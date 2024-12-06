@@ -10,17 +10,17 @@ The branch name should be in the following format:
 
 The branch name should follow the following rules:
 
--   The branch name should be at least 10 characters long.
--   The branch name should not be more than 100 characters long.
--   The branch name should be in the following format: `<type>/<description>`.
--   The branch name should not end with a period.
--   The branch name should not be empty.
--   The branch name should always have the following types: `feature`, `fix`, `hotfix`, `chore`, `docs`, `refactor`, `test`, `config`.
+- The branch name should be at least 10 characters long.
+- The branch name should not be more than 100 characters long.
+- The branch name should be in the following format: `<type>/<description>`.
+- The branch name should not end with a period.
+- The branch name should not be empty.
+- The branch name should always have the following types: `feature`, `fix`, `hotfix`, `chore`, `docs`, `refactor`, `test`, `config`.
 
 Description of the branch name format:
 
--   `<type>`: The type of the branch. For example, `feature` for a new feature, `fix` for a bug fix, `hotfix` for a hotfix, etc.
--   `<description>`: The description of the branch. For example, `add-dark-mode-support`, `fix-broken-links`, `update-documentation`, etc.
+- `<type>`: The type of the branch. For example, `feature` for a new feature, `fix` for a bug fix, `hotfix` for a hotfix, etc.
+- `<description>`: The description of the branch. For example, `add-dark-mode-support`, `fix-broken-links`, `update-documentation`, etc.
 
 Rules for the branch name format:
 
@@ -41,6 +41,6 @@ The pull request template is used to create a pull request. The pull request tem
 
 The pull request template contains the following sections:
 
--   **Description**: The description of the pull request.
--   **Related Issues**: The related issues.
--   **Checklist**: The checklist for the pull request.
+- **Description**: The description of the pull request.
+- **Related Issues**: The related issues.
+- **Checklist**: The checklist for the pull request.

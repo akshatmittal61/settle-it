@@ -13,24 +13,24 @@ The pre-commit hook is used to run the linting and formatting scripts before com
 The commit message hook is used to validate the commit message. The commit message must follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 The rules and restrictions for the commit message are as follows:
 
--   The commit message must be in the following format:
+- The commit message must be in the following format:
 
 ```md
 <type>(<scope>): <subject>
 ```
 
--   The commit message must be at least 10 characters long.
--   The commit message must not be more than 100 characters long.
--   The case of the commit message must be lower-case.
--   The commit message must not end with a period.
--   The commit message must not be empty.
--   The commit message must always have the following types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`, `config`.
+- The commit message must be at least 10 characters long.
+- The commit message must not be more than 100 characters long.
+- The case of the commit message must be lower-case.
+- The commit message must not end with a period.
+- The commit message must not be empty.
+- The commit message must always have the following types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`, `config`.
 
 Description of the commit message format:
 
--   `<type>`: The type of the commit. For example, `feat` for a new feature, `fix` for a bug fix, `docs` for documentation changes, etc.
--   `<scope>`: The scope of the commit. For example, `home`, `about`, `contact`, etc.
--   `<subject>`: The subject of the commit. For example, `add dark mode support`, `fix broken links`, `update documentation`, etc.
+- `<type>`: The type of the commit. For example, `feat` for a new feature, `fix` for a bug fix, `docs` for documentation changes, etc.
+- `<scope>`: The scope of the commit. For example, `home`, `about`, `contact`, etc.
+- `<subject>`: The subject of the commit. For example, `add dark mode support`, `fix broken links`, `update documentation`, etc.
 
 Rules for the commit message format:
 
@@ -62,13 +62,13 @@ config: Changes to configuration files
 
 The build and test workflow is used to build and test the project. The workflow is triggered on:
 
--   Every push to the `master` branch.
--   Every push to the `dev` branch.
--   Every pull request to the `master` branch.
+- Every push to the `master` branch.
+- Every push to the `dev` branch.
+- Every pull request to the `master` branch.
 
 ### Format and Lint Workflow
 
 The format and lint workflow is used to format and lint the project. The workflow is triggered on:
 
--   Every push to the `master` branch.
--   Every pull request to the `master` branch.
+- Every push to the `master` branch.
+- Every pull request to the `master` branch.

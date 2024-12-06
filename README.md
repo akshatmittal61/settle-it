@@ -12,17 +12,17 @@ Blend in the fun and let us handle your expenses.
 
 ## Features
 
--   **Expense Tracking:** Easily record and categorize expenses during trips or outings.
--   **Expense Splitting:** Automatically split expenses among participants and ensure fairness.
--   **Real-time Updates:** View and manage expenses with real-time updates.
--   **User-friendly Interface:** Intuitive design for easy navigation and use.
+- **Expense Tracking:** Easily record and categorize expenses during trips or outings.
+- **Expense Splitting:** Automatically split expenses among participants and ensure fairness.
+- **Real-time Updates:** View and manage expenses with real-time updates.
+- **User-friendly Interface:** Intuitive design for easy navigation and use.
 
 ## Technology Stack
 
--   **Frontend:** NextJS, TypeScript
--   **Backend** NextJS API Routes
--   **Styling:** SASS
--   **Database:** MongoDB
+- **Frontend:** NextJS, TypeScript
+- **Backend** NextJS API Routes
+- **Styling:** SASS
+- **Database:** MongoDB
 
 ## Getting Started
 
@@ -30,8 +30,8 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### Prerequisites
 
--   Node.js (>= 18.x)
--   yarn
+- Node.js (>= 18.x)
+- yarn
 
 ### Installation
 
@@ -76,8 +76,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Acknowledgments
 
--   Special thanks to all contributors and the open-source community for their support.
--   Inspired by the need for simple and efficient expense management during group activities.
+- Special thanks to all contributors and the open-source community for their support.
+- Inspired by the need for simple and efficient expense management during group activities.
 
 ## Contact
 
@@ -91,12 +91,12 @@ For any questions or feedback, please open an issue in the repository or reach o
 
 ## Acknowledgements
 
--   [Next.js](https://nextjs.org)
--   [TypeScript](https://www.typescriptlang.org)
--   [MongoDB](https://www.mongodb.com)
--   [Sass](https://sass-lang.com)
--   [ESLint](https://eslint.org)
--   [Prettier](https://prettier.io)
--   [Husky](https://typicode.github.io/husky)
--   [Commitlint](https://commitlint.js.org)
--   [Jest](https://jestjs.io)
+- [Next.js](https://nextjs.org)
+- [TypeScript](https://www.typescriptlang.org)
+- [MongoDB](https://www.mongodb.com)
+- [Sass](https://sass-lang.com)
+- [ESLint](https://eslint.org)
+- [Prettier](https://prettier.io)
+- [Husky](https://typicode.github.io/husky)
+- [Commitlint](https://commitlint.js.org)
+- [Jest](https://jestjs.io)
