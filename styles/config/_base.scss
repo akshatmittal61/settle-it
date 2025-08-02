@@ -44,6 +44,38 @@ body {
 	color: var(--theme-fg);
 }
 
+body.light {
+	--bgcolor: #f9f9f9;
+	--bgcolor-100: #e1e1e1;
+	--bgcolor-400: #d2d2d2;
+	--bgcolor-700: #c3c3c3;
+
+	--tcolor: #121212;
+	--tcolor-100: #333333;
+	--tcolor-400: #272727;
+	--tcolor-700: #1d1d1d;
+
+	--back-shadow: rgba(0, 0, 0, 0.2);
+	--back-shadow-dark: rgba(0, 0, 0, 0.25);
+	--back-shadow-light: rgba(0, 0, 0, 0.1);
+}
+
+body.dark {
+	--bgcolor: #121212;
+	--bgcolor-100: #333333;
+	--bgcolor-400: #272727;
+	--bgcolor-700: #1d1d1d;
+
+	--tcolor: #f9f9f9;
+	--tcolor-100: #e1e1e1;
+	--tcolor-400: #d2d2d2;
+	--tcolor-700: #c3c3c3;
+
+	--back-shadow: rgba(255, 255, 255, 0.2);
+	--back-shadow-dark: rgba(255, 255, 255, 0.25);
+	--back-shadow-light: rgba(255, 255, 255, 0.1);
+}
+
 .dispn {
 	display: none !important;
 }
