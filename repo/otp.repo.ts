@@ -1,6 +1,6 @@
-import { BaseRepo } from "./base";
-import { Otp } from "@/schema";
 import { OtpModel } from "@/models";
+import { Otp } from "@/schema";
+import { BaseRepo } from "./base";
 
 class OtpRepo extends BaseRepo<Otp> {
 	protected model = OtpModel;

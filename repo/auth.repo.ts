@@ -1,4 +1,3 @@
-import { Logger } from "@/log";
 import { AuthMappingModel } from "@/models";
 import { AuthMapping } from "@/schema";
 import {
@@ -13,22 +12,23 @@ import { BaseRepo } from "./base";
 
 class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
 	protected model = AuthMappingModel;
+
 	public parser(input: AuthMapping | null): IAuthMapping | null {
 		const res = super.parser(input);
 		if (!res) return null;
 		res.user = getObjectFromMongoResponse<IUser>(res.user);
 		return res;
 	}
+
 	public async findOne(
 		query: FilterQuery<AuthMapping>
 	): Promise<IAuthMapping | null> {
-		Logger.debug("Finding one auth mapping", query);
 		const res = await this.model
 			.findOne<AuthMapping>(query)
 			.populate("user");
-		Logger.debug("Found one auth mapping", res);
 		return this.parser(res);
 	}
+
 	public async findById(id: string): Promise<IAuthMapping | null> {
 		try {
 			const res = await this.model
@@ -40,6 +40,7 @@ class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
 			throw error;
 		}
 	}
+
 	public async find(
 		query: FilterQuery<AuthMapping>
 	): Promise<Array<IAuthMapping> | null> {
@@ -51,6 +52,7 @@ class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
 		if (parsedRes.length === 0) return null;
 		return parsedRes;
 	}
+
 	public async findAll(): Promise<Array<IAuthMapping>> {
 		const res = await this.model
 			.find<AuthMapping>()
@@ -60,10 +62,12 @@ class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
 		if (parsedRes.length > 0) return parsedRes;
 		return [];
 	}
+
 	public async create(body: CreateModel<AuthMapping>): Promise<IAuthMapping> {
 		const res = await this.model.create<CreateModel<AuthMapping>>(body);
 		return getNonNullValue(this.parser(await res.populate("user")));
 	}
+
 	public async update(
 		query: FilterQuery<AuthMapping>,
 		update: UpdateQuery<AuthMapping>
@@ -74,6 +78,7 @@ class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
 			.populate("user");
 		return this.parser(res);
 	}
+
 	public async remove(
 		query: FilterQuery<AuthMapping>
 	): Promise<IAuthMapping | null> {

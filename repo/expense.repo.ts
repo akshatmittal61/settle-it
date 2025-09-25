@@ -1,39 +1,69 @@
-import { BaseRepo } from "@/repo/base";
-import { Expense, Group } from "@/schema";
-import { CreateModel, IExpense, IUser, ObjectId } from "@/types";
-import { getNonNullValue, getObjectFromMongoResponse, omitKeys } from "@/utils";
-import { groupRepo } from "@/repo/group.repo";
 import { ExpenseModel } from "@/models";
+import { Expense, Group, User } from "@/schema";
+import { CreateModel, IExpense } from "@/types";
+import { getNonNullValue, getObjectFromMongoResponse, omitKeys } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
+import { BaseRepo } from "./base";
+import { groupRepo } from "./group.repo";
+import { userRepo } from "./user.repo";
 
 export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 	protected model = ExpenseModel;
+
 	public parser(expense: Expense | null): IExpense | null {
 		if (!expense) return null;
 		const parsed = getObjectFromMongoResponse<Expense>(expense);
 		if (!parsed) return null;
+		const group = parsed.group
+			? groupRepo.parser(getObjectFromMongoResponse<Group>(parsed.group))
+			: null;
+		const author = getNonNullValue(
+			userRepo.parser(getObjectFromMongoResponse<User>(parsed.author))
+		);
+		const sender = getNonNullValue(
+			userRepo.parser(getObjectFromMongoResponse<User>(parsed.sender))
+		);
+		const receiver = parsed.receiver
+			? userRepo.parser(getObjectFromMongoResponse<User>(parsed.receiver))
+			: null;
 		return {
 			...omitKeys(parsed, ["groupId"]),
-			group: groupRepo.parser(
-				getObjectFromMongoResponse<Group>(parsed.groupId)
-			),
-			paidBy: getObjectFromMongoResponse<IUser>(parsed.paidBy),
-			createdBy: getObjectFromMongoResponse<IUser>(parsed.createdBy),
+			group,
+			author,
+			sender,
+			receiver,
 		};
 	}
+
 	public async findOne(
 		query: FilterQuery<Expense>
 	): Promise<IExpense | null> {
 		const res = await this.model
 			.findOne<Expense>(query)
-			.populate("groupId paidBy createdBy");
+			.populate("group author sender receiver")
+			.populate({
+				path: "group",
+				model: "Group",
+				populate: {
+					path: "author",
+					model: "User",
+				},
+			});
 		return this.parser(res);
 	}
 
 	public async findById(id: string): Promise<IExpense | null> {
 		return await this.model
 			.findById<Expense>(id)
-			.populate("groupId paidBy createdBy")
+			.populate("group author sender receiver")
+			.populate({
+				path: "group",
+				model: "Group",
+				populate: {
+					path: "author",
+					model: "User",
+				},
+			})
 			.then(this.parser)
 			.catch((error: any) => {
 				if (error.kind === "ObjectId") return null;
@@ -45,7 +75,15 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const res = await this.model
 			.find<Expense>(query)
 			.sort({ createdAt: -1 })
-			.populate("groupId paidBy createdBy");
+			.populate("group author sender receiver")
+			.populate({
+				path: "group",
+				model: "Group",
+				populate: {
+					path: "author",
+					model: "User",
+				},
+			});
 		const parsedRes = res.map(this.parser).filter((obj) => obj !== null);
 		if (parsedRes.length > 0) return parsedRes;
 		return null;
@@ -55,7 +93,15 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const res = await this.model
 			.find<Expense>()
 			.sort({ createdAt: -1 })
-			.populate("groupId paidBy createdBy");
+			.populate("group author sender receiver")
+			.populate({
+				path: "group",
+				model: "Group",
+				populate: {
+					path: "author",
+					model: "User",
+				},
+			});
 		const parsedRes = res.map(this.parser).filter((obj) => obj !== null);
 		if (parsedRes.length > 0) return parsedRes;
 		return [];
@@ -63,8 +109,7 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 
 	public async create(body: CreateModel<Expense>): Promise<IExpense> {
 		const res = await this.model.create<CreateModel<Expense>>(body);
-		await res.populate("paidBy createdBy groupId");
-		return getNonNullValue(this.parser(res));
+		return getNonNullValue(await this.findById(res.id));
 	}
 
 	public async update(
@@ -74,19 +119,35 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const filter = query.id ? { _id: query.id } : query;
 		const res = await this.model
 			.findOneAndUpdate<Expense>(filter, update, { new: true })
-			.populate("paidBy createdBy groupId");
+			.populate("group author sender receiver")
+			.populate({
+				path: "group",
+				model: "Group",
+				populate: {
+					path: "author",
+					model: "User",
+				},
+			});
 		return this.parser(res);
 	}
 
-	public async remove(query: Partial<Expense>): Promise<IExpense | null> {
+	public async remove(query: FilterQuery<Expense>): Promise<IExpense | null> {
 		const filter = query.id ? { _id: query.id } : query;
 		const res = await this.model
 			.findOneAndDelete<Expense>(filter)
-			.populate("paidBy createdBy groupId");
+			.populate("group author sender receiver")
+			.populate({
+				path: "group",
+				model: "Group",
+				populate: {
+					path: "author",
+					model: "User",
+				},
+			});
 		return this.parser(res);
 	}
 
-	public async removeMultiple(query: Partial<Expense>): Promise<number> {
+	public async removeMultiple(query: FilterQuery<Expense>): Promise<number> {
 		const res = await this.model.deleteMany(query);
 		return res.deletedCount;
 	}
@@ -97,11 +158,13 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const res = await this.model
 			.find<Expense>({ groupId })
 			.sort({ paidOn: -1 })
-			.populate("paidBy createdBy groupId")
+			.populate("group author sender receiver")
 			.populate({
-				path: "groupId",
+				path: "group",
+				model: "Group",
 				populate: {
-					path: "members createdBy",
+					path: "author",
+					model: "User",
 				},
 			});
 
@@ -114,59 +177,17 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const res = await this.model
 			.find<Expense>({ groupId: { $in: groupIds } })
 			.sort({ paidOn: -1 })
-			.populate("paidBy createdBy groupId")
+			.populate("group author sender receiver")
 			.populate({
-				path: "groupId",
+				path: "group",
+				model: "Group",
 				populate: {
-					path: "members createdBy",
+					path: "author",
+					model: "User",
 				},
 			});
 
 		return res.map(this.parser).map(getNonNullValue);
-	}
-
-	/**
-	 * Computes the total expenditure for a group by summing the `amount` of all expenses in that group.
-	 *
-	 * Process (MongoDB aggregation pipeline):
-	 * - $match: Filter documents by `groupId`.
-	 * - $group: Group by `groupId` and sum the `amount` field as `totalAmountSpent`.
-	 * - $project: Remove `_id`, expose `groupId` and `totalAmountSpent`.
-	 *
-	 * Input:
-	 * - groupId: string (Mongo ObjectId as string) identifying the group.
-	 *
-	 * Output:
-	 * - number representing the aggregated total amount. Returns 0 when no expenses are found.
-	 *
-	 * Edge cases:
-	 * - If there are no matching expenses, pipeline returns an empty array => we return 0.
-	 */
-	public async getExpenditureForGroup(groupId: string): Promise<number> {
-		const result = await this.model.aggregate([
-			{
-				$match: {
-					groupId: new ObjectId(groupId),
-				},
-			},
-			{
-				$group: {
-					_id: "$groupId",
-					totalAmountSpent: { $sum: "$amount" },
-				},
-			},
-			{
-				$project: {
-					_id: 0,
-					groupId: "$_id",
-					totalAmountSpent: 1,
-				},
-			},
-		]);
-		if (result.length === 0) {
-			return 0;
-		}
-		return result[0].totalAmountSpent;
 	}
 }
 

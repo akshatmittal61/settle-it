@@ -1,36 +1,34 @@
-import { BaseRepo } from "./base";
-import { Group, User } from "@/schema";
-import { CreateModel, IGroup, IUser } from "@/types";
 import { GroupModel } from "@/models";
+import { Group, User } from "@/schema";
+import { CreateModel, IGroup } from "@/types";
 import { getNonNullValue, getObjectFromMongoResponse } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
+import { BaseRepo } from "./base";
+import { userRepo } from "./user.repo";
 
 export class GroupRepo extends BaseRepo<Group, IGroup> {
 	protected model = GroupModel;
 	public parser(group: Group | null): IGroup | null {
 		const parsed = super.parser(group);
 		if (!parsed) return null;
+		const author = getNonNullValue(
+			userRepo.parser(getObjectFromMongoResponse<User>(parsed.author))
+		);
 		return {
 			...parsed,
-			createdBy: getNonNullValue(
-				getObjectFromMongoResponse<IUser>(parsed.createdBy)
-			),
-			members: parsed.members
-				.map(getObjectFromMongoResponse<User>)
-				.filter((obj) => obj !== null),
+			author,
 		};
 	}
+
 	public async findOne(query: Partial<Group>): Promise<IGroup | null> {
-		const res = await this.model
-			.findOne<Group>(query)
-			.populate("members createdBy");
+		const res = await this.model.findOne<Group>(query).populate("author");
 		return this.parser(res);
 	}
 
 	public async findById(id: string): Promise<IGroup | null> {
 		return await this.model
 			.findById<Group>(id)
-			.populate("members createdBy")
+			.populate("author")
 			.then(this.parser)
 			.catch((error: any) => {
 				if (error.kind === "ObjectId") return null;
@@ -42,7 +40,7 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 		const res = await this.model
 			.find<Group>(query)
 			.sort({ createdAt: -1 })
-			.populate("members createdBy");
+			.populate("author");
 		const parsedRes = res.map(this.parser).filter((obj) => obj !== null);
 		if (parsedRes.length > 0) return parsedRes;
 		return null;
@@ -52,14 +50,14 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 		const res = await this.model
 			.find<Group>()
 			.sort({ createdAt: -1 })
-			.populate("members createdBy");
+			.populate("author");
 
 		return res.map(this.parser).filter((obj) => obj !== null);
 	}
 
 	public async create(body: CreateModel<Group>): Promise<IGroup> {
 		const res = await this.model.create<CreateModel<Group>>(body);
-		await res.populate("members createdBy");
+		await res.populate("author");
 		return getNonNullValue(this.parser(res));
 	}
 
@@ -70,7 +68,7 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 		const filter = query.id ? { _id: query.id } : query;
 		const res = await this.model
 			.findOneAndUpdate(filter, update, { new: true })
-			.populate("members createdBy");
+			.populate("author");
 		return this.parser(res);
 	}
 
@@ -78,7 +76,7 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 		const filter = query.id ? { _id: query.id } : query;
 		const res = await this.model
 			.findOneAndDelete(filter)
-			.populate("members createdBy");
+			.populate("author");
 		return this.parser(res);
 	}
 }
