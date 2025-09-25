@@ -6,6 +6,7 @@ import {
 	emailTemplates,
 	HTTP,
 	OTP_STATUS,
+	USER_ROLE,
 	USER_STATUS,
 } from "@/constants";
 import { AuthResponse } from "@/types";
@@ -61,6 +62,7 @@ export class OtpService {
 		const { user, isNew } = await UserService.findOrCreateUser({
 			email,
 			status: USER_STATUS.JOINED,
+			role: USER_ROLE.MEMBER,
 		});
 		if (user.status === USER_STATUS.INVITED) {
 			// If an Invited user logs in, mark the user as Joined

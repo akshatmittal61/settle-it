@@ -1,4 +1,4 @@
-import { USER_STATUS } from "@/constants";
+import { USER_ROLE, USER_STATUS } from "@/constants";
 import { authHelpers, userHelpers } from "@/context/helpers";
 import { IUser, UserSlice } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
@@ -8,6 +8,7 @@ const initialState: UserSlice = {
 	name: "",
 	email: "",
 	status: USER_STATUS.JOINED,
+	role: USER_ROLE.MEMBER,
 };
 
 export const userSlice = createSlice({

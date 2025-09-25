@@ -4,6 +4,7 @@ import {
 	cacheParameter,
 	emailTemplates,
 	HTTP,
+	USER_ROLE,
 	USER_STATUS,
 } from "@/constants";
 import { ApiError } from "@/errors";
@@ -183,6 +184,7 @@ export class UserService {
 		return await userRepo.create({
 			email: invitee,
 			status: USER_STATUS.INVITED,
+			role: USER_ROLE.MEMBER,
 			invitedBy: invitedByUserId,
 		});
 	}
@@ -244,6 +246,7 @@ export class UserService {
 				name: email.split("@")[0],
 				email,
 				status: USER_STATUS.INVITED,
+				role: USER_ROLE.MEMBER,
 				invitedBy: invitedByUser.id,
 			}))
 		);

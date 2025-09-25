@@ -1,6 +1,12 @@
 import { Cache } from "@/cache";
 import { jwtSecret, oauth_google } from "@/config";
-import { cacheParameter, fallbackAssets, HTTP, USER_STATUS } from "@/constants";
+import {
+	cacheParameter,
+	fallbackAssets,
+	HTTP,
+	USER_ROLE,
+	USER_STATUS,
+} from "@/constants";
 import { ApiError } from "@/errors";
 import { Logger } from "@/log";
 import { authRepo } from "@/repo";
@@ -40,6 +46,7 @@ export class OAuthService {
 			email,
 			avatar: picture || fallbackAssets.avatar,
 			status: USER_STATUS.JOINED,
+			role: USER_ROLE.MEMBER,
 		});
 		Logger.debug("Found or created user", { user, isNew });
 		const authMapping = await AuthService.findOrCreateAuthMapping(

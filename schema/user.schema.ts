@@ -1,4 +1,4 @@
-import { fallbackAssets, USER_STATUS } from "@/constants";
+import { fallbackAssets, USER_ROLE, USER_STATUS } from "@/constants";
 import { ObjectId } from "@/types";
 
 export const UserSchema = {
@@ -32,5 +32,10 @@ export const UserSchema = {
 		type: ObjectId,
 		ref: "User",
 		sparse: true,
+	},
+	role: {
+		type: String,
+		enum: Object.values(USER_ROLE),
+		default: USER_ROLE.MEMBER,
 	},
 };
