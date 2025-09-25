@@ -1,42 +1,48 @@
-import { AuthMapping, Expense, Group, Member, User } from "@/schema";
-import { UpdateModel } from "./parser";
+import { AuthMapping, Expense, Group, Member, Split, User } from "@/schema";
+import { CreateModel, UpdateModel } from "./parser";
 
 // User
-export type IUser = Omit<User, "createdAt" | "updatedAt">;
+export type IUser = User;
 export type UpdateUser = Omit<UpdateModel<User>, "email">;
 export type IAuthMapping = Omit<AuthMapping, "user"> & { user: IUser | null };
 
 // Group
-export type IGroup = Omit<Group, "members" | "createdBy"> & {
-	members: Array<IUser>;
-	createdBy: IUser;
-};
-export type CreateGroupData = Omit<
-	Group,
-	"id" | "createdBy" | "createdAt" | "updatedAt"
->;
-export type UpdateGroupData = CreateGroupData;
-
-// Expense
-export type IExpense = Omit<Expense, "groupId" | "paidBy" | "createdBy"> & {
-	group: IGroup;
-	paidBy: IUser;
-	createdBy: IUser;
-};
-export type CreateExpenseData = Omit<
-	Expense,
-	"id" | "createdBy" | "createdAt" | "updatedAt"
-> & {
-	members: { userId: string; amount: number }[];
-};
-export type UpdateExpenseData = CreateExpenseData;
+export type IGroup = Omit<Group, "author"> & { author: IUser };
+export type CreateGroupData = CreateModel<Omit<Group, "author">>;
+export type UpdateGroupData = UpdateModel<Omit<Group, "author">>;
 
 // Members
-export type IMember = Omit<Member, "userId" | "groupId" | "expenseId"> & {
+export type IMember = Omit<Member, "user" | "group"> & {
 	user: IUser;
 	group: IGroup;
-	expense: IExpense;
 };
+
+// Expense
+export type IExpense = Omit<
+	Expense,
+	"group" | "author" | "sender" | "receiver"
+> & {
+	group?: IGroup;
+	author: IUser;
+	sender: IUser;
+	receiver?: IUser;
+};
+export type CreateExpenseData = Omit<CreateModel<Expense>, "author"> & {
+	splits?: Array<{ user: string; amount: number }>;
+};
+export type UpdateExpenseData = UpdateModel<
+	Omit<Expense, "group" | "author"> & {
+		splits: Array<{ user: string; amount: number }>;
+	}
+>;
+
+// Splits
+export type ISplit = Omit<Split, "expense" | "user"> & {
+	expense: IExpense;
+	user: IUser;
+};
+
+// Wallet
 export type Share = {
 	user: string;
 	amount: number;

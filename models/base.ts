@@ -8,7 +8,10 @@ export class ModelFactory<T = any> {
 		this.model = this.getModel(name);
 	}
 	private getSchema(input: any): mongoose.Schema<T> {
-		return new mongoose.Schema<T>(input, { timestamps: true });
+		return new mongoose.Schema<T>(input, {
+			timestamps: true,
+			versionKey: false,
+		});
 	}
 	private getModel(name: string): mongoose.Model<T> {
 		return mongoose.models[name] || mongoose.model<T>(name, this.schema);

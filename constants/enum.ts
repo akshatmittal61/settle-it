@@ -1,7 +1,11 @@
 import {
 	T_API_METHODS,
 	T_EMAIL_TEMPLATE,
+	T_EXPENSE_METHOD,
 	T_EXPENSE_STATUS,
+	T_EXPENSE_TYPE,
+	T_MEMBER_ROLE,
+	T_MEMBER_STATUS,
 	T_OTP_STATUS,
 	T_USER_ROLE,
 	T_USER_STATUS,
@@ -15,9 +19,29 @@ export const USER_ROLE = getEnumeration<T_USER_ROLE>([
 	"GUEST",
 ]);
 export const OTP_STATUS = getEnumeration<T_OTP_STATUS>(["PENDING", "EXPIRED"]);
+
+export const EXPENSE_TYPE = getEnumeration<T_EXPENSE_TYPE>([
+	"PAID",
+	"RECEIVED",
+	"SELF",
+	"SETTLE",
+]);
+export const EXPENSE_METHOD = getEnumeration<T_EXPENSE_METHOD>([
+	"UPI",
+	"CASH",
+	"CARD",
+	"NETBANKING",
+]);
 export const EXPENSE_STATUS = getEnumeration<T_EXPENSE_STATUS>([
 	"PENDING",
 	"SETTLED",
+]);
+
+export const MEMBER_ROLE = getEnumeration<T_MEMBER_ROLE>(["ADMIN", "MEMBER"]);
+export const MEMBER_STATUS = getEnumeration<T_MEMBER_STATUS>([
+	"JOINED",
+	"INVITED",
+	"LEFT",
 ]);
 
 export const apiMethods = getEnumeration<T_API_METHODS>([

@@ -1,31 +1,25 @@
 import { ObjectId } from "@/types";
+import { MEMBER_ROLE, MEMBER_STATUS } from "@/constants";
 
 export const MemberSchema = {
-	userId: {
+	user: {
 		type: ObjectId,
-		required: true,
 		ref: "User",
-	},
-	groupId: {
-		type: ObjectId,
 		required: true,
+	},
+	group: {
+		type: ObjectId,
 		ref: "Group",
-	},
-	expenseId: {
-		type: ObjectId,
-		required: true,
-		ref: "Expense",
-	},
-	amount: {
-		type: Number,
 		required: true,
 	},
-	owed: {
-		type: Number,
-		required: true,
+	status: {
+		type: String,
+		enum: Object.values(MEMBER_STATUS),
+		default: MEMBER_STATUS.JOINED,
 	},
-	paid: {
-		type: Number,
-		required: true,
+	role: {
+		type: String,
+		enum: Object.values(MEMBER_ROLE),
+		default: MEMBER_ROLE.MEMBER,
 	},
 };

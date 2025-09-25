@@ -1,4 +1,13 @@
-import { Model, T_OTP_STATUS, T_USER_ROLE, T_USER_STATUS } from "@/types";
+import {
+	Model,
+	T_EXPENSE_METHOD,
+	T_EXPENSE_TYPE,
+	T_MEMBER_ROLE,
+	T_MEMBER_STATUS,
+	T_OTP_STATUS,
+	T_USER_ROLE,
+	T_USER_STATUS,
+} from "@/types";
 import { ObjectId } from "mongoose";
 
 /**
@@ -55,53 +64,71 @@ export type Otp = Model<{
  * @param {string} name - Name of the group
  * @param {string} icon - Icon of the group (optional)
  * @param {string} banner - Banner of the group (optional)
- * @param {string} type - Type of the group (optional)
- * @param {string[]} members - Array of user ids (References User model)
- * @param {string} createdBy - ID of the user who created the group (References User model)
+ * @param {string[]} tags - Array of tags (optional)
+ * @param {string} author - ID of the user who created the group (References User model)
  */
 export type Group = Model<{
 	name: string;
 	icon?: string;
 	banner?: string;
-	type?: string;
-	members: string[];
-	createdBy: string | ObjectId;
+	tags?: Array<string>;
+	author: string;
+}>;
+
+/**
+ * Member model
+ * @param {string} user - ID of the user (References User model)
+ * @param {string} group - ID of the group (References Group model)
+ * @param {string} status - Status of the member (Joined, Invited)
+ * @param {string} role - Role of the member (Member, Admin)
+ */
+export type Member = Model<{
+	user: string;
+	group: string;
+	status: T_MEMBER_STATUS;
+	role: T_MEMBER_ROLE;
 }>;
 
 /**
  * Expense model
  * @param {string} title - Title of the expense
  * @param {number} amount - Amount of the expense
- * @param {string} groupId - ID of the group (References Group model)
- * @param {string} paidBy - ID of the user who paid the expense (References User model)
- * @param {string} createdBy - ID of the user who created the expense (References User model)
+ * @param {string} author - ID of the user who created the expense (References User model)
+ * @param {string} sender - ID of the user who paid for the expense (References User model)
+ * @param {string} receiver - ID of the user who received the expense (References User model)
+ * @param {string} type - Type of the expense (Paid, Received, Self, Settle)
+ * @param {string} method - Method of the expense (UPI, Cash, Card, NetBanking)
+ * @param {string} timestamp - Timestamp of the expense
  * @param {string} description - Description of the expense (optional)
- * @param {string} paidOn - Date when the expense was paid (optional)
+ * @param {string} group - ID of the group (References Group model)
+ * @param {string[]} tags - Set of tags (optional)
+ * @param {string} icon - Icon for the expense (optional)
  */
 export type Expense = Model<{
 	title: string;
 	amount: number;
-	groupId: string | ObjectId;
-	paidBy: string | ObjectId;
-	createdBy: string | ObjectId;
+	author: string;
+	sender: string;
+	receiver?: string;
+	type: T_EXPENSE_TYPE;
+	method: T_EXPENSE_METHOD;
+	timestamp: string;
 	description?: string;
-	paidOn?: string;
+	group?: string;
+	tags?: Array<string>;
+	icon?: string;
 }>;
 
 /**
- * Member model
- * @param {string} userId - ID of the user (References User model)
- * @param {string} groupId - ID of the group (References Group model)
- * @param {string} expenseId - ID of the expense (References Expense model)
- * @param {number} amount - Amount of the expense
- * @param {number} owed - Amount owed by the user
- * @param {number} paid - Amount paid by the user
+ * Split model
+ * @param {string} expense - ID of the expense (References Expense model)
+ * @param {string} user - ID of the user (References User model)
+ * @param {number} pending - Pending amount
+ * @param {number} completed - Paid amount
  */
-export type Member = Model<{
-	userId: string;
-	groupId: string;
-	expenseId: string;
-	amount: number;
-	owed: number;
-	paid: number;
+export type Split = Model<{
+	expense: string;
+	user: string;
+	pending: number;
+	completed: number;
 }>;

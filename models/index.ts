@@ -9,6 +9,8 @@ import {
 	MemberSchema,
 	Otp,
 	OtpSchema,
+	Split,
+	SplitSchema,
 	User,
 	UserSchema,
 } from "@/schema";
@@ -19,9 +21,10 @@ export const AuthMappingModel = new ModelFactory<AuthMapping>(
 	AuthMappingSchema
 ).model;
 export const GroupModel = new ModelFactory<Group>("Group", GroupSchema).model;
-export const ExpenseModel = new ModelFactory<Expense>("Expense", ExpenseSchema)
-	.model;
 export const MemberModel = new ModelFactory<Member>("Member", MemberSchema)
 	.model;
+export const ExpenseModel = new ModelFactory<Expense>("Expense", ExpenseSchema)
+	.model;
+export const SplitModel = new ModelFactory<Split>("Split", SplitSchema).model;
 export const OtpModel = new ModelFactory<Otp>("Otp", OtpSchema).model;
 export const UserModel = new ModelFactory<User>("User", UserSchema).model;
