@@ -61,6 +61,9 @@ export class CacheService {
 		} else if (parameter === cacheParameter.GROUP) {
 			const payload = data as CachePayloadGenerator<"GROUP">;
 			return `group:${payload.id}`;
+		} else if (parameter === cacheParameter.GROUP_DETAILS) {
+			const payload = data as CachePayloadGenerator<"GROUP_DETAILS">;
+			return `group-details:${payload.id}`;
 		} else if (parameter === cacheParameter.MEMBER) {
 			const payload = data as CachePayloadGenerator<"MEMBER">;
 			return `member:${payload.id}`;

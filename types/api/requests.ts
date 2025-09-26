@@ -25,8 +25,8 @@ export type BulkUserSearch = { query: string };
 export type GetLogFileByName = { name: string };
 
 // Group
-export type CreateGroup = CreateGroupData;
-export type UpdateGroup = UpdateGroupData;
+export type CreateGroup = CreateGroupData & { members: string[] };
+export type UpdateGroup = UpdateGroupData & { members: string[] };
 export type DeleteGroup = { id: string };
 export type AddMembers = { members: string[] };
 

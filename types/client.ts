@@ -43,6 +43,7 @@ export type ISplit = Omit<Split, "expense" | "user"> & {
 };
 
 // Wallet
+export type GroupSpread = IGroup & { members: Array<Omit<IMember, "group">> };
 export type Share = {
 	user: string;
 	amount: number;

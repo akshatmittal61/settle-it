@@ -147,7 +147,7 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		return this.parser(res);
 	}
 
-	public async removeMultiple(query: FilterQuery<Expense>): Promise<number> {
+	public async bulkRemove(query: FilterQuery<Expense>): Promise<number> {
 		const res = await this.model.deleteMany(query);
 		return res.deletedCount;
 	}
@@ -156,8 +156,8 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		groupId: string
 	): Promise<Array<IExpense>> {
 		const res = await this.model
-			.find<Expense>({ groupId })
-			.sort({ paidOn: -1 })
+			.find<Expense>({ group: groupId })
+			.sort({ timestamp: -1 })
 			.populate("group author sender receiver")
 			.populate({
 				path: "group",

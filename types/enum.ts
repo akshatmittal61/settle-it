@@ -18,6 +18,7 @@ export type CacheParameter =
 	| "AUTH_MAPPING"
 	| "EXPENSE"
 	| "GROUP"
+	| "GROUP_DETAILS"
 	| "MEMBER"
 	| "USER_GROUPS"
 	| "GROUP_EXPENSES";

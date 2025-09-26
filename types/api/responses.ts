@@ -1,4 +1,5 @@
 import {
+	GroupSpread,
 	IBalancesSummary,
 	IExpense,
 	IGroup,
@@ -35,13 +36,14 @@ export type GetAllLogFiles = Array<string>;
 export type GetLogFileByName = string;
 
 // Group
-export type GetGroupsForUser = Array<IGroup>;
-export type GetGroupDetails = IGroup;
+export type GetGroupsForUser = Array<GroupSpread>;
+export type GetGroupDetails = GroupSpread;
 export type GetGroupExpenses = Array<IExpense>;
-export type CreateGroup = IGroup;
-export type UpdateGroupDetails = IGroup;
+export type CreateGroup = GroupSpread;
+export type UpdateGroupDetails = GroupSpread;
 export type DeleteGroup = IGroup;
-export type AddMembers = IGroup;
+export type AddMembers = GroupSpread;
+export type RemoveMembers = GroupSpread;
 
 // Expense
 export type GetUsersExpenses = Array<IExpense>;

@@ -2,7 +2,7 @@ import { ApiRoute } from "@/server";
 import { GroupController } from "@/controllers";
 
 const apiRoute = new ApiRoute(
-	{ POST: GroupController.addMembers },
+	{ PATCH: GroupController.updateMembers },
 	{ db: true, auth: true, groupMember: true }
 );
 

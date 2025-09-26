@@ -1,11 +1,15 @@
-import { BaseRepo } from "@/repo/base";
-import { Expense, Split, User } from "@/schema";
-import { CreateModel, ISplit, UpdateModel } from "@/types";
 import { SplitModel } from "@/models";
-import { getNonNullValue, getObjectFromMongoResponse } from "@/utils";
-import { expenseRepo } from "@/repo/expense.repo";
-import { userRepo } from "@/repo/user.repo";
+import { Expense, Split, User } from "@/schema";
+import { CreateModel, ISplit } from "@/types";
+import {
+	CollectionUtils,
+	getNonNullValue,
+	getObjectFromMongoResponse,
+} from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
+import { BaseRepo } from "./base";
+import { expenseRepo } from "./expense.repo";
+import { userRepo } from "./user.repo";
 
 class SplitRepo extends BaseRepo<Split, ISplit> {
 	protected model = SplitModel;
@@ -149,7 +153,7 @@ class SplitRepo extends BaseRepo<Split, ISplit> {
 
 	public async update(
 		query: FilterQuery<Split>,
-		body: UpdateModel<Split>
+		body: UpdateQuery<Split>
 	): Promise<ISplit | null> {
 		const filter = query.id ? { _id: query.id } : query;
 		const res = await this.model
@@ -233,6 +237,47 @@ class SplitRepo extends BaseRepo<Split, ISplit> {
 	public async bulkRemove(query: FilterQuery<Split>): Promise<number> {
 		const res = await this.model.deleteMany(query);
 		return res.deletedCount;
+	}
+
+	public async settleOne(splitId: string): Promise<ISplit | null> {
+		return this.update({ id: splitId }, [
+			{
+				$set: {
+					pending: 0,
+					completed: { $add: ["$pending", "$completed"] },
+				},
+			},
+		]);
+	}
+
+	public async settleMany(query: FilterQuery<Split>): Promise<number> {
+		const splits = await this.find(query);
+		if (CollectionUtils.isEmpty(splits)) {
+			return 0;
+		}
+		const res = await this.model.bulkWrite(
+			splits!.map((split) => ({
+				updateOne: {
+					filter: { _id: split.id },
+					update: {
+						$set: {
+							pending: 0,
+							completed: { $add: ["$pending", "$completed"] },
+						},
+					},
+				},
+			}))
+		);
+		return res.modifiedCount;
+	}
+
+	public async removeSplitsForGroup(groupId: string): Promise<number> {
+		const expenses = await expenseRepo.find({ group: groupId });
+		if (CollectionUtils.isEmpty(expenses)) {
+			return 0;
+		}
+		const expenseIds = expenses!.map((expense) => expense.id);
+		return await this.bulkRemove({ expense: { $in: expenseIds } });
 	}
 }
 

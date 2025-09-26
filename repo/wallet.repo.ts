@@ -1,20 +1,61 @@
+import { ExpenseModel, SplitModel } from "@/models";
 import { BaseRepo } from "@/repo/base";
-import { Expense, Member } from "@/schema";
+import { Expense, Split } from "@/schema";
 import {
 	IExpense,
-	IMember,
 	ITransaction,
 	IUser,
 	ObjectId,
 	Share,
 	Transaction,
 } from "@/types";
-import { ExpenseModel } from "@/models";
-import { FilterQuery } from "mongoose";
 import { getNumber, getObjectFromMongoResponse } from "@/utils";
 
 class WalletRepo extends BaseRepo<Expense, IExpense> {
 	model = ExpenseModel;
+
+	public async getSplitsForSomeGroupMembers(
+		groupId: string,
+		userIds: Array<string>
+	): Promise<Array<Split>> {
+		const result = await SplitModel.aggregate([
+			{
+				$match: {
+					user: { $in: userIds },
+				},
+			},
+			{
+				$lookup: {
+					from: "expenses",
+					localField: "expense",
+					foreignField: "_id",
+					as: "expense",
+				},
+			},
+			{
+				$unwind: "$expense",
+			},
+			{
+				$match: {
+					"expense.group": new ObjectId(groupId),
+				},
+			},
+			{
+				$project: {
+					_id: 1,
+					user: "$user",
+					expense: "$expense._id",
+					completed: "$completed",
+					pending: "$pending",
+					createdAt: "$expense.createdAt",
+					updatedAt: "$expense.updatedAt",
+				},
+			},
+		]);
+		return result
+			.map((doc) => getObjectFromMongoResponse<Split>(doc))
+			.filter((doc) => doc != null);
+	}
 
 	/**
 	 * Computes the total expenditure for a group by summing the `amount` of all expenses in that group.
@@ -34,7 +75,7 @@ class WalletRepo extends BaseRepo<Expense, IExpense> {
 	 * - If there are no matching expenses, pipeline returns an empty array => we return 0.
 	 */
 	public async getTotalExpenditureForGroup(groupId: string): Promise<number> {
-		const result = await this.model.aggregate([
+		const result = await ExpenseModel.aggregate([
 			{
 				$match: {
 					group: new ObjectId(groupId),
@@ -60,24 +101,6 @@ class WalletRepo extends BaseRepo<Expense, IExpense> {
 		return result[0].totalAmountSpent;
 	}
 
-	public async settleMany(query: FilterQuery<Member>): Promise<number> {
-		const members = await this.find(query);
-		if (!members || members.length === 0) return 0;
-		const res = await this.model.bulkWrite(
-			members.map((member) => ({
-				updateOne: {
-					filter: { _id: member.id },
-					update: {
-						$set: {
-							owed: 0,
-							paid: member.amount,
-						},
-					},
-				},
-			}))
-		);
-		return res.modifiedCount;
-	}
 	/**
 	 * Builds a compact pairwise transaction summary for a group.
 	 *
@@ -295,18 +318,6 @@ class WalletRepo extends BaseRepo<Expense, IExpense> {
 			user: res.user.toString(),
 			amount: res.amount,
 		}));
-	}
-
-	public async settleOne(query: Partial<Member>): Promise<IMember | null> {
-		const updateRequest = [
-			{
-				$set: {
-					paid: { $add: ["$paid", "$owed"] },
-					owed: 0,
-				},
-			},
-		];
-		return this.update(query, updateRequest);
 	}
 }
 

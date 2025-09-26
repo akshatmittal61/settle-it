@@ -6,6 +6,7 @@ import {
 	genericParse,
 	getNonEmptyString,
 	getSearchParam,
+	omitKeys,
 	safeParse,
 } from "@/utils";
 import { ApiFailure, ApiSuccess } from "./payload";
@@ -137,14 +138,14 @@ export class ServerMiddleware {
 				const group = await GroupService.getGroupDetailsForUser(
 					loggedInUser.id,
 					groupId
-				);
+				).catch(() => null);
 				if (!group) {
 					return new ApiFailure(res)
 						.status(HTTP.status.FORBIDDEN)
 						.message("You are not a member of this group")
 						.send();
 				}
-				req.group = group;
+				req.group = omitKeys(group, ["members"]);
 			} catch (error) {
 				Logger.error(error);
 				return new ApiFailure(res)

@@ -1,7 +1,12 @@
-import { GroupModel } from "@/models";
-import { Group, User } from "@/schema";
-import { CreateModel, IGroup } from "@/types";
-import { getNonNullValue, getObjectFromMongoResponse } from "@/utils";
+import { GroupModel, MemberModel } from "@/models";
+import { Group, Member, User } from "@/schema";
+import { CreateModel, GroupSpread, IGroup } from "@/types";
+import {
+	CollectionUtils,
+	getNonNullValue,
+	getObjectFromMongoResponse,
+	omitKeys,
+} from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";
 import { userRepo } from "./user.repo";
@@ -78,6 +83,56 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 			.findOneAndDelete(filter)
 			.populate("author");
 		return this.parser(res);
+	}
+
+	public async findWithMembers(
+		query: FilterQuery<Group>
+	): Promise<Array<GroupSpread>> {
+		const res = await this.model.aggregate([
+			{
+				$match: query,
+			},
+			{
+				$lookup: {
+					from: "members",
+					localField: "_id",
+					foreignField: "group",
+					as: "members",
+				},
+			},
+			{
+				$project: {
+					_id: 1,
+					name: 1,
+					icon: 1,
+					banner: 1,
+					tags: 1,
+					author: 1,
+					members: 1,
+					createdAt: 1,
+					updatedAt: 1,
+				},
+			},
+		]);
+		if (CollectionUtils.isEmpty(res)) return [];
+		return res.map((obj) => ({
+			...obj,
+			members: obj.members.map((member: Member) =>
+				omitKeys(member, ["group"])
+			),
+		}));
+	}
+
+	public async findOneWithMembers(
+		query: FilterQuery<Group>
+	): Promise<GroupSpread | null> {
+		const groups = await this.findWithMembers(query);
+		if (CollectionUtils.isEmpty(groups)) return null;
+		return groups[0];
+	}
+
+	public async findByIdWithMembers(id: string): Promise<GroupSpread | null> {
+		return await this.findOneWithMembers({ _id: id });
 	}
 }
 

@@ -8,3 +8,4 @@ export * from "./member.service";
 export * from "./oauth.service";
 export * from "./otp.service";
 export * from "./user.service";
+export * from "./wallet.service";
