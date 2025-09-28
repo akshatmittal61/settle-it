@@ -16,12 +16,16 @@ export const authenticatedPage: ServerSideAuthMiddleware = async (
 	}
 	try {
 		const headers = { cookie: req.headers.cookie };
-		const user = await CacheService.fetch(
+		// TODO: Optimize it without caching on access token
+		/* const user = await CacheService.fetch(
 			CacheService.getKey(cacheParameter.USER, {
 				id: cookies.accessToken,
 			}),
 			() => AuthApi.verifyUserIfLoggedIn(headers).then((res) => res.data),
 			AuthConstants.ACCESS_TOKEN_EXPIRY
+		); */
+		const user = await AuthApi.verifyUserIfLoggedIn(headers).then(
+			(res) => res.data
 		);
 		Logger.debug("authenticatedPage -> user", user);
 		if (user.name) {
