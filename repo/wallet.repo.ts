@@ -14,6 +14,96 @@ import { getNumber, getObjectFromMongoResponse } from "@/utils";
 class WalletRepo extends BaseRepo<Expense, IExpense> {
 	model = ExpenseModel;
 
+	/**
+	 * Fetches all expenses for a user.
+	 * Get all expenses created by the user
+	 * Get all expenses where the user is a part of the split
+	 * Get all expenses where the user is a part of the group
+	 *
+	 * @param userId
+	 */
+	public async getExpensesForUser(userId: string) {
+		/*
+		SELECT * FROM expenses
+		WHERE author = :userId
+		OR id IN (SELECT expense FROM splits WHERE user = :userId)
+		OR group IN (SELECT group FROM members WHERE user = :userId);
+		*/
+		const expenses = await ExpenseModel.aggregate([
+			// Stage 1: Conditional Lookup for matching Splits
+			// Finds any split records for this expense ID where the user is the target user.
+			{
+				$lookup: {
+					from: "splits", // Corresponds to SplitModel
+					let: { expenseId: "$_id" },
+					pipeline: [
+						{
+							$match: {
+								$expr: {
+									$and: [
+										{ $eq: ["$expense", "$$expenseId"] }, // Join condition: splits.expense == expenses._id
+										{ $eq: ["$user", userId] }, // WHERE condition: splits.user == :userId
+									],
+								},
+							},
+						},
+					],
+					as: "splitMatches",
+				},
+			},
+
+			// Stage 2: Conditional Lookup for matching Group Membership
+			// Finds any member records for this expense's group ID where the user is a member.
+			{
+				$lookup: {
+					from: "members", // Corresponds to MemberModel
+					let: { groupId: "$group" },
+					pipeline: [
+						{
+							$match: {
+								$expr: {
+									$and: [
+										{ $eq: ["$group", "$$groupId"] }, // Join condition: members.group == expenses.group
+										{ $eq: ["$user", userId] }, // WHERE condition: members.user == :userId
+									],
+								},
+							},
+						},
+					],
+					as: "memberMatches",
+				},
+			},
+
+			// Stage 3: Match the expenses based on the three OR conditions
+			{
+				$match: {
+					$or: [
+						// Condition 1: Direct match on author field
+						{ author: userId },
+
+						// Condition 2: A matching split record was found (splitMatches is not empty)
+						{ splitMatches: { $ne: [] } },
+
+						// Condition 3: A matching group membership record was found (memberMatches is not empty)
+						// Note: This check correctly handles expenses with a null/missing 'group' field,
+						// as the lookup pipeline won't find a match if 'group' is null/missing.
+						{ memberMatches: { $ne: [] } },
+					],
+				},
+			},
+
+			// Stage 4 (Optional but recommended): Clean up the temporary join fields
+			{
+				$project: {
+					splitMatches: 0,
+					memberMatches: 0,
+				},
+			},
+		]);
+		if (!expenses) return [];
+		return expenses;
+	}
+
 	public async getSplitsForSomeGroupMembers(
 		groupId: string,
 		userIds: Array<string>

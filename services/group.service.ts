@@ -7,6 +7,7 @@ import {
 	USER_ROLE,
 } from "@/constants";
 import { ApiError } from "@/errors";
+import { Logger } from "@/log";
 import {
 	expenseRepo,
 	groupRepo,
@@ -14,32 +15,20 @@ import {
 	splitRepo,
 	userRepo,
 } from "@/repo";
+import { walletRepo } from "@/repo/wallet.repo";
+import { Group } from "@/schema";
+import { EmailService } from "@/services/email";
 import {
 	CreateGroupData,
 	CreateModel,
 	GroupSpread,
-	IBalancesSummary,
+	IExpense,
 	IGroup,
 	IMember,
-	IShare,
-	ITransaction,
-	IUser,
-	Transaction,
 } from "@/types";
-import {
-	CollectionUtils,
-	getNonNullValue,
-	getSingletonValue,
-	getUserDetails,
-	simplifyFraction,
-} from "@/utils";
+import { CollectionUtils, getSingletonValue, getUserDetails } from "@/utils";
 import { CacheService } from "./cache.service";
-import { ExpenseService } from "./expense.service";
 import { UserService } from "./user.service";
-import { EmailService } from "@/services/email";
-import { Group } from "@/schema";
-import { Logger } from "@/log";
-import { walletRepo } from "@/repo/wallet.repo";
 
 export class GroupService {
 	public static async getAllGroups(): Promise<Array<IGroup>> {
@@ -60,20 +49,6 @@ export class GroupService {
 			CacheService.getKey(cacheParameter.GROUP_DETAILS, { id }),
 			() => groupRepo.findByIdWithMembers(id)
 		);
-	}
-
-	private static async clear(id: string): Promise<boolean> {
-		const group = await GroupService.getGroupById(id);
-		if (!group) return false;
-		await Promise.all([
-			splitRepo.bulkRemove({ group: id }),
-			expenseRepo.bulkRemove({ group: id }),
-			memberRepo.bulkRemove({ group: id }),
-		]);
-		Cache.del(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, { groupId: id })
-		);
-		return true;
 	}
 
 	private static async addMembers(
@@ -177,12 +152,6 @@ export class GroupService {
 			);
 		}
 		return group;
-	}
-
-	public static async getGroupExpenses(groupId: string) {
-		const expenses = await ExpenseService.getExpensesForGroup(groupId);
-		if (!expenses) return [];
-		return expenses;
 	}
 
 	public static async sendInvitationToUsers(
@@ -368,6 +337,9 @@ export class GroupService {
 			})
 		);
 		Cache.del(CacheService.getKey(cacheParameter.GROUP, { id: groupId }));
+		Cache.del(
+			CacheService.getKey(cacheParameter.GROUP_EXPENSES, { groupId })
+		);
 		return deletedGroup;
 	}
 
@@ -429,5 +401,16 @@ export class GroupService {
 			CacheService.getKey(cacheParameter.GROUP, { id: groupId })
 		);
 		return GroupService.getGroupDetailsById(groupId);
+	}
+
+	public static async getGroupExpenses(
+		groupId: string
+	): Promise<Array<IExpense>> {
+		const expenses = await CacheService.fetch(
+			CacheService.getKey(cacheParameter.GROUP_EXPENSES, { groupId }),
+			() => expenseRepo.getExpensesForGroup(groupId)
+		);
+		if (!expenses) return [];
+		return expenses;
 	}
 }

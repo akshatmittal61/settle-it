@@ -1,19 +1,21 @@
 import { Cache } from "@/cache";
 import { cacheParameter, EXPENSE_STATUS, HTTP } from "@/constants";
 import { ApiError } from "@/errors";
-import { expenseRepo, memberRepo } from "@/repo";
+import { expenseRepo, memberRepo, splitRepo } from "@/repo";
 import {
 	CreateModel,
 	IExpense,
 	IMember,
 	T_EXPENSE_STATUS,
+	UpdateModel,
 	UpdateQuery,
 } from "@/types";
-import { isSubset } from "@/utils";
+import { CollectionUtils, isSubset, StringUtils } from "@/utils";
 import { CacheService } from "./cache.service";
 import { GroupService } from "./group.service";
 import { MemberService } from "./member.service";
-import { Expense, Member } from "@/schema";
+import { Expense, Member, Split } from "@/schema";
+import { walletRepo } from "@/repo/wallet.repo";
 
 export class ExpenseService {
 	public static async getExpenseById(id: string): Promise<IExpense | null> {
@@ -22,36 +24,36 @@ export class ExpenseService {
 			() => expenseRepo.findById(id)
 		);
 	}
+
 	public static async getExpensesForUser(
 		userId: string
 	): Promise<Array<IExpense>> {
-		const groups = await GroupService.getGroupsUserIsPartOf(userId);
-		const groupIds = groups ? groups.map((group) => group.id) : [];
-		const expenses = await expenseRepo.getExpensesForGroups(groupIds);
+		const expenses = await walletRepo.getExpensesForUser(userId);
 		if (!expenses) return [];
 		return expenses;
 	}
-	public static async getExpensesForGroup(
-		groupId: string
-	): Promise<Array<IExpense>> {
-		const expenses = await CacheService.fetch(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, { groupId }),
-			() => expenseRepo.getExpensesForGroup(groupId)
-		);
-		if (!expenses) return [];
-		return expenses;
-	}
+
 	public static async createExpense({
 		body,
 		loggedInUserId,
-		members,
+		splits,
 	}: {
-		body: Omit<CreateModel<Expense>, "createdBy">;
+		body: Omit<CreateModel<Expense>, "author">;
 		loggedInUserId: string;
-		members: Array<{ userId: string; amount: number }>;
+		splits: Array<{ userId: string; amount: number }>;
 	}): Promise<IExpense> {
-		const totalDistributedAmount = members
-			.map((member) => member.amount)
+		// if someone enters non-positive amount, in total or in a split, throw error
+		if (
+			body.amount <= 0 ||
+			splits.map((split) => split.amount).some((amount) => amount <= 0)
+		) {
+			throw new ApiError(
+				HTTP.status.BAD_REQUEST,
+				"Amount should be greater than 0"
+			);
+		}
+		const totalDistributedAmount = splits
+			.map((split) => split.amount)
 			.reduce((a, b) => a + b, 0);
 		// check if amount distributed among members is equal to expense amount
 		if (totalDistributedAmount !== body.amount) {
@@ -60,67 +62,69 @@ export class ExpenseService {
 				"Total amount distributed doesn't match"
 			);
 		}
-		// check if it is a valid group
-		const foundGroup = await GroupService.getGroupById(
-			body.groupId.toString()
-		);
-		if (!foundGroup) {
-			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
-		}
-		const existingMemberIds = foundGroup.members.map((m) => m.id);
-		const includedMembers = members.filter((member) => member.amount > 0);
-		if (
-			!isSubset(
-				includedMembers.map((member) => member.userId),
-				existingMemberIds
-			)
-		) {
-			// check if all sent members are in the group
-			throw new ApiError(
-				HTTP.status.BAD_REQUEST,
-				"Some members are not in the group"
+		if (StringUtils.isNotEmpty(body.group)) {
+			const groupId = body.group!;
+			// check if it is a valid group
+			const foundGroup = await GroupService.getGroupDetailsById(groupId);
+			if (!foundGroup) {
+				throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
+			}
+			if (CollectionUtils.isEmpty(splits)) {
+				throw new ApiError(
+					HTTP.status.BAD_REQUEST,
+					"Please split your expense for group"
+				);
+			}
+			// all members should be a part of that group
+			const existingMembersUserIds = foundGroup.members.map(
+				(m) => m.user.id
 			);
+			// current user should be a part of the group
+			if (!existingMembersUserIds.includes(loggedInUserId)) {
+				throw new ApiError(
+					HTTP.status.BAD_REQUEST,
+					"Current user is not a part of the group"
+				);
+			}
+			if (
+				splits
+					.map((s) => s.userId)
+					.some((id) => !existingMembersUserIds.includes(id))
+			) {
+				throw new ApiError(
+					HTTP.status.BAD_REQUEST,
+					"Some members are not in the group"
+				);
+			}
 		}
-		const payload = { ...body, createdBy: loggedInUserId };
+		const payload = { ...body, author: loggedInUserId };
 		const createdExpense = await expenseRepo.create(payload);
 		// initially, all members are pending, and they have to pay the expense
-		const membersForCurrentExpense: Array<CreateModel<Member>> =
-			includedMembers.map((member) => ({
-				userId: member.userId,
-				groupId: body.groupId.toString(),
-				expenseId: createdExpense.id,
-				amount: member.amount,
-				owed: member.userId === body.paidBy ? 0 : member.amount,
-				paid: member.userId === body.paidBy ? member.amount : 0,
-			}));
-		await memberRepo.bulkCreate(membersForCurrentExpense);
-		Cache.invalidate(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-				groupId: body.groupId.toString(),
+		const splitsForCurrentExpense: Array<CreateModel<Split>> = splits.map(
+			(split) => ({
+				user: split.userId,
+				expense: createdExpense.id,
+				pending: split.userId === body.sender ? 0 : split.amount,
+				completed: split.userId === body.sender ? split.amount : 0,
 			})
 		);
+		await splitRepo.bulkCreate(splitsForCurrentExpense);
+		if (StringUtils.isNotEmpty(body.group)) {
+			Cache.invalidate(
+				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
+					groupId: body.group!.toString(),
+				})
+			);
+		}
 		return createdExpense;
 	}
+
 	public static async updateExpense({
 		id,
 		loggedInUserId,
-		title,
-		amount,
-		paidBy,
-		paidOn,
-		description,
-		status,
-		members,
 	}: {
-		id: string;
-		loggedInUserId: string;
-		title?: string | null;
-		amount?: number | null;
-		paidBy?: string | null;
-		paidOn?: string | null;
-		description?: string | null;
-		status?: T_EXPENSE_STATUS | null;
-		members?: Array<{ userId: string; amount: number }> | null;
+		body: UpdateModel<Expense>;
+		loggedInUserId;
 	}): Promise<IExpense> {
 		// if amount is updated, members should be sent as well for validation
 		if (amount !== null && members === null) {
@@ -330,6 +334,7 @@ export class ExpenseService {
 		);
 		return updatedExpense;
 	}
+
 	public static async removeExpense({
 		expenseId,
 		loggedInUserId,
@@ -359,6 +364,7 @@ export class ExpenseService {
 		);
 		return removedExpense;
 	}
+
 	public static async settleExpense({
 		expenseId,
 		loggedInUserId,
@@ -386,6 +392,7 @@ export class ExpenseService {
 		);
 		return MemberService.getMembersOfExpense(expenseId);
 	}
+
 	public static async memberPaidForExpense({
 		memberId,
 		loggedInUserId,
@@ -437,6 +444,7 @@ export class ExpenseService {
 		);
 		return MemberService.getMembersOfExpense(foundMember.expense.id);
 	}
+
 	public static async settleMemberInExpense({
 		memberId,
 		loggedInUserId,

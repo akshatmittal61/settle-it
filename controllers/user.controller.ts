@@ -1,3 +1,5 @@
+import { ApiFailure, ApiSuccess } from "@/server";
+import { UserService } from "@/services";
 import {
 	ApiRequest,
 	ApiRequests,
@@ -12,8 +14,6 @@ import {
 	getString,
 	safeParse,
 } from "@/utils";
-import { ApiFailure, ApiSuccess } from "@/server";
-import { UserService } from "@/services";
 
 export class UserController {
 	public static async updateUserProfile(

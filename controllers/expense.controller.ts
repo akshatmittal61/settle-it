@@ -6,16 +6,22 @@ import {
 	ApiRequests,
 	ApiResponse,
 	ApiResponses,
+	CreateModel,
+	T_EXPENSE_METHOD,
 	T_EXPENSE_STATUS,
+	T_EXPENSE_TYPE,
 } from "@/types";
 import {
+	CollectionUtils,
 	genericParse,
 	getArray,
 	getNonEmptyString,
 	getNonNegativeNumber,
 	getSearchParam,
 	safeParse,
+	StringUtils,
 } from "@/utils";
+import { Expense } from "@/schema";
 
 export class ExpenseController {
 	public static async getUsersExpenses(req: ApiRequest, res: ApiResponse) {
@@ -26,6 +32,7 @@ export class ExpenseController {
 			expenses
 		);
 	}
+
 	public static async createExpense(
 		req: ApiRequest<ApiRequests.CreateExpense>,
 		res: ApiResponse
@@ -33,27 +40,60 @@ export class ExpenseController {
 		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
 		const title = genericParse(getNonEmptyString, req.body.title);
 		const amount = genericParse(getNonNegativeNumber, req.body.amount);
-		const groupId = genericParse(getNonEmptyString, req.group?.id);
-		const paidBy =
-			safeParse(getNonEmptyString, req.body.paidBy) || loggedInUserId;
-		const paidOn =
-			safeParse(getNonEmptyString, req.body.paidOn) ||
-			new Date().toISOString();
+		const sender = genericParse(getNonEmptyString, req.body.sender);
+		const receiver = safeParse(getNonEmptyString, req.body.receiver) || "";
+		const type = genericParse(
+			getNonEmptyString<T_EXPENSE_TYPE>,
+			req.body.type
+		);
+		const method = genericParse(
+			getNonEmptyString<T_EXPENSE_METHOD>,
+			req.body.method
+		);
+		const timestamp =
+			genericParse(getNonEmptyString, req.body.timestamp) || "";
 		const description =
 			safeParse(getNonEmptyString, req.body.description) || "";
-		const members = genericParse(
+		const group = safeParse(getNonEmptyString, req.body?.group) || "";
+		const tags = safeParse(getArray<string>, req.body.tags) || [];
+		const icon = safeParse(getNonEmptyString, req.body.icon) || "";
+		const splits = genericParse(
 			getArray<{ userId: string; amount: number }>,
-			req.body.members
+			req.body.splits
 		);
+		const body: Omit<CreateModel<Expense>, "author"> = {
+			title,
+			amount,
+			sender,
+			type,
+			method,
+			timestamp,
+		};
+		if (StringUtils.isNotEmpty(receiver)) {
+			body.receiver = receiver;
+		}
+		if (StringUtils.isNotEmpty(description)) {
+			body.description = description;
+		}
+		if (StringUtils.isNotEmpty(group)) {
+			body.group = group;
+		}
+		if (CollectionUtils.isNotEmpty(tags)) {
+			body.tags = tags;
+		}
+		if (StringUtils.isNotEmpty(icon)) {
+			body.icon = icon;
+		}
 		const createdExpense = await ExpenseService.createExpense({
-			body: { title, amount, groupId, paidBy, paidOn, description },
+			body,
 			loggedInUserId,
-			members,
+			splits,
 		});
 		return new ApiSuccess<ApiResponses.CreateExpense>(res)
 			.status(HTTP.status.CREATED)
 			.send(createdExpense);
 	}
+
 	public static async updateExpense(
 		req: ApiRequest<ApiRequests.UpdateExpense>,
 		res: ApiResponse
@@ -91,6 +131,7 @@ export class ExpenseController {
 			updatedExpense
 		);
 	}
+
 	public static async removeExpense(
 		req: ApiRequest<ApiRequests.RemoveExpense>,
 		res: ApiResponse
@@ -108,6 +149,7 @@ export class ExpenseController {
 			removedExpense!
 		);
 	}
+
 	public static async settleExpense(
 		req: ApiRequest<ApiRequests.SettleExpense>,
 		res: ApiResponse
@@ -125,6 +167,7 @@ export class ExpenseController {
 			updatedMembersInfo
 		);
 	}
+
 	public static async memberPaidAmount(
 		req: ApiRequest<ApiRequests.MemberPaidAmount>,
 		res: ApiResponse

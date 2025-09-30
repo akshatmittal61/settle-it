@@ -32,7 +32,7 @@ export type AddMembers = { members: string[] };
 
 // Expense
 export type CreateExpense = CreateExpenseData & {
-	members: Array<{ userId: string; amount: number }>;
+	splits: Array<{ userId: string; amount: number }>;
 };
 export type UpdateExpense = Partial<UpdateExpenseData> & {
 	members?: Array<{ userId: string; amount: number }>;

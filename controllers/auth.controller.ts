@@ -1,8 +1,8 @@
+import { HTTP } from "@/constants";
 import { ApiFailure, ApiSuccess } from "@/server";
 import { AuthService, OAuthService, OtpService } from "@/services";
 import { ApiRequest, ApiRequests, ApiResponse, ApiResponses } from "@/types";
 import { genericParse, getNonEmptyString } from "@/utils";
-import { HTTP } from "@/constants";
 
 export class AuthController {
 	public static async verifyLoggedInUser(

@@ -91,6 +91,13 @@ export class GroupController {
 		}
 		return new ApiSuccess<ApiResponses.DeleteGroup>(res).send(deletedGroup);
 	}
+	public static async getGroupExpenses(req: ApiRequest, res: ApiResponse) {
+		const groupId = genericParse(getNonEmptyString, req.group?.id);
+		const groupExpenses = await GroupService.getGroupExpenses(groupId);
+		return new ApiSuccess<ApiResponses.GetGroupExpenses>(res).send(
+			groupExpenses
+		);
+	}
 	public static async getBalancesSummary(req: ApiRequest, res: ApiResponse) {
 		const groupId = genericParse(getNonEmptyString, req.group?.id);
 		const groupSummary = await WalletService.getGroupSummary(groupId);

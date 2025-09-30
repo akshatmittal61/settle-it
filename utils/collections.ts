@@ -7,7 +7,9 @@ export class CollectionUtils {
 		);
 	}
 
-	public static isNotEmpty<T>(collection: Array<T>): boolean {
+	public static isNotEmpty<T>(
+		collection: Array<T> | null | undefined
+	): boolean {
 		return !CollectionUtils.isEmpty(collection);
 	}
 }
