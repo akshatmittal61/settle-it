@@ -6,7 +6,6 @@ import {
 	CreateModel,
 	IExpense,
 	IMember,
-	T_EXPENSE_STATUS,
 	UpdateModel,
 	UpdateQuery,
 } from "@/types";
@@ -16,6 +15,7 @@ import { GroupService } from "./group.service";
 import { MemberService } from "./member.service";
 import { Expense, Member, Split } from "@/schema";
 import { walletRepo } from "@/repo/wallet.repo";
+import { NumberUtils } from "@/utils/number";
 
 export class ExpenseService {
 	public static async getExpenseById(id: string): Promise<IExpense | null> {
@@ -44,8 +44,10 @@ export class ExpenseService {
 	}): Promise<IExpense> {
 		// if someone enters non-positive amount, in total or in a split, throw error
 		if (
-			body.amount <= 0 ||
-			splits.map((split) => split.amount).some((amount) => amount <= 0)
+			NumberUtils.isNonPositiveNumber(body.amount) ||
+			splits
+				.map((split) => split.amount)
+				.some(NumberUtils.isNonPositiveNumber)
 		) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
@@ -63,9 +65,10 @@ export class ExpenseService {
 			);
 		}
 		if (StringUtils.isNotEmpty(body.group)) {
-			const groupId = body.group!;
 			// check if it is a valid group
-			const foundGroup = await GroupService.getGroupDetailsById(groupId);
+			const foundGroup = await GroupService.getGroupDetailsById(
+				body.group
+			);
 			if (!foundGroup) {
 				throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
 			}
@@ -121,29 +124,50 @@ export class ExpenseService {
 
 	public static async updateExpense({
 		id,
+		body,
+		splits,
 		loggedInUserId,
 	}: {
-		body: UpdateModel<Expense>;
-		loggedInUserId;
+		id: string;
+		body: Omit<UpdateModel<Expense>, "group" | "author">;
+		splits: Array<{ userId: string; amount: number }> | null;
+		loggedInUserId: string;
 	}): Promise<IExpense> {
-		// if amount is updated, members should be sent as well for validation
-		if (amount !== null && members === null) {
-			throw new ApiError(
-				HTTP.status.BAD_REQUEST,
-				HTTP.message.BAD_REQUEST
-			);
-		}
-		if (amount !== null && members !== null && members !== undefined) {
-			const totalDistributedAmount = members
-				.map((member) => member.amount)
+		const updatedAmount = body.amount;
+		if (
+			NumberUtils.isNotEmpty(updatedAmount) &&
+			CollectionUtils.isNotEmpty(splits)
+		) {
+			const totalDistributedAmount = splits!
+				.map((split) => split.amount)
 				.reduce((a, b) => a + b, 0);
+			if (
+				NumberUtils.isNonPositiveNumber(updatedAmount) ||
+				splits
+					.map((split) => split.amount)
+					.some(NumberUtils.isNonPositiveNumber)
+			) {
+				throw new ApiError(
+					HTTP.status.BAD_REQUEST,
+					"Amount should be greater than 0"
+				);
+			}
 			// check if amount distributed among members is equal to expense amount
-			if (totalDistributedAmount !== amount) {
+			if (totalDistributedAmount !== body.amount) {
 				throw new ApiError(
 					HTTP.status.BAD_REQUEST,
 					"Total amount distributed doesn't match"
 				);
 			}
+		} else if (
+			NumberUtils.isNotEmpty(body.amount) &&
+			CollectionUtils.isEmpty(splits)
+		) {
+			// if amount is updated, members should be sent as well for validation
+			throw new ApiError(
+				HTTP.status.BAD_REQUEST,
+				"Please split your expense properly"
+			);
 		}
 		const foundExpense = await ExpenseService.getExpenseById(id);
 		if (!foundExpense)

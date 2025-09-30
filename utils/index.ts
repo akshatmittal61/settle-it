@@ -2,6 +2,7 @@ export * from "./collections";
 export * from "./files";
 export * from "./functions";
 export * from "./notify";
+export * from "./number";
 export * from "./parser";
 export * from "./profiler";
 export * from "./safety";

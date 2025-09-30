@@ -13,19 +13,16 @@ import {
 } from "@/types";
 import {
 	CollectionUtils,
-	genericParse,
-	getArray,
-	getNonEmptyString,
-	getNonNegativeNumber,
 	getSearchParam,
-	safeParse,
+	NumberUtils,
+	SafetyUtils,
 	StringUtils,
 } from "@/utils";
 import { Expense } from "@/schema";
 
 export class ExpenseController {
 	public static async getUsersExpenses(req: ApiRequest, res: ApiResponse) {
-		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
+		const loggedInUserId = StringUtils.getNonEmptyString(req.user?.id);
 		const expenses =
 			await ExpenseService.getExpensesForUser(loggedInUserId);
 		return new ApiSuccess<ApiResponses.GetUsersExpenses>(res).send(
@@ -37,28 +34,53 @@ export class ExpenseController {
 		req: ApiRequest<ApiRequests.CreateExpense>,
 		res: ApiResponse
 	) {
-		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
-		const title = genericParse(getNonEmptyString, req.body.title);
-		const amount = genericParse(getNonNegativeNumber, req.body.amount);
-		const sender = genericParse(getNonEmptyString, req.body.sender);
-		const receiver = safeParse(getNonEmptyString, req.body.receiver) || "";
-		const type = genericParse(
-			getNonEmptyString<T_EXPENSE_TYPE>,
+		const loggedInUserId = StringUtils.getNonEmptyString(req.user?.id);
+		const title = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString,
+			req.body.title
+		);
+		const amount = SafetyUtils.genericParse(
+			NumberUtils.valueOf,
+			req.body.amount
+		);
+		const sender = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString,
+			req.body.sender
+		);
+		const receiver = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			req.body.receiver
+		);
+		const type = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString<T_EXPENSE_TYPE>,
 			req.body.type
 		);
-		const method = genericParse(
-			getNonEmptyString<T_EXPENSE_METHOD>,
+		const method = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString<T_EXPENSE_METHOD>,
 			req.body.method
 		);
-		const timestamp =
-			genericParse(getNonEmptyString, req.body.timestamp) || "";
-		const description =
-			safeParse(getNonEmptyString, req.body.description) || "";
-		const group = safeParse(getNonEmptyString, req.body?.group) || "";
-		const tags = safeParse(getArray<string>, req.body.tags) || [];
-		const icon = safeParse(getNonEmptyString, req.body.icon) || "";
-		const splits = genericParse(
-			getArray<{ userId: string; amount: number }>,
+		const timestamp = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString,
+			req.body.timestamp
+		);
+		const description = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			req.body.description
+		);
+		const group = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			req.body?.group
+		);
+		const tags = SafetyUtils.safeParse(
+			CollectionUtils.valueOf<string>,
+			req.body.tags
+		);
+		const icon = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			req.body.icon
+		);
+		const splits = SafetyUtils.safeParse(
+			CollectionUtils.valueOf<{ userId: string; amount: number }>,
 			req.body.splits
 		);
 		const body: Omit<CreateModel<Expense>, "author"> = {

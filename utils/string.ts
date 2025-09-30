@@ -1,9 +1,53 @@
+import { ParserSafetyError } from "@/errors";
+
 export class StringUtils {
-	public static isEmpty(str: string | null | undefined): boolean {
-		return str === null || str === undefined || str.trim().length === 0;
+	public static EMPTY = "";
+
+	public static equals(str1: string, str2: string): boolean {
+		return str1.length === str2.length && str1 === str2;
 	}
 
-	public static isNotEmpty(str: string | null | undefined): boolean {
-		return !StringUtils.isEmpty(str);
+	public static equalsIgnoreCase(str1: string, str2: string): boolean {
+		return str1.toLowerCase() === str2.toLowerCase();
+	}
+
+	public static isEmpty(
+		str: string | null | undefined
+	): str is null | undefined | "" {
+		return (
+			str === null ||
+			str === undefined ||
+			str.trim() === StringUtils.EMPTY
+		);
+	}
+
+	public static isNotEmpty<T extends string | null | undefined>(
+		str: T
+	): str is T extends string ? T & string : never {
+		return !this.isEmpty(str);
+	}
+
+	public static valueOf<T extends string>(input: any): T {
+		// TODO: Replace with zod
+		if (typeof input !== "string") {
+			throw new ParserSafetyError(
+				`${input} of type ${typeof input} is not a valid string!`,
+				"StringUtils.getString",
+				input
+			);
+		}
+		return input as T;
+	}
+
+	public static getNonEmptyString<T extends string>(input: any): T {
+		const output = StringUtils.valueOf<T>(input);
+		if (StringUtils.isEmpty(output)) {
+			throw new ParserSafetyError(
+				`${input} is an empty string!`,
+				"StringUtils.getNonEmptyString",
+				input
+			);
+		}
+		return output;
 	}
 }

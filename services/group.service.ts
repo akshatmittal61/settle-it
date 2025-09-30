@@ -26,7 +26,7 @@ import {
 	IGroup,
 	IMember,
 } from "@/types";
-import { CollectionUtils, getSingletonValue, getUserDetails } from "@/utils";
+import { CollectionUtils, getUserDetails } from "@/utils";
 import { CacheService } from "./cache.service";
 import { UserService } from "./user.service";
 
@@ -80,7 +80,7 @@ export class GroupService {
 	): Promise<Array<IGroup>> {
 		const membersForUser = await memberRepo.find({ user: userId });
 		if (CollectionUtils.isEmpty(membersForUser)) return [];
-		return membersForUser!.map((member) => member.group);
+		return membersForUser.map((member) => member.group);
 	}
 
 	public static async getAllGroupsDetailsForUser(
@@ -106,10 +106,7 @@ export class GroupService {
 				"Group members not found"
 			);
 		}
-		return {
-			...group,
-			members: members!,
-		};
+		return { ...group, members };
 	}
 
 	public static async getGroupDetailsForUser(
@@ -142,8 +139,8 @@ export class GroupService {
 				"Group members not found"
 			);
 		}
-		const admin = getSingletonValue(
-			members!.filter((member) => member.role === USER_ROLE.ADMIN)
+		const admin = CollectionUtils.getSingletonValue(
+			members.filter((member) => member.role === USER_ROLE.ADMIN)
 		);
 		if (admin.user.id !== userId) {
 			throw new ApiError(
@@ -202,15 +199,15 @@ export class GroupService {
 
 	public static async createGroup({
 		body,
-		authorId,
+		loggedInUserId,
 		members,
 	}: {
 		body: CreateGroupData;
-		authorId: string;
+		loggedInUserId: string;
 		members: Array<string>;
 	}): Promise<GroupSpread> {
-		if (!members.includes(authorId)) {
-			members.push(authorId);
+		if (!members.includes(loggedInUserId)) {
+			members.push(loggedInUserId);
 		}
 		if (members.length <= 1) {
 			throw new ApiError(
@@ -220,19 +217,16 @@ export class GroupService {
 		}
 		Cache.invalidate(
 			CacheService.getKey(cacheParameter.USER_GROUPS, {
-				userId: authorId,
+				userId: loggedInUserId,
 			})
 		);
-		const payload: CreateModel<Group> = {
-			...body,
-			author: authorId,
-		};
+		const payload: CreateModel<Group> = { ...body, author: loggedInUserId };
 		const createdGroup = await groupRepo.create(payload);
 		try {
 			await GroupService.sendInvitationToUsers(
 				{ name: createdGroup.name, id: createdGroup.id },
-				members.filter((m) => m !== authorId),
-				authorId
+				members.filter((m) => m !== loggedInUserId),
+				loggedInUserId
 			);
 		} catch (e: any) {
 			if (!(e instanceof ApiError)) {
@@ -244,22 +238,22 @@ export class GroupService {
 
 	public static async updateGroupDetails({
 		groupId,
-		authorId,
+		loggedInUserId,
 		body,
 		members,
 	}: {
 		groupId: string;
-		authorId: string;
+		loggedInUserId: string;
 		body: Partial<Group>;
 		members: Array<string> | null;
 	}): Promise<GroupSpread> {
 		const foundGroup = await GroupService.getGroupDetailsForUser(
-			authorId,
+			loggedInUserId,
 			groupId
 		);
-		if (members) {
-			if (!members.includes(authorId)) {
-				members.push(authorId);
+		if (CollectionUtils.isNotEmpty(members)) {
+			if (!members.includes(loggedInUserId)) {
+				members.push(loggedInUserId);
 			}
 			// get added members list
 			const addedMembers = members.filter(
@@ -304,7 +298,7 @@ export class GroupService {
 		}
 		Cache.invalidate(
 			CacheService.getKey(cacheParameter.USER_GROUPS, {
-				userId: authorId,
+				userId: loggedInUserId,
 			})
 		);
 		Cache.invalidate(
