@@ -31,13 +31,8 @@ export type DeleteGroup = { id: string };
 export type AddMembers = { members: string[] };
 
 // Expense
-export type CreateExpense = CreateExpenseData & {
-	splits: Array<{ userId: string; amount: number }>;
-};
-export type UpdateExpense = Partial<UpdateExpenseData> & {
-	members?: Array<{ userId: string; amount: number }>;
-	status?: T_EXPENSE_STATUS;
-};
+export type CreateExpense = CreateExpenseData;
+export type UpdateExpense = UpdateExpenseData;
 export type SettleExpense = null;
 export type RemoveExpense = null;
 export type MemberPaidAmount = { paidAmount: number };

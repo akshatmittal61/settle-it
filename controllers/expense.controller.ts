@@ -6,10 +6,12 @@ import {
 	ApiRequests,
 	ApiResponse,
 	ApiResponses,
+	CreateExpenseData,
 	CreateModel,
 	T_EXPENSE_METHOD,
 	T_EXPENSE_STATUS,
 	T_EXPENSE_TYPE,
+	UpdateExpenseData,
 } from "@/types";
 import {
 	CollectionUtils,
@@ -79,11 +81,14 @@ export class ExpenseController {
 			StringUtils.getNonEmptyString,
 			req.body.icon
 		);
-		const splits = SafetyUtils.safeParse(
+		// We are assuming right now, there is no expense without any split
+		// Not supporting adding personal expenses just yet
+		// TODO: Support adding personal expenses
+		const splits = SafetyUtils.genericParse(
 			CollectionUtils.valueOf<{ userId: string; amount: number }>,
 			req.body.splits
 		);
-		const body: Omit<CreateModel<Expense>, "author"> = {
+		const body: Omit<CreateExpenseData, "splits"> = {
 			title,
 			amount,
 			sender,
@@ -120,34 +125,18 @@ export class ExpenseController {
 		req: ApiRequest<ApiRequests.UpdateExpense>,
 		res: ApiResponse
 	) {
-		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
-		const expenseId = genericParse(
-			getNonEmptyString,
+		const loggedInUserId = StringUtils.getNonEmptyString(req.user?.id);
+		const expenseId = StringUtils.getNonEmptyString(
 			getSearchParam(req.url, "expenseId")
-		);
-		const title = safeParse(getNonEmptyString, req.body.title);
-		const amount = safeParse(getNonNegativeNumber, req.body.amount);
-		const paidBy = safeParse(getNonEmptyString, req.body.paidBy);
-		const paidOn = safeParse(getNonEmptyString, req.body.paidOn);
-		const description = safeParse(getNonEmptyString, req.body.description);
-		const status = safeParse(
-			(s: T_EXPENSE_STATUS) => EXPENSE_STATUS[s],
-			req.body.status
-		);
-		const members = safeParse(
-			getArray<{ userId: string; amount: number }>,
-			req.body.members
 		);
 		const updatedExpense = await ExpenseService.updateExpense({
 			id: expenseId,
 			loggedInUserId,
-			title,
-			amount,
-			paidBy,
-			paidOn,
-			description,
-			status,
-			members,
+			body: req.body,
+			splits: SafetyUtils.safeParse(
+				CollectionUtils.valueOf<{ userId: string; amount: number }>,
+				req.body.splits
+			),
 		});
 		return new ApiSuccess<ApiResponses.UpdateExpense>(res).send(
 			updatedExpense
@@ -158,9 +147,8 @@ export class ExpenseController {
 		req: ApiRequest<ApiRequests.RemoveExpense>,
 		res: ApiResponse
 	) {
-		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
-		const expenseId = genericParse(
-			getNonEmptyString,
+		const loggedInUserId = StringUtils.getNonEmptyString(req.user?.id);
+		const expenseId = StringUtils.getNonEmptyString(
 			getSearchParam(req.url, "expenseId")
 		);
 		const removedExpense = await ExpenseService.removeExpense({
@@ -168,7 +156,7 @@ export class ExpenseController {
 			loggedInUserId,
 		});
 		return new ApiSuccess<ApiResponses.RemoveExpense>(res).send(
-			removedExpense!
+			removedExpense
 		);
 	}
 

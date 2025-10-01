@@ -88,7 +88,7 @@ export class EmailService {
 			const payload = data as EmailTemplateGenerator<"USER_INVITED">;
 			return emailTemplate(
 				`Welcome to ${AppSeo.title}`,
-				`<a href="mailto:${payload.invitedBy.email}" style="color:inherit;text-decoration:none">${payload.invitedBy.name}</a> has invited you to join ${AppSeo.title}. You can now login to your account.`,
+				`<a href="mailto:${payload.invitedBy.email}" style="color:inherit;text-decoration:none">${payload.invitedBy.name}</a> has invited you to join ${AppSeo.title}. You can now log in to your account.`,
 				"Login",
 				`${frontendBaseUrl}/login`
 			);

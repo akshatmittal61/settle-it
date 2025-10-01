@@ -9,7 +9,7 @@ import {
 	Share,
 	Transaction,
 } from "@/types";
-import { getNumber, getObjectFromMongoResponse } from "@/utils";
+import { getObjectFromMongoResponse, NumberUtils, SafetyUtils } from "@/utils";
 
 class WalletRepo extends BaseRepo<Expense, IExpense> {
 	model = ExpenseModel;
@@ -143,8 +143,8 @@ class WalletRepo extends BaseRepo<Expense, IExpense> {
 			},
 		]);
 		return result
-			.map((doc) => getObjectFromMongoResponse<Split>(doc))
-			.filter((doc) => doc != null);
+			.map(getObjectFromMongoResponse<Split>)
+			.filter(SafetyUtils.isNonNull);
 	}
 
 	/**
@@ -359,8 +359,8 @@ class WalletRepo extends BaseRepo<Expense, IExpense> {
 				...obj,
 				from: getObjectFromMongoResponse<IUser>(obj.from),
 				to: getObjectFromMongoResponse<IUser>(obj.to),
-				owed: getNumber(obj.owed),
-				paid: getNumber(obj.paid),
+				owed: NumberUtils.valueOf(obj.owed),
+				paid: NumberUtils.valueOf(obj.paid),
 			}))
 			.filter((obj) => obj.from.id !== obj.to.id);
 	}

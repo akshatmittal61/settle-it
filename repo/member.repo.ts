@@ -3,7 +3,7 @@ import { groupRepo } from "@/repo/group.repo";
 import { userRepo } from "@/repo/user.repo";
 import { Group, Member, User } from "@/schema";
 import { CreateModel, IMember } from "@/types";
-import { getNonNullValue, getObjectFromMongoResponse } from "@/utils";
+import { getObjectFromMongoResponse, SafetyUtils } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";
 
@@ -13,10 +13,10 @@ export class MemberRepo extends BaseRepo<Member, IMember> {
 		if (!member) return null;
 		const parsed = getObjectFromMongoResponse<Member>(member);
 		if (!parsed) return null;
-		const user = getNonNullValue(
+		const user = SafetyUtils.getNonNullValue(
 			userRepo.parser(getObjectFromMongoResponse<User>(parsed.user))
 		);
-		const group = getNonNullValue(
+		const group = SafetyUtils.getNonNullValue(
 			groupRepo.parser(getObjectFromMongoResponse<Group>(parsed.group))
 		);
 		return {
@@ -99,7 +99,7 @@ export class MemberRepo extends BaseRepo<Member, IMember> {
 
 	public async create(body: CreateModel<Member>): Promise<IMember> {
 		const res = await this.model.create<CreateModel<Member>>(body);
-		return getNonNullValue(await this.findById(res.id));
+		return SafetyUtils.getNonNullValue(await this.findById(res.id));
 	}
 
 	public async update(
@@ -143,7 +143,7 @@ export class MemberRepo extends BaseRepo<Member, IMember> {
 		const res = await this.model.insertMany<CreateModel<Member>>(body);
 		const idsOfCreated = res.map((obj) => obj.id);
 		const created = await this.find({ _id: { $in: idsOfCreated } });
-		return getNonNullValue(created);
+		return SafetyUtils.getNonNullValue(created);
 	}
 
 	public async bulkRemove(query: FilterQuery<Member>): Promise<number> {

@@ -33,6 +33,7 @@ export class CacheService {
 			return callback();
 		}
 	}
+
 	public static getKey<T extends CacheParameter>(
 		parameter: T,
 		data: CachePayloadGenerator<T>

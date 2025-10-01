@@ -1,7 +1,7 @@
 import { ExpenseModel } from "@/models";
 import { Expense, Group, User } from "@/schema";
 import { CreateModel, IExpense } from "@/types";
-import { getNonNullValue, getObjectFromMongoResponse, omitKeys } from "@/utils";
+import { getObjectFromMongoResponse, omitKeys, SafetyUtils } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";
 import { groupRepo } from "./group.repo";
@@ -17,10 +17,10 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const group = parsed.group
 			? groupRepo.parser(getObjectFromMongoResponse<Group>(parsed.group))
 			: null;
-		const author = getNonNullValue(
+		const author = SafetyUtils.getNonNullValue(
 			userRepo.parser(getObjectFromMongoResponse<User>(parsed.author))
 		);
-		const sender = getNonNullValue(
+		const sender = SafetyUtils.getNonNullValue(
 			userRepo.parser(getObjectFromMongoResponse<User>(parsed.sender))
 		);
 		const receiver = parsed.receiver
@@ -109,7 +109,7 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 
 	public async create(body: CreateModel<Expense>): Promise<IExpense> {
 		const res = await this.model.create<CreateModel<Expense>>(body);
-		return getNonNullValue(await this.findById(res.id));
+		return SafetyUtils.getNonNullValue(await this.findById(res.id));
 	}
 
 	public async update(
@@ -168,7 +168,7 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 				},
 			});
 
-		return res.map(this.parser).map(getNonNullValue);
+		return res.map(this.parser).map(SafetyUtils.getNonNullValue);
 	}
 
 	public async getExpensesForGroups(
@@ -187,7 +187,7 @@ export class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 				},
 			});
 
-		return res.map(this.parser).map(getNonNullValue);
+		return res.map(this.parser).map(SafetyUtils.getNonNullValue);
 	}
 }
 

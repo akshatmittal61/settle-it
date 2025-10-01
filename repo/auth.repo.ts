@@ -7,7 +7,7 @@ import {
 	IUser,
 	UpdateQuery,
 } from "@/types";
-import { getNonNullValue, getObjectFromMongoResponse } from "@/utils";
+import { getObjectFromMongoResponse, SafetyUtils } from "@/utils";
 import { BaseRepo } from "./base";
 
 class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
@@ -65,7 +65,9 @@ class AuthRepo extends BaseRepo<AuthMapping, IAuthMapping> {
 
 	public async create(body: CreateModel<AuthMapping>): Promise<IAuthMapping> {
 		const res = await this.model.create<CreateModel<AuthMapping>>(body);
-		return getNonNullValue(this.parser(await res.populate("user")));
+		return SafetyUtils.getNonNullValue(
+			this.parser(await res.populate("user"))
+		);
 	}
 
 	public async update(

@@ -3,8 +3,8 @@ import { Expense, Split, User } from "@/schema";
 import { CreateModel, ISplit } from "@/types";
 import {
 	CollectionUtils,
-	getNonNullValue,
 	getObjectFromMongoResponse,
+	SafetyUtils,
 } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";
@@ -17,12 +17,12 @@ class SplitRepo extends BaseRepo<Split, ISplit> {
 	public parser(input: Split | null): ISplit | null {
 		const parsed = super.parser(input);
 		if (!parsed) return null;
-		const expense = getNonNullValue(
+		const expense = SafetyUtils.getNonNullValue(
 			expenseRepo.parser(
 				getObjectFromMongoResponse<Expense>(parsed.expense)
 			)
 		);
-		const user = getNonNullValue(
+		const user = SafetyUtils.getNonNullValue(
 			userRepo.parser(getObjectFromMongoResponse<User>(parsed.user))
 		);
 		return {
@@ -148,7 +148,7 @@ class SplitRepo extends BaseRepo<Split, ISplit> {
 
 	public async create(body: CreateModel<Split>): Promise<ISplit> {
 		const res = await this.model.create<CreateModel<Split>>(body);
-		return getNonNullValue(await this.findById(res.id));
+		return SafetyUtils.getNonNullValue(await this.findById(res.id));
 	}
 
 	public async update(
@@ -218,7 +218,7 @@ class SplitRepo extends BaseRepo<Split, ISplit> {
 		const createdSplits = await this.find({
 			_id: { $in: idsOfCreatedSplits },
 		});
-		return getNonNullValue(createdSplits);
+		return SafetyUtils.getNonNullValue(createdSplits);
 	}
 
 	public async bulkUpdate(

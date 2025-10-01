@@ -2,13 +2,7 @@ import { AuthConstants, HTTP } from "@/constants";
 import { Logger } from "@/log";
 import { AuthService, GroupService } from "@/services";
 import { ApiController, ApiRequest, ApiResponse } from "@/types";
-import {
-	genericParse,
-	getNonEmptyString,
-	getSearchParam,
-	omitKeys,
-	safeParse,
-} from "@/utils";
+import { getSearchParam, omitKeys, SafetyUtils, StringUtils } from "@/utils";
 import { ApiFailure, ApiSuccess } from "./payload";
 
 export class ServerMiddleware {
@@ -16,12 +10,10 @@ export class ServerMiddleware {
 		return async (req: ApiRequest, res: ApiResponse) => {
 			try {
 				Logger.debug("authRoute -> url, cookies", req.url, req.cookies);
-				const accessToken = genericParse(
-					getNonEmptyString,
+				const accessToken = StringUtils.getNonEmptyString(
 					req.cookies[AuthConstants.ACCESS_TOKEN]
 				);
-				const refreshToken = genericParse(
-					getNonEmptyString,
+				const refreshToken = StringUtils.getNonEmptyString(
 					req.cookies[AuthConstants.REFRESH_TOKEN]
 				);
 				Logger.debug("Authenticating user tokens", {
@@ -33,7 +25,7 @@ export class ServerMiddleware {
 					refreshToken,
 				});
 				Logger.debug("authResponse", authResponse);
-				if (!authResponse) {
+				if (!SafetyUtils.isNonNull(authResponse)) {
 					const cookies = AuthService.getCookies({
 						accessToken: null,
 						refreshToken: null,
@@ -84,7 +76,7 @@ export class ServerMiddleware {
 		return async (req: ApiRequest, res: ApiResponse) => {
 			try {
 				const loggedInUser = req.user;
-				if (!loggedInUser) {
+				if (!SafetyUtils.isNonNull(loggedInUser)) {
 					return new ApiFailure(res)
 						.status(HTTP.status.UNAUTHORIZED)
 						.message(HTTP.message.UNAUTHORIZED)
@@ -119,17 +111,17 @@ export class ServerMiddleware {
 						.message(HTTP.message.UNAUTHORIZED)
 						.send();
 				}
-				let groupId = safeParse(
-					getNonEmptyString,
+				let groupId = SafetyUtils.safeParse(
+					StringUtils.getNonEmptyString,
 					getSearchParam(req.url, "groupId")
 				);
-				if (groupId == null) {
-					groupId = safeParse(
-						getNonEmptyString,
+				if (StringUtils.isEmpty(groupId)) {
+					groupId = SafetyUtils.safeParse(
+						StringUtils.getNonEmptyString,
 						getSearchParam(req.url, "id")
 					);
 				}
-				if (groupId == null) {
+				if (StringUtils.isEmpty(groupId)) {
 					return new ApiFailure(res)
 						.status(HTTP.status.BAD_REQUEST)
 						.message("Group ID is required")

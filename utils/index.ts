@@ -1,3 +1,4 @@
+export * from "./boolean";
 export * from "./collections";
 export * from "./files";
 export * from "./functions";

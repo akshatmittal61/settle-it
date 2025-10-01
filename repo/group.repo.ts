@@ -1,11 +1,11 @@
-import { GroupModel, MemberModel } from "@/models";
+import { GroupModel } from "@/models";
 import { Group, Member, User } from "@/schema";
 import { CreateModel, GroupSpread, IGroup } from "@/types";
 import {
 	CollectionUtils,
-	getNonNullValue,
 	getObjectFromMongoResponse,
 	omitKeys,
+	SafetyUtils,
 } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";
@@ -16,7 +16,7 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 	public parser(group: Group | null): IGroup | null {
 		const parsed = super.parser(group);
 		if (!parsed) return null;
-		const author = getNonNullValue(
+		const author = SafetyUtils.getNonNullValue(
 			userRepo.parser(getObjectFromMongoResponse<User>(parsed.author))
 		);
 		return {
@@ -63,7 +63,7 @@ export class GroupRepo extends BaseRepo<Group, IGroup> {
 	public async create(body: CreateModel<Group>): Promise<IGroup> {
 		const res = await this.model.create<CreateModel<Group>>(body);
 		await res.populate("author");
-		return getNonNullValue(this.parser(res));
+		return SafetyUtils.getNonNullValue(this.parser(res));
 	}
 
 	public async update(

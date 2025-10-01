@@ -4,12 +4,14 @@ import { ApiError } from "@/errors";
 import { expenseRepo, memberRepo, splitRepo } from "@/repo";
 import {
 	CreateModel,
+	GroupSpread,
 	IExpense,
 	IMember,
+	UpdateExpenseData,
 	UpdateModel,
 	UpdateQuery,
 } from "@/types";
-import { CollectionUtils, isSubset, StringUtils } from "@/utils";
+import { CollectionUtils, isSubset, SafetyUtils, StringUtils } from "@/utils";
 import { CacheService } from "./cache.service";
 import { GroupService } from "./group.service";
 import { MemberService } from "./member.service";
@@ -115,7 +117,7 @@ export class ExpenseService {
 		if (StringUtils.isNotEmpty(body.group)) {
 			Cache.invalidate(
 				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-					groupId: body.group!.toString(),
+					groupId: body.group,
 				})
 			);
 		}
@@ -129,11 +131,21 @@ export class ExpenseService {
 		loggedInUserId,
 	}: {
 		id: string;
-		body: Omit<UpdateModel<Expense>, "group" | "author">;
+		body: UpdateExpenseData;
 		splits: Array<{ userId: string; amount: number }> | null;
 		loggedInUserId: string;
 	}): Promise<IExpense> {
 		const updatedAmount = body.amount;
+		if (
+			NumberUtils.isNotEmpty(body.amount) &&
+			CollectionUtils.isEmpty(splits)
+		) {
+			// if amount is updated, members should be sent as well for validation
+			throw new ApiError(
+				HTTP.status.BAD_REQUEST,
+				"Please split your expense properly"
+			);
+		}
 		if (
 			NumberUtils.isNotEmpty(updatedAmount) &&
 			CollectionUtils.isNotEmpty(splits)
@@ -159,15 +171,6 @@ export class ExpenseService {
 					"Total amount distributed doesn't match"
 				);
 			}
-		} else if (
-			NumberUtils.isNotEmpty(body.amount) &&
-			CollectionUtils.isEmpty(splits)
-		) {
-			// if amount is updated, members should be sent as well for validation
-			throw new ApiError(
-				HTTP.status.BAD_REQUEST,
-				"Please split your expense properly"
-			);
 		}
 		const foundExpense = await ExpenseService.getExpenseById(id);
 		if (!foundExpense)
@@ -176,137 +179,141 @@ export class ExpenseService {
 		// - it is created by the user
 		// - or it is paid by the user
 		if (
-			foundExpense.createdBy.id !== loggedInUserId &&
-			foundExpense.paidBy.id !== loggedInUserId
+			foundExpense.author.id !== loggedInUserId &&
+			foundExpense.sender.id !== loggedInUserId
 		) {
 			throw new ApiError(HTTP.status.FORBIDDEN, "Forbidden");
 		}
-		const groupId = foundExpense.group.id;
-		const foundGroup = await GroupService.getGroupById(groupId);
-		if (!foundGroup) {
-			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
-		}
-		if (amount !== null && members !== null && members !== undefined) {
-			// check if all sent members are in the group
-			if (
-				!isSubset(
-					members.map((m) => m.userId),
-					foundGroup.members.map((m) => m.id)
-				)
-			) {
-				throw new ApiError(
-					HTTP.status.BAD_REQUEST,
-					"Some members are not in the group"
-				);
+		let foundGroup: GroupSpread | null = null;
+		if (SafetyUtils.isNonNull(foundExpense.group)) {
+			const groupId = foundExpense.group.id;
+			foundGroup = await GroupService.getGroupDetailsById(groupId);
+			if (!SafetyUtils.isNonNull(foundGroup)) {
+				throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
 			}
-			const currentMembersOfExpense = await memberRepo.find({
-				expenseId: id,
-			});
-			if (currentMembersOfExpense === null) {
-				if (members.length > 0) {
-					const membersToCreateForCurrentExpense: Array<
-						CreateModel<Member>
-					> = members.map((member) => ({
-						userId: member.userId,
-						groupId,
-						expenseId: id,
-						amount: member.amount,
-						owed:
-							member.userId === (paidBy || foundExpense.paidBy.id)
-								? 0
-								: member.amount,
-						paid:
-							member.userId === (paidBy || foundExpense.paidBy.id)
-								? member.amount
-								: 0,
-					}));
-					await memberRepo.bulkCreate(
-						membersToCreateForCurrentExpense
+		}
+		// for amount change, work with re-distributed splits
+		if (
+			NumberUtils.isNotEmpty(updatedAmount) &&
+			CollectionUtils.isNotEmpty(splits)
+		) {
+			if (SafetyUtils.isNonNull(foundGroup)) {
+				// check if all sent members are in the group
+				const userIdsOfMembersOfGroup = foundGroup.members.map(
+					(m) => m.user.id
+				);
+				const userIdsOfSplits = splits.map((s) => s.userId);
+				if (
+					!CollectionUtils.isSubset(
+						userIdsOfSplits,
+						userIdsOfMembersOfGroup
+					)
+				) {
+					throw new ApiError(
+						HTTP.status.BAD_REQUEST,
+						"Some members of splits are not in the group"
 					);
 				}
+			}
+			// const currentMembersOfExpense = await memberRepo.find({
+			// 	expenseId: id,
+			// });
+			const currentSplitsOfExpense = await splitRepo.find({
+				expense: id,
+			});
+			if (currentSplitsOfExpense === null) {
+				const splitsToCreateForCurrentExpense: Array<
+					CreateModel<Split>
+				> = splits.map((split) => ({
+					user: split.userId,
+					expense: id,
+					pending:
+						split.userId === (body.sender || foundExpense.sender.id)
+							? 0
+							: split.amount,
+					completed:
+						split.userId === (body.sender || foundExpense.sender.id)
+							? split.amount
+							: 0,
+				}));
+				await splitRepo.bulkCreate(splitsToCreateForCurrentExpense);
 			} else {
-				const membersToUpdateForCurrentExpense: Array<
-					UpdateQuery<Member>
+				const splitsToUpdateForCurrentExpense: Array<
+					UpdateQuery<Split>
 				> = [];
-				const membersToRemoveForCurrentExpense: Array<Partial<Member>> =
+				const splitsToRemoveForCurrentExpense: Array<Partial<Split>> =
 					[];
-				currentMembersOfExpense.forEach((member) => {
-					const foundMember = members.find(
-						(m) => m.userId === member.user.id
+				currentSplitsOfExpense.forEach((split) => {
+					const foundSplit = splits.find(
+						(s) => s.userId === split.user.id
 					);
-					if (foundMember) {
-						membersToUpdateForCurrentExpense.push({
-							id: member.id,
-							userId: member.user.id,
-							groupId: member.group.id,
-							expenseId: member.expense.id,
-							amount: foundMember.amount,
-							owed:
-								foundMember.userId ===
-								(paidBy ?? foundExpense.paidBy.id)
+					if (foundSplit) {
+						splitsToUpdateForCurrentExpense.push({
+							id: split.id,
+							user: split.user.id,
+							expense: split.expense.id,
+							pending:
+								foundSplit.userId ===
+								(body.sender ?? foundExpense.sender.id)
 									? 0
-									: foundMember.amount,
-							paid:
-								foundMember.userId ===
-								(paidBy ?? foundExpense.paidBy.id)
-									? foundMember.amount
+									: foundSplit.amount,
+							completed:
+								foundSplit.userId ===
+								(body.sender ?? foundExpense.sender.id)
+									? foundSplit.amount
 									: 0,
 						});
 					} else {
-						membersToRemoveForCurrentExpense.push({
-							id: member.id,
-							userId: member.user.id,
-							groupId: member.group.id,
-							expenseId: member.expense.id,
+						splitsToRemoveForCurrentExpense.push({
+							id: split.id,
+							user: split.user.id,
+							expense: split.expense.id,
 						});
 					}
 				});
-				const membersToCreateForCurrentExpense: Array<
-					CreateModel<Member>
-				> = members
+				const splitsToCreateForCurrentExpense: Array<
+					CreateModel<Split>
+				> = splits
 					.filter(
-						(m) =>
-							!currentMembersOfExpense
-								.map((m) => m.user.id)
-								.includes(m.userId)
+						(split) =>
+							!currentSplitsOfExpense
+								.map((currentSplit) => currentSplit.user.id)
+								.includes(split.userId)
 					)
-					.map((member) => ({
-						userId: member.userId,
-						groupId,
-						expenseId: id,
-						amount: member.amount,
-						owed:
-							member.userId === (paidBy ?? foundExpense.paidBy.id)
+					.map((split) => ({
+						user: split.userId,
+						expense: id,
+						pending:
+							split.userId ===
+							(body.sender ?? foundExpense.sender.id)
 								? 0
-								: member.amount,
-						paid:
-							member.userId === (paidBy ?? foundExpense.paidBy.id)
-								? member.amount
+								: split.amount,
+						completed:
+							split.userId ===
+							(body.sender ?? foundExpense.sender.id)
+								? split.amount
 								: 0,
 					}));
-				if (membersToCreateForCurrentExpense.length > 0) {
-					await memberRepo.bulkCreate(
-						membersToCreateForCurrentExpense
-					);
+				if (splitsToCreateForCurrentExpense.length > 0) {
+					await splitRepo.bulkCreate(splitsToCreateForCurrentExpense);
 				}
-				if (membersToRemoveForCurrentExpense.length > 0) {
-					await memberRepo.bulkRemove({
+				if (splitsToRemoveForCurrentExpense.length > 0) {
+					await splitRepo.bulkRemove({
 						_id: {
-							$in: membersToRemoveForCurrentExpense.map(
-								(m) => m.id
+							$in: splitsToRemoveForCurrentExpense.map(
+								(split) => split.id
 							),
 						},
 					});
 				}
-				if (membersToUpdateForCurrentExpense.length > 0) {
-					await memberRepo.bulkUpdate(
-						membersToUpdateForCurrentExpense.map((m) => ({
-							filter: { _id: m.id },
+				if (splitsToUpdateForCurrentExpense.length > 0) {
+					await splitRepo.bulkUpdate(
+						splitsToUpdateForCurrentExpense.map((split) => ({
+							filter: { _id: split.id },
 							update: {
 								$set: {
-									amount: m.amount,
-									owed: m.owed,
-									paid: m.paid,
+									pending: split.pending,
+									completed: split.completed,
 								},
 							},
 						}))
@@ -314,46 +321,57 @@ export class ExpenseService {
 				}
 			}
 		}
-		const updatedExpenseBody: Partial<Expense> = {};
-		if (title) updatedExpenseBody.title = title;
-		if (amount) updatedExpenseBody.amount = amount;
-		if (description) updatedExpenseBody.description = description;
-		if (paidOn) updatedExpenseBody.paidOn = paidOn;
-		if (paidBy) {
-			// person who paid should be a part of the group
-			if (
-				!isSubset(
-					[paidBy],
-					foundGroup.members.map((m) => m.id)
-				)
-			) {
-				throw new ApiError(
-					HTTP.status.BAD_REQUEST,
-					"Person who paid should be a part of the group"
-				);
+		if (body.sender) {
+			// for groups, person who paid should be a part of the group
+			if (SafetyUtils.isNonNull(foundGroup)) {
+				if (
+					!CollectionUtils.isSubset(
+						[body.sender],
+						foundGroup.members.map((m) => m.user.id)
+					)
+				) {
+					throw new ApiError(
+						HTTP.status.BAD_REQUEST,
+						"Person who paid should be a part of the group"
+					);
+				}
 			}
-			updatedExpenseBody.paidBy = paidBy;
 		}
-		if (status) {
-			if (status === EXPENSE_STATUS.SETTLED) {
+		if (body.receiver) {
+			// for groups, person who received should be a part of the group
+			if (SafetyUtils.isNonNull(foundGroup)) {
+				if (
+					!CollectionUtils.isSubset(
+						[body.receiver],
+						foundGroup.members.map((m) => m.user.id)
+					)
+				) {
+					throw new ApiError(
+						HTTP.status.BAD_REQUEST,
+						"Person who received should be a part of the group"
+					);
+				}
+			}
+		}
+		/* if (body.status) {
+			if (body.status === EXPENSE_STATUS.SETTLED) {
 				await memberRepo.settleMany({ expenseId: id });
 			}
-		}
-		const updatedExpense = await expenseRepo.update(
-			{ id },
-			updatedExpenseBody
-		);
-		if (!updatedExpense) {
+		} */
+		const updatedExpense = await expenseRepo.update({ id }, body);
+		if (!SafetyUtils.isNonNull(updatedExpense)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
 		}
-		Cache.invalidate(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-				groupId: updatedExpense?.group.id,
-			})
-		);
+		if (SafetyUtils.isNonNull(foundGroup)) {
+			Cache.invalidate(
+				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
+					groupId: foundGroup.id,
+				})
+			);
+		}
 		Cache.invalidate(
 			CacheService.getKey(cacheParameter.EXPENSE, {
-				id: updatedExpense?.id,
+				id: updatedExpense.id,
 			})
 		);
 		return updatedExpense;
@@ -365,24 +383,29 @@ export class ExpenseService {
 	}: {
 		expenseId: string;
 		loggedInUserId: string;
-	}) {
+	}): Promise<IExpense> {
 		const foundExpense = await ExpenseService.getExpenseById(expenseId);
 		if (!foundExpense)
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
 		if (
-			foundExpense.createdBy.id !== loggedInUserId &&
-			foundExpense.paidBy.id !== loggedInUserId
+			foundExpense.author.id !== loggedInUserId &&
+			foundExpense.sender.id !== loggedInUserId
 		) {
 			throw new ApiError(HTTP.status.FORBIDDEN, HTTP.message.FORBIDDEN);
 		}
-		// remove all members for the current expense
-		await memberRepo.bulkRemove({ expenseId });
+		// remove all splits for the current expense
+		await splitRepo.bulkRemove({ expense: expenseId });
 		const removedExpense = await expenseRepo.remove({ id: expenseId });
-		Cache.invalidate(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-				groupId: foundExpense.group.id,
-			})
-		);
+		if (!SafetyUtils.isNonNull(removedExpense)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
+		}
+		if (SafetyUtils.isNonNull(removedExpense.group)) {
+			Cache.invalidate(
+				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
+					groupId: removedExpense.group.id,
+				})
+			);
+		}
 		Cache.del(
 			CacheService.getKey(cacheParameter.EXPENSE, { id: expenseId })
 		);

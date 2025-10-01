@@ -3,9 +3,9 @@ import { AuthConstants, cacheParameter } from "@/constants";
 import { Logger } from "@/log";
 import { authRepo } from "@/repo";
 import { AuthResponse, Cookie, IAuthMapping, IUser, Tokens } from "@/types";
-import { genericParse, getNonEmptyString } from "@/utils";
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { CacheService } from "./cache.service";
+import { BooleanUtils, StringUtils } from "@/utils";
 
 export class AuthService {
 	public static async findOrCreateAuthMapping(
@@ -90,8 +90,7 @@ export class AuthService {
 				accessToken,
 				jwtSecret.authAccess
 			);
-			const authMappingId = genericParse(
-				getNonEmptyString,
+			const authMappingId = StringUtils.getNonEmptyString(
 				decodedAccessToken.id
 			);
 			Logger.debug(
@@ -132,8 +131,7 @@ export class AuthService {
 				refreshToken,
 				jwtSecret.authRefresh
 			);
-			const authMappingId = genericParse(
-				getNonEmptyString,
+			const authMappingId = StringUtils.getNonEmptyString(
 				decodedRefreshToken.id
 			);
 			Logger.debug(
@@ -206,7 +204,7 @@ export class AuthService {
 		logout?: boolean;
 	}): Array<Cookie> {
 		const cookiesToSet: Array<Cookie> = [];
-		if (logout) {
+		if (BooleanUtils.True.equals(logout)) {
 			cookiesToSet.push({
 				name: AuthConstants.ACCESS_TOKEN,
 				value: "",
@@ -238,7 +236,7 @@ export class AuthService {
 
 	public static getUpdatedCookies(old: Tokens, newTokens: Tokens) {
 		const cookiesToSet = [];
-		if (old.accessToken !== newTokens.accessToken) {
+		if (StringUtils.equals(old.accessToken, newTokens.accessToken)) {
 			cookiesToSet.push({
 				name: AuthConstants.ACCESS_TOKEN,
 				value: newTokens.accessToken,

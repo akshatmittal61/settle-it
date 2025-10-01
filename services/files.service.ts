@@ -1,6 +1,5 @@
 import { fileBasedStorage } from "@/utils";
 import { HTTP, logsBaseUrl } from "@/constants";
-import { ApiFailure } from "@/server";
 import { ApiError } from "@/errors";
 
 export class FilesService {

@@ -1,4 +1,6 @@
 import { ParserSafetyError } from "@/errors";
+import { StringUtils } from "./string";
+import { NumberUtils } from "./number";
 
 export class SafetyUtils {
 	public static genericParse<T>(parse: (_: any) => T, input: any): T {
@@ -25,13 +27,23 @@ export class SafetyUtils {
 	}
 
 	public static getNonNullValue<T>(input: T | undefined | null): T {
-		if (input === null || input === undefined) {
-			throw new ParserSafetyError(
-				`${input} is null!`,
-				"SafetyUtils.getNonNullValue",
-				input
-			);
+		if (SafetyUtils.isNonNull(input)) {
+			return input;
 		}
-		return input;
+		throw new ParserSafetyError(
+			`${input} is null!`,
+			"SafetyUtils.getNonNullValue",
+			input
+		);
+	}
+
+	public static isNonNull<
+		T extends string | number | boolean | [] | object | null | undefined,
+	>(input: T): input is NonNullable<T> {
+		if (input === null || input === undefined) return false;
+		if (typeof input === "undefined") return false;
+		if (typeof input === "string") return StringUtils.isNotEmpty(input);
+		if (typeof input === "number") return NumberUtils.isNotEmpty(input);
+		return true;
 	}
 }

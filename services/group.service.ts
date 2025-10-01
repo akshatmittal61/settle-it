@@ -26,7 +26,7 @@ import {
 	IGroup,
 	IMember,
 } from "@/types";
-import { CollectionUtils, getUserDetails } from "@/utils";
+import { CollectionUtils, getUserDetails, SafetyUtils } from "@/utils";
 import { CacheService } from "./cache.service";
 import { UserService } from "./user.service";
 
@@ -96,7 +96,7 @@ export class GroupService {
 
 	public static async getGroupDetails(groupId: string): Promise<GroupSpread> {
 		const group = await GroupService.getGroupById(groupId);
-		if (!group) {
+		if (!SafetyUtils.isNonNull(group)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
 		}
 		const members = await memberRepo.find({ group: groupId });
@@ -152,13 +152,16 @@ export class GroupService {
 	}
 
 	public static async sendInvitationToUsers(
-		group: { name: string; id: string },
+		group: IGroup,
 		users: Array<string>,
 		invitedBy: string
 	): Promise<void> {
 		const invitedByUser = await UserService.getUserById(invitedBy);
 		const allUsers = await userRepo.find({ _id: { $in: users } });
-		if (!allUsers || !invitedByUser || !group) {
+		if (
+			CollectionUtils.isEmpty(allUsers) ||
+			!SafetyUtils.isNonNull(invitedByUser)
+		) {
 			throw new ApiError(
 				HTTP.status.NOT_FOUND,
 				"Could not send invitation to users"
@@ -185,7 +188,7 @@ export class GroupService {
 		const failedEmails = emailsSent.filter(
 			(email) => email.status === "rejected"
 		);
-		if (failedEmails.length > 0) {
+		if (CollectionUtils.isNotEmpty(failedEmails)) {
 			Logger.warn(
 				"Failed to send invitation to some users",
 				failedEmails
@@ -206,6 +209,7 @@ export class GroupService {
 		loggedInUserId: string;
 		members: Array<string>;
 	}): Promise<GroupSpread> {
+		members = CollectionUtils.getUniqueValues(members);
 		if (!members.includes(loggedInUserId)) {
 			members.push(loggedInUserId);
 		}
@@ -224,7 +228,7 @@ export class GroupService {
 		const createdGroup = await groupRepo.create(payload);
 		try {
 			await GroupService.sendInvitationToUsers(
-				{ name: createdGroup.name, id: createdGroup.id },
+				createdGroup,
 				members.filter((m) => m !== loggedInUserId),
 				loggedInUserId
 			);
@@ -269,7 +273,7 @@ export class GroupService {
 			const removedMembers = foundGroup.members
 				.map((member) => member.user.id)
 				.filter((memberUserId) => !members.includes(memberUserId));
-			if (removedMembers.length > 0) {
+			if (CollectionUtils.isNotEmpty(removedMembers)) {
 				// check if removed user have any pending transactions
 				const pendingTransactions = (
 					await walletRepo.getSplitsForSomeGroupMembers(
@@ -277,7 +281,7 @@ export class GroupService {
 						removedMembers
 					)
 				).filter((split) => split.pending > 0);
-				if (!pendingTransactions) {
+				if (CollectionUtils.isEmpty(pendingTransactions)) {
 					const removedCount = await GroupService.removeMembers(
 						groupId,
 						removedMembers
@@ -288,7 +292,7 @@ export class GroupService {
 							"Could not remove members"
 						);
 					}
-				} else if (pendingTransactions.length > 0) {
+				} else {
 					throw new ApiError(
 						HTTP.status.BAD_REQUEST,
 						"One (or more) removed users have pending transactions"
@@ -351,7 +355,7 @@ export class GroupService {
 			groupId
 		);
 		if (
-			members.length === 0 ||
+			CollectionUtils.isEmpty(members) ||
 			(members.length === 1 && members.includes(loggedInUserId))
 		) {
 			throw new ApiError(
@@ -371,16 +375,19 @@ export class GroupService {
 		const membersToRemove = existingMemberUserIds.filter(
 			(member) => !members.includes(member)
 		);
-		if (membersToAdd.length === 0 && membersToRemove.length === 0) {
+		if (
+			CollectionUtils.isEmpty(membersToAdd) &&
+			CollectionUtils.isEmpty(membersToRemove)
+		) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"No members to update in group"
 			);
 		}
-		if (membersToAdd.length > 0) {
+		if (CollectionUtils.isNotEmpty(membersToAdd)) {
 			await GroupService.addMembers(groupId, membersToAdd);
 		}
-		if (membersToRemove.length > 0) {
+		if (CollectionUtils.isNotEmpty(membersToRemove)) {
 			await GroupService.removeMembers(groupId, membersToRemove);
 		}
 		Cache.invalidate(
