@@ -6,6 +6,7 @@ import {
 	IMember,
 	IOwedRecord,
 	IShare,
+	ISplit,
 	ITransaction,
 	IUser,
 } from "@/types";
@@ -50,8 +51,8 @@ export type GetUsersExpenses = Array<IExpense>;
 export type CreateExpense = IExpense;
 export type UpdateExpense = IExpense;
 export type RemoveExpense = IExpense;
-export type SettleExpense = Array<IMember>;
-export type MemberPaidAmount = Array<IMember>;
+export type SettleExpense = Array<ISplit>;
+export type MemberPaidAmount = Array<ISplit>;
 
 // Member
 export type GetMembersForExpense = Array<IMember>;

@@ -2,8 +2,8 @@ import { AuthConstants, HTTP } from "@/constants";
 import { DatabaseManager } from "@/db";
 import { ApiFailure, ApiSuccess } from "@/server";
 import { AuthService } from "@/services";
-import { ApiRequest, ApiResponse, Cookie, IUser } from "@/types";
-import { getNonEmptyString, safeParse } from "@/utils";
+import { ApiRequest, ApiResponse, IUser } from "@/types";
+import { SafetyUtils, StringUtils } from "@/utils";
 
 type HealthPayload = {
 	identity: number;
@@ -35,6 +35,7 @@ export class ServerController {
 				.message(HTTP.message.HEALTHY_API)
 				.send(payload);
 		};
+
 	public static heartbeat =
 		(db: DatabaseManager) => async (req: ApiRequest, res: ApiResponse) => {
 			const payload: HeartbeatPayload = {
@@ -44,46 +45,54 @@ export class ServerController {
 				database: db.isConnected(),
 				user: null,
 			};
-			const cookies = req.cookies;
-			let updatedCookies: Array<Cookie> = [];
-			if (cookies) {
-				const accessToken = safeParse(
-					getNonEmptyString,
-					cookies?.[AuthConstants.ACCESS_TOKEN]
-				);
-				const refreshToken = safeParse(
-					getNonEmptyString,
-					cookies?.[AuthConstants.REFRESH_TOKEN]
-				);
-				if (accessToken && refreshToken) {
-					const authResponse = await AuthService.getAuthenticatedUser(
-						{
-							accessToken,
-							refreshToken,
-						}
-					);
-					if (authResponse) {
-						payload.user = authResponse.user;
-						const {
-							accessToken: newAccessToken,
-							refreshToken: newRefreshToken,
-						} = authResponse;
-						updatedCookies = AuthService.getUpdatedCookies(
-							{ accessToken, refreshToken },
-							{
-								accessToken: newAccessToken,
-								refreshToken: newRefreshToken,
-							}
-						);
-					}
+			const accessToken = SafetyUtils.safeParse(
+				StringUtils.getNonEmptyString,
+				req.cookies[AuthConstants.ACCESS_TOKEN]
+			);
+			const refreshToken = SafetyUtils.safeParse(
+				StringUtils.getNonEmptyString,
+				req.cookies[AuthConstants.REFRESH_TOKEN]
+			);
+			if (
+				StringUtils.isNotEmpty(accessToken) &&
+				StringUtils.isNotEmpty(refreshToken)
+			) {
+				const authResponse = await AuthService.getAuthenticatedUser({
+					accessToken,
+					refreshToken,
+				}).catch(() => null);
+				if (!SafetyUtils.isNonNull(authResponse)) {
+					const cookies = AuthService.getCookies({
+						accessToken: null,
+						refreshToken: null,
+						logout: true,
+					});
+					return new ApiSuccess<HeartbeatPayload>(res)
+						.message(HTTP.message.HEARTBEAT)
+						.cookies(cookies)
+						.data(payload)
+						.send();
 				}
-			}
-			if (updatedCookies.length > 0) {
-				return new ApiSuccess<HeartbeatPayload>(res)
-					.message(HTTP.message.HEARTBEAT)
-					.cookies(updatedCookies)
-					.data(payload)
-					.send();
+				const {
+					user,
+					accessToken: newAccessToken,
+					refreshToken: newRefreshToken,
+				} = authResponse;
+				payload.user = user;
+				const cookies = AuthService.getUpdatedCookies(
+					{ accessToken, refreshToken },
+					{
+						accessToken: newAccessToken,
+						refreshToken: newRefreshToken,
+					}
+				);
+				if (cookies.length > 0) {
+					return new ApiSuccess<HeartbeatPayload>(res)
+						.message(HTTP.message.HEARTBEAT)
+						.cookies(cookies)
+						.data(payload)
+						.send();
+				}
 			}
 			return new ApiSuccess<HeartbeatPayload>(res)
 				.message(HTTP.message.HEARTBEAT)

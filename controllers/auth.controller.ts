@@ -2,7 +2,7 @@ import { HTTP } from "@/constants";
 import { ApiFailure, ApiSuccess } from "@/server";
 import { AuthService, OAuthService, OtpService } from "@/services";
 import { ApiRequest, ApiRequests, ApiResponse, ApiResponses } from "@/types";
-import { genericParse, getNonEmptyString } from "@/utils";
+import { SafetyUtils, StringUtils } from "@/utils";
 
 export class AuthController {
 	public static async verifyLoggedInUser(
@@ -32,7 +32,7 @@ export class AuthController {
 		req: ApiRequest<ApiRequests.RequestOtp>,
 		res: ApiResponse
 	) {
-		const email = getNonEmptyString(req.body.email);
+		const email = StringUtils.getNonEmptyString(req.body.email);
 		await OtpService.requestOtpForEmail(email);
 		return new ApiSuccess<ApiResponses.RequestOtp>(res)
 			.message("OTP sent successfully")
@@ -42,8 +42,8 @@ export class AuthController {
 		req: ApiRequest<ApiRequests.VerifyOtp>,
 		res: ApiResponse
 	) {
-		const email = getNonEmptyString(req.body.email);
-		const otp = getNonEmptyString(req.body.otp);
+		const email = StringUtils.getNonEmptyString(req.body.email);
+		const otp = StringUtils.getNonEmptyString(req.body.otp);
 		const { cookies, user, isNew } = await OtpService.verifyOtpForEmail(
 			email,
 			otp
@@ -61,7 +61,10 @@ export class AuthController {
 		req: ApiRequest<ApiRequests.VerifyGoogleOAuth>,
 		res: ApiResponse
 	) {
-		const code = genericParse(getNonEmptyString, req.body.code);
+		const code = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString,
+			req.body.code
+		);
 		const data = await OAuthService.verifyOAuthSignIn(code);
 		return new ApiSuccess<ApiResponses.VerifyGoogleOAuth>(res).send(data);
 	}
@@ -69,7 +72,10 @@ export class AuthController {
 		req: ApiRequest<ApiRequests.ContinueGoogleOAuth>,
 		res: ApiResponse
 	) {
-		const validatorToken = genericParse(getNonEmptyString, req.body.token);
+		const validatorToken = SafetyUtils.genericParse(
+			StringUtils.getNonEmptyString,
+			req.body.token
+		);
 		const { user, cookies } =
 			await OAuthService.continueOAuthWithGoogle(validatorToken);
 		return new ApiSuccess<ApiResponses.ContinueGoogleOAuth>(res)

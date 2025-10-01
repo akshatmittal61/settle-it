@@ -7,6 +7,7 @@ import {
 	GroupSpread,
 	IExpense,
 	IMember,
+	ISplit,
 	UpdateExpenseData,
 	UpdateModel,
 	UpdateQuery,
@@ -418,26 +419,34 @@ export class ExpenseService {
 	}: {
 		expenseId: string;
 		loggedInUserId: string;
-	}): Promise<Array<IMember>> {
+	}): Promise<Array<ISplit>> {
 		const foundExpense = await ExpenseService.getExpenseById(expenseId);
-		if (!foundExpense) {
+		if (!SafetyUtils.isNonNull(foundExpense)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
 		}
-		if (foundExpense.paidBy.id !== loggedInUserId)
+		if (foundExpense.sender.id !== loggedInUserId) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
 				"Only the person who paid can settle"
 			);
-		await memberRepo.settleMany({ expenseId });
-		Cache.invalidate(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-				groupId: foundExpense.group.id,
-			})
-		);
+		}
+		await splitRepo.settleMany({ expense: expenseId });
+		if (SafetyUtils.isNonNull(foundExpense.group)) {
+			Cache.invalidate(
+				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
+					groupId: foundExpense.group.id,
+				})
+			);
+		}
 		Cache.invalidate(
 			CacheService.getKey(cacheParameter.EXPENSE, { id: expenseId })
 		);
-		return MemberService.getMembersOfExpense(expenseId);
+		// TODO: See if we can cache splits
+		const updatedSplits = await splitRepo.find({ expense: expenseId });
+		if (CollectionUtils.isEmpty(updatedSplits)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Splits not found");
+		}
+		return updatedSplits;
 	}
 
 	public static async memberPaidForExpense({

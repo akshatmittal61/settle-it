@@ -1,17 +1,14 @@
-import { EXPENSE_STATUS, HTTP } from "@/constants";
-import { ExpenseService } from "@/services";
+import { HTTP } from "@/constants";
 import { ApiSuccess } from "@/server";
+import { ExpenseService } from "@/services";
 import {
 	ApiRequest,
 	ApiRequests,
 	ApiResponse,
 	ApiResponses,
 	CreateExpenseData,
-	CreateModel,
 	T_EXPENSE_METHOD,
-	T_EXPENSE_STATUS,
 	T_EXPENSE_TYPE,
-	UpdateExpenseData,
 } from "@/types";
 import {
 	CollectionUtils,
@@ -20,7 +17,6 @@ import {
 	SafetyUtils,
 	StringUtils,
 } from "@/utils";
-import { Expense } from "@/schema";
 
 export class ExpenseController {
 	public static async getUsersExpenses(req: ApiRequest, res: ApiResponse) {
@@ -164,40 +160,16 @@ export class ExpenseController {
 		req: ApiRequest<ApiRequests.SettleExpense>,
 		res: ApiResponse
 	) {
-		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
-		const expenseId = genericParse(
-			getNonEmptyString,
+		const loggedInUserId = StringUtils.getNonEmptyString(req.user?.id);
+		const expenseId = StringUtils.getNonEmptyString(
 			getSearchParam(req.url, "expenseId")
 		);
-		const updatedMembersInfo = await ExpenseService.settleExpense({
+		const updatedSplits = await ExpenseService.settleExpense({
 			expenseId,
 			loggedInUserId,
 		});
 		return new ApiSuccess<ApiResponses.SettleExpense>(res).send(
-			updatedMembersInfo
-		);
-	}
-
-	public static async memberPaidAmount(
-		req: ApiRequest<ApiRequests.MemberPaidAmount>,
-		res: ApiResponse
-	) {
-		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
-		const memberId = genericParse(
-			getNonEmptyString,
-			getSearchParam(req.url, "memberId")
-		);
-		const paidAmount = genericParse(
-			getNonNegativeNumber,
-			req.body.paidAmount
-		);
-		const updatedMembersInfo = await ExpenseService.memberPaidForExpense({
-			memberId,
-			loggedInUserId,
-			paidAmount,
-		});
-		return new ApiSuccess<ApiResponses.MemberPaidAmount>(res).send(
-			updatedMembersInfo
+			updatedSplits
 		);
 	}
 }

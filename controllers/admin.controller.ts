@@ -1,3 +1,4 @@
+import { ApiSuccess } from "@/server";
 import {
 	CacheService,
 	FilesService,
@@ -5,8 +6,7 @@ import {
 	UserService,
 } from "@/services";
 import { ApiRequest, ApiResponse, ApiResponses } from "@/types";
-import { ApiSuccess } from "@/server";
-import { getNonEmptyString } from "@/utils";
+import { StringUtils } from "@/utils";
 
 export class AdminController {
 	public static async getAllGroups(_: ApiRequest, res: ApiResponse) {
@@ -41,7 +41,7 @@ export class AdminController {
 	}
 
 	public static async getLogFileByName(req: ApiRequest, res: ApiResponse) {
-		const name = getNonEmptyString(req.body.name);
+		const name = StringUtils.getNonEmptyString(req.body.name);
 		const fileContent = FilesService.getLogFileByName(name);
 		return new ApiSuccess<ApiResponses.GetLogFileByName>(res)
 			.data(fileContent)

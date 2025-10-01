@@ -13,10 +13,10 @@ import { userRepo } from "@/repo";
 import { User } from "@/schema";
 import { CreateModel, IUser } from "@/types";
 import {
-	genericParse,
-	getNonEmptyString,
-	getNonNullValue,
+	CollectionUtils,
 	getUserDetails,
+	SafetyUtils,
+	StringUtils,
 } from "@/utils";
 import { CacheService } from "./cache.service";
 import { EmailService } from "./email";
@@ -26,7 +26,7 @@ type CollectionUser = { name: string; email: string };
 export class UserService {
 	public static async getAllUsers(): Promise<Array<IUser>> {
 		const allUsers = await userRepo.findAll();
-		return allUsers.map(getNonNullValue);
+		return allUsers.map(SafetyUtils.getNonNullValue);
 	}
 
 	public static async getUserById(id: string): Promise<IUser | null> {
@@ -39,7 +39,7 @@ export class UserService {
 	public static async findOrCreateUser(
 		body: CreateModel<User>
 	): Promise<{ user: IUser; isNew: boolean }> {
-		const email = genericParse(getNonEmptyString, body.email);
+		const email = StringUtils.getNonEmptyString(body.email);
 		const foundUser = await UserService.getUserByEmail(email);
 		if (foundUser) {
 			return { user: foundUser, isNew: false };
@@ -57,7 +57,7 @@ export class UserService {
 	): Promise<Map<string, IUser>> {
 		const res = await userRepo.find({ _id: { $in: userIds } });
 		if (!res) return new Map();
-		const parsedRes = res.map(getNonNullValue);
+		const parsedRes = res.map(SafetyUtils.getNonNullValue);
 		return new Map<string, IUser>(parsedRes.map((user) => [user.id, user]));
 	}
 
@@ -111,9 +111,11 @@ export class UserService {
 	public static async updateUserDetails(
 		id: string,
 		update: Partial<IUser>
-	): Promise<IUser | null> {
+	): Promise<IUser> {
 		const foundUser = await UserService.getUserById(id);
-		if (!foundUser) return null;
+		if (!foundUser) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "User not found");
+		}
 		const keysToUpdate = ["name", "phone", "avatar"];
 		if (Object.keys(update).length == 0) {
 			throw new ApiError(
@@ -152,6 +154,9 @@ export class UserService {
 			}
 		}
 		const updatedUser = await userRepo.update({ id }, updatedBody);
+		if (!SafetyUtils.isNonNull(updatedUser)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "User not found");
+		}
 		Cache.invalidate(CacheService.getKey(cacheParameter.USER, { id }));
 		Cache.invalidate(
 			CacheService.getKey(cacheParameter.USER, { email: foundUser.email })
