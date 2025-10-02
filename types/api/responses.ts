@@ -52,7 +52,6 @@ export type CreateExpense = IExpense;
 export type UpdateExpense = IExpense;
 export type RemoveExpense = IExpense;
 export type SettleExpense = Array<ISplit>;
-export type MemberPaidAmount = Array<ISplit>;
 
 // Member
 export type GetMembersForExpense = Array<IMember>;
@@ -60,6 +59,8 @@ export type SettleMemberInExpense = Array<IMember>;
 export type SettleOwedMembersInGroup = Array<IOwedRecord>;
 
 // Wallet
+export type GetSplitsForExpense = Array<ISplit>;
+export type SettleSplitInExpense = Array<ISplit>;
 export type GetBalancesSummary = {
 	expenditure: number;
 	balances: IBalancesSummary;

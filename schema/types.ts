@@ -123,12 +123,12 @@ export type Expense = Model<{
  * Split model
  * @param {string} expense - ID of the expense (References Expense model)
  * @param {string} user - ID of the user (References User model)
+ * @param {number} amount - Amount of the split
  * @param {number} pending - Pending amount
- * @param {number} completed - Paid amount
  */
 export type Split = Model<{
 	expense: string;
 	user: string;
+	amount: number;
 	pending: number;
-	completed: number;
 }>;

@@ -43,3 +43,7 @@ export type SettleOwedMembersInGroup = {
 	userA: string;
 	userB: string;
 };
+
+// Wallet
+export type SettleMemberInGroup = { sender: string; receiver: string };
+export type SettleSplitInExpense = { expenseId: string; splitId: string };

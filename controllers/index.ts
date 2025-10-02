@@ -5,3 +5,4 @@ export * from "./group.controller";
 export * from "./member.controller";
 export * from "./server.controller";
 export * from "./user.controller";
+export * from "./wallet.controller";

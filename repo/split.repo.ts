@@ -256,7 +256,7 @@ class SplitRepo extends BaseRepo<Split, ISplit> {
 			return 0;
 		}
 		const res = await this.model.bulkWrite(
-			splits!.map((split) => ({
+			splits.map((split) => ({
 				updateOne: {
 					filter: { _id: split.id },
 					update: {

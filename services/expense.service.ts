@@ -413,6 +413,75 @@ export class ExpenseService {
 		return removedExpense;
 	}
 
+	public static async getSplitsForExpense({
+		expenseId,
+		loggedInUserId,
+	}: {
+		expenseId: string;
+		loggedInUserId: string;
+	}): Promise<Array<ISplit>> {
+		const foundExpense = await ExpenseService.getExpenseById(expenseId);
+		if (!SafetyUtils.isNonNull(foundExpense)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
+		}
+		const splits = await splitRepo.find({ expense: expenseId });
+		if (CollectionUtils.isEmpty(splits)) {
+			throw new ApiError(
+				HTTP.status.NOT_FOUND,
+				"Splits not found for this expense"
+			);
+		}
+		if (SafetyUtils.isNonNull(foundExpense.group)) {
+			// for group expenses, user should be a member of the group
+			const foundGroupDetails = await GroupService.getGroupDetailsById(
+				foundExpense.group.id
+			);
+			if (!SafetyUtils.isNonNull(foundGroupDetails)) {
+				throw new ApiError(
+					HTTP.status.BAD_REQUEST,
+					"Abnormal group details"
+				);
+			}
+			if (CollectionUtils.isEmpty(foundGroupDetails.members)) {
+				throw new ApiError(
+					HTTP.status.BAD_REQUEST,
+					"Abnormal group members"
+				);
+			}
+			// if the current user is not part of the group, throw forbidden
+			if (
+				!CollectionUtils.isSubset(
+					[loggedInUserId],
+					foundGroupDetails.members.map((m) => m.user.id)
+				)
+			) {
+				throw new ApiError(
+					HTTP.status.FORBIDDEN,
+					"You are not a part of this group"
+				);
+			}
+		} else {
+			// for non-group expenses, to view it, user should either be
+			// the author
+			// or sender
+			// or receiver
+			// or should have a split in the expense
+			if (
+				StringUtils.notEquals(foundExpense.author.id, loggedInUserId) &&
+				StringUtils.notEquals(foundExpense.sender.id, loggedInUserId) &&
+				StringUtils.notEquals(foundExpense.receiver?.id, loggedInUserId)
+			) {
+				if (!splits.some((split) => split.user.id === loggedInUserId)) {
+					throw new ApiError(
+						HTTP.status.FORBIDDEN,
+						"None of your business"
+					);
+				}
+			}
+		}
+		return splits;
+	}
+
 	public static async settleExpense({
 		expenseId,
 		loggedInUserId,
@@ -501,37 +570,43 @@ export class ExpenseService {
 		return MemberService.getMembersOfExpense(foundMember.expense.id);
 	}
 
-	public static async settleMemberInExpense({
-		memberId,
+	public static async settleSplitInExpense({
+		splitId,
 		loggedInUserId,
 	}: {
-		memberId: string;
+		splitId: string;
 		loggedInUserId: string;
-	}) {
-		const foundMember = await memberRepo.findById(memberId);
-		if (!foundMember) throw new Error("Member not found");
-		const foundExpense = foundMember.expense;
+	}): Promise<Array<ISplit>> {
+		const foundSplit = await splitRepo.findById(splitId);
+		if (!SafetyUtils.isNonNull(foundSplit)) {
+			throw new Error("Split not found");
+		}
+		const foundExpense = foundSplit.expense;
 		const expenseId = foundExpense.id;
-		if (foundExpense.paidBy.id !== loggedInUserId) {
+		if (foundExpense.sender.id !== loggedInUserId) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
-				"You did not paid for this expense"
+				"You did not pay for this expense"
 			);
 		}
-		const settledMember = await memberRepo.settleOne({
-			expenseId,
-			id: memberId,
-		});
-		if (!settledMember)
-			throw new ApiError(HTTP.status.NOT_FOUND, "Member not found");
-		Cache.invalidate(
-			CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-				groupId: foundExpense.group.id,
-			})
-		);
+		const settledSplit = await splitRepo.settleOne(splitId);
+		if (!SafetyUtils.isNonNull(settledSplit)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Split not found");
+		}
+		if (SafetyUtils.isNonNull(foundExpense.group)) {
+			Cache.invalidate(
+				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
+					groupId: foundExpense.group.id,
+				})
+			);
+		}
 		Cache.invalidate(
 			CacheService.getKey(cacheParameter.EXPENSE, { id: foundExpense.id })
 		);
-		return await MemberService.getMembersOfExpense(expenseId);
+		const updatedSplits = await splitRepo.find({ expense: expenseId });
+		if (CollectionUtils.isEmpty(updatedSplits)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Splits not found");
+		}
+		return updatedSplits;
 	}
 }

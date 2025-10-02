@@ -155,21 +155,4 @@ export class ExpenseController {
 			removedExpense
 		);
 	}
-
-	public static async settleExpense(
-		req: ApiRequest<ApiRequests.SettleExpense>,
-		res: ApiResponse
-	) {
-		const loggedInUserId = StringUtils.getNonEmptyString(req.user?.id);
-		const expenseId = StringUtils.getNonEmptyString(
-			getSearchParam(req.url, "expenseId")
-		);
-		const updatedSplits = await ExpenseService.settleExpense({
-			expenseId,
-			loggedInUserId,
-		});
-		return new ApiSuccess<ApiResponses.SettleExpense>(res).send(
-			updatedSplits
-		);
-	}
 }

@@ -7,9 +7,91 @@ import {
 	IUser,
 	Transaction,
 } from "@/types";
-import { getNonNullValue, simplifyFraction } from "@/utils";
+import {
+	CollectionUtils,
+	SafetyUtils,
+	simplifyFraction,
+	StringUtils,
+} from "@/utils";
+import { GroupService } from "@/services/group.service";
+import { ApiError } from "@/errors";
+import { HTTP } from "@/constants";
+import { expenseRepo, splitRepo } from "@/repo";
 
 export class WalletService {
+	public static async settleMemberInGroup({
+		groupId,
+		sender,
+		receiver,
+		loggedInUserId,
+	}: {
+		groupId: string;
+		sender: string;
+		receiver: string;
+		loggedInUserId: string;
+	}) {
+		// Approach
+		// Find all the cross-over splits between sender and receiver and settle them all
+		// Create a new expense recording a payment with expense type SETTLE
+		// the new expense will create a split showing reverse payment from receiver to sender marked as pending
+		// make sure to mark that as settled by default
+		// TODO: Fix split model to total amount and pending amount and then fix this
+		const groupDetails = await GroupService.getGroupDetailsById(groupId);
+		if (!SafetyUtils.isNonNull(groupDetails)) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
+		}
+		// sender, receiver and logged-in user should be part of the group
+		if (
+			!CollectionUtils.isSubset(
+				[sender, receiver, loggedInUserId],
+				groupDetails.members.map((m) => m.user.id)
+			)
+		) {
+			throw new ApiError(
+				HTTP.status.FORBIDDEN,
+				"You are not a part of this group"
+			);
+		}
+		// only the person that is supposed to receive money can settle
+		if (StringUtils.notEquals(receiver, loggedInUserId)) {
+			throw new ApiError(
+				HTTP.status.FORBIDDEN,
+				"You are not the receiver"
+			);
+		}
+		// find the expenses paid by sender and receiver
+		const [expensesPaidBySender, expensesPaidByReceiver] =
+			await Promise.all([
+				expenseRepo.find({ sender, group: groupId }),
+				expenseRepo.find({ sender: receiver, group: groupId }),
+			]);
+		const settlingProcesses = [];
+		if (CollectionUtils.isNotEmpty(expensesPaidBySender)) {
+			// for expenses paid by sender, the pending split will be in the name of receiver
+			settlingProcesses.push(
+				splitRepo.settleMany({
+					user: receiver,
+					expense: {
+						$in: expensesPaidBySender.map((e) => e.id),
+					},
+				})
+			);
+		}
+		if (CollectionUtils.isNotEmpty(expensesPaidByReceiver)) {
+			// for expenses paid by receiver, the pending split will be in the name of sender
+			settlingProcesses.push(
+				splitRepo.settleMany({
+					user: sender,
+					expense: {
+						$in: expensesPaidByReceiver.map((e) => e.id),
+					},
+				})
+			);
+		}
+		// after finding all the cross-over expenses, settle them all
+		await Promise.allSettled(settlingProcesses);
+	}
+
 	/**
 	 * Calculates the outstanding balances (who owes money to whom) from a list of transactions.
 	 *
@@ -195,14 +277,16 @@ export class WalletService {
 			.map((obj) => {
 				// For each debtor, compute total amount owed by summing all sub-transactions
 				return {
-					user: getNonNullValue(usersMap.get(obj.user)),
+					user: SafetyUtils.getNonNullValue(usersMap.get(obj.user)),
 					amount: obj.transactions
 						.map((t) => t.amount)
 						.reduce((a, b) => a + b, 0),
 					// Populate each sub-transaction with user object of creditor
 					transactions: obj.transactions.map((t) => {
 						return {
-							user: getNonNullValue(usersMap.get(t.user)),
+							user: SafetyUtils.getNonNullValue(
+								usersMap.get(t.user)
+							),
 							amount: t.amount,
 						};
 					}),
@@ -414,12 +498,14 @@ export class WalletService {
 			.map((obj) => {
 				// Populate final objects with user details and child transaction user details
 				return {
-					user: getNonNullValue(usersMap.get(obj.user)),
+					user: SafetyUtils.getNonNullValue(usersMap.get(obj.user)),
 					gives: obj.gives,
 					gets: obj.gets,
 					transactions: obj.transactions.map((t) => {
 						return {
-							user: getNonNullValue(usersMap.get(t.user)),
+							user: SafetyUtils.getNonNullValue(
+								usersMap.get(t.user)
+							),
 							gives: t.gives,
 							gets: t.gets,
 						};
@@ -568,7 +654,7 @@ export class WalletService {
 		// Populate shares with user details and calculated values
 		const populatedShares = shares.map((share) => {
 			return {
-				user: getNonNullValue(usersMap.get(share.user)),
+				user: SafetyUtils.getNonNullValue(usersMap.get(share.user)),
 				amount: share.amount,
 				// Calculate percentage contribution (rounded to 2 decimal places)
 				percentage: +((share.amount / totalAmount) * 100).toFixed(2),

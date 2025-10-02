@@ -3,8 +3,23 @@ import { ParserSafetyError } from "@/errors";
 export class StringUtils {
 	public static EMPTY = "";
 
-	public static equals(str1: string, str2: string): boolean {
-		return str1.length === str2.length && str1 === str2;
+	public static equals(
+		str1: string | null | undefined,
+		str2: string | null | undefined
+	): boolean {
+		if (StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str2)) {
+			return str1.length === str2.length && str1 === str2;
+		} else if (StringUtils.isEmpty(str1) && StringUtils.isEmpty(str2)) {
+			return true;
+		}
+		return false;
+	}
+
+	public static notEquals(
+		str1: string | null | undefined,
+		str2: string | null | undefined
+	): boolean {
+		return !StringUtils.equals(str1, str2);
 	}
 
 	public static equalsIgnoreCase(str1: string, str2: string): boolean {
