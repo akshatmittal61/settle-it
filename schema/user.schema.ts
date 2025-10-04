@@ -1,7 +1,8 @@
 import { fallbackAssets, USER_ROLE, USER_STATUS } from "@/constants";
-import { ObjectId } from "@/types";
+import { ObjectId, Schema } from "@/types";
+import { User } from "./types";
 
-export const UserSchema = {
+export const UserSchema: Schema<User> = {
 	name: {
 		type: String,
 	},

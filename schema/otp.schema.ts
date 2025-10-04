@@ -1,6 +1,8 @@
 import { OTP_STATUS } from "@/constants";
+import { Schema } from "@/types";
+import { Otp } from "./types";
 
-export const OtpSchema = {
+export const OtpSchema: Schema<Otp> = {
 	email: {
 		type: String,
 		unique: true,

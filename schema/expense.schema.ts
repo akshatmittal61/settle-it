@@ -1,7 +1,8 @@
 import { EXPENSE_METHOD, EXPENSE_TYPE } from "@/constants";
-import { ObjectId } from "@/types";
+import { ObjectId, Schema } from "@/types";
+import { Expense } from "./types";
 
-export const ExpenseSchema = {
+export const ExpenseSchema: Schema<Expense> = {
 	title: {
 		type: String,
 		required: true,

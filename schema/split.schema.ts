@@ -1,6 +1,7 @@
-import { ObjectId } from "@/types";
+import { ObjectId, Schema } from "@/types";
+import { Split } from "./types";
 
-export const SplitSchema = {
+export const SplitSchema: Schema<Split> = {
 	expense: {
 		type: ObjectId,
 		ref: "Expense",
@@ -11,12 +12,7 @@ export const SplitSchema = {
 		ref: "User",
 		required: true,
 	},
-	pending: {
-		type: Number,
-		default: 0,
-		required: true,
-	},
-	completed: {
+	amount: {
 		type: Number,
 		default: 0,
 		required: true,

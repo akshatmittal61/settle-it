@@ -1,7 +1,8 @@
 import { fallbackAssets } from "@/constants";
-import { ObjectId } from "@/types";
+import { ObjectId, Schema } from "@/types";
+import { Group } from "./types";
 
-export const GroupSchema = {
+export const GroupSchema: Schema<Group> = {
 	name: {
 		type: String,
 		required: true,
@@ -13,10 +14,6 @@ export const GroupSchema = {
 	banner: {
 		type: String,
 		default: fallbackAssets.banner,
-	},
-	type: {
-		type: String,
-		default: "Other",
 	},
 	tags: {
 		type: [

@@ -200,7 +200,7 @@ export class ExpenseService {
 		) {
 			if (SafetyUtils.isNonNull(foundGroup)) {
 				// check if all sent members are in the group
-				const userIdsOfMembersOfGroup = foundGroup.members.map(
+				const userIdsOfMembersOfGroup = foundGroup!.members.map(
 					(m) => m.user.id
 				);
 				const userIdsOfSplits = splits.map((s) => s.userId);

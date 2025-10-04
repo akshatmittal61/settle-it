@@ -1,6 +1,7 @@
-import { ObjectId } from "@/types";
+import { ObjectId, Schema } from "@/types";
+import { AuthMapping } from "./types";
 
-export const AuthMappingSchema = {
+export const AuthMappingSchema: Schema<AuthMapping> = {
 	identifier: {
 		type: String,
 		required: true,

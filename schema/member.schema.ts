@@ -1,7 +1,8 @@
-import { ObjectId } from "@/types";
 import { MEMBER_ROLE, MEMBER_STATUS } from "@/constants";
+import { ObjectId, Schema } from "@/types";
+import { Member } from "./types";
 
-export const MemberSchema = {
+export const MemberSchema: Schema<Member> = {
 	user: {
 		type: ObjectId,
 		ref: "User",
