@@ -1,10 +1,8 @@
 import { http } from "@/connections";
-import { ApiRes, ApiRequests, ApiResponses, IGroup, IUser } from "@/types";
+import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 
 export class AdminApi {
-	public static async getAllUsers(
-		headers?: any
-	): Promise<ApiRes<Array<IUser>>> {
+	public static async getAllUsers(headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetAllUsers>>(
 			"/admin/users",
 			{ headers }
@@ -12,9 +10,7 @@ export class AdminApi {
 		return response.data;
 	}
 
-	public static async getAllGroups(
-		headers?: any
-	): Promise<ApiRes<Array<IGroup>>> {
+	public static async getAllGroups(headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetAllGroups>>(
 			"/admin/groups",
 			{ headers }
@@ -38,9 +34,7 @@ export class AdminApi {
 		return response.data;
 	}
 
-	public static async getAllLogFiles(
-		headers?: any
-	): Promise<ApiRes<Array<string>>> {
+	public static async getAllLogFiles(headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetAllLogFiles>>(
 			"/admin/logs",
 			{ headers }
@@ -48,10 +42,7 @@ export class AdminApi {
 		return response.data;
 	}
 
-	public static async getLogFileByName(
-		name: string,
-		headers?: any
-	): Promise<ApiRes<string>> {
+	public static async getLogFileByName(name: string, headers?: any) {
 		const response = await http.post<
 			ApiRes<ApiResponses.GetLogFileByName>,
 			ApiRequests.GetLogFileByName

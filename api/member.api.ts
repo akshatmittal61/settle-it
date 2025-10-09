@@ -1,5 +1,5 @@
 import { http } from "@/connections";
-import { ApiRes, ApiRequests, ApiResponses } from "@/types";
+import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 
 export class MemberApi {
 	public static async settleMemberInExpense(
@@ -13,7 +13,7 @@ export class MemberApi {
 			memberId: string;
 		},
 		headers?: any
-	): Promise<ApiRes<ApiResponses.SettleMemberInExpense>> {
+	) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.SettleMemberInExpense>,
 			ApiRequests.SettleMemberInExpense
@@ -29,7 +29,7 @@ export class MemberApi {
 		groupId: string,
 		userA: string,
 		userB: string
-	): Promise<ApiRes<ApiResponses.SettleOwedMembersInGroup>> {
+	) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.SettleOwedMembersInGroup>,
 			ApiRequests.SettleOwedMembersInGroup

@@ -1,10 +1,8 @@
 import { http } from "@/connections";
-import { ApiRes, ApiRequests, ApiResponses } from "@/types";
+import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 
 export class UserApi {
-	public static async updateUser(
-		data: ApiRequests.UpdateUser
-	): Promise<ApiRes<ApiResponses.UpdateUser>> {
+	public static async updateUser(data: ApiRequests.UpdateUser) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.UpdateUser>,
 			ApiRequests.UpdateUser
@@ -12,9 +10,7 @@ export class UserApi {
 		return response.data;
 	}
 
-	public static async searchForUsers(
-		query: string
-	): Promise<ApiRes<ApiResponses.SearchUsers>> {
+	public static async searchForUsers(query: string) {
 		const response = await http.post<
 			ApiRes<ApiResponses.SearchUsers>,
 			ApiRequests.SearchUsers
@@ -22,18 +18,14 @@ export class UserApi {
 		return response.data;
 	}
 
-	public static async inviteUser(
-		email: string
-	): Promise<ApiRes<ApiResponses.InviteUser>> {
+	public static async inviteUser(email: string) {
 		const response = await http.post<
 			ApiRes<ApiResponses.InviteUser>,
 			ApiRequests.InviteUser
 		>("/users/invite", { email });
 		return response.data;
 	}
-	public static async searchInBulk(
-		query: string
-	): Promise<ApiRes<ApiResponses.BulkUserSearch>> {
+	public static async searchInBulk(query: string) {
 		const response = await http.post<
 			ApiRes<ApiResponses.BulkUserSearch>,
 			ApiRequests.BulkUserSearch

@@ -1,10 +1,8 @@
 import { http } from "@/connections";
-import { ApiRes, ApiRequests, ApiResponses } from "@/types";
+import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 
 export class ExpenseApi {
-	public static async getAllUserExpense(
-		headers?: any
-	): Promise<ApiRes<ApiResponses.GetUsersExpenses>> {
+	public static async getAllUserExpense(headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetUsersExpenses>>(
 			"/expenses",
 			{ headers }
@@ -15,7 +13,7 @@ export class ExpenseApi {
 	public static async getAllExpensesForGroup(
 		{ groupId }: { groupId: string },
 		headers?: any
-	): Promise<ApiRes<ApiResponses.GetGroupExpenses>> {
+	) {
 		const response = await http.get<ApiRes<ApiResponses.GetGroupExpenses>>(
 			`/group/expenses?groupId=${groupId}`,
 			{ headers }
@@ -38,13 +36,11 @@ export class ExpenseApi {
 	public static async createExpense(
 		data: ApiRequests.CreateExpense,
 		headers?: any
-	): Promise<ApiRes<ApiResponses.CreateExpense>> {
+	) {
 		const response = await http.post<
 			ApiRes<ApiResponses.CreateExpense>,
 			ApiRequests.CreateExpense
-		>(`/group/expense?groupId=${data.groupId}`, data, {
-			headers,
-		});
+		>("/group/expense", data, { headers });
 		return response.data;
 	}
 
@@ -59,7 +55,7 @@ export class ExpenseApi {
 			data: ApiRequests.UpdateExpense;
 		},
 		headers?: any
-	): Promise<ApiRes<ApiResponses.UpdateExpense>> {
+	) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.UpdateExpense>,
 			ApiRequests.UpdateExpense
@@ -72,7 +68,7 @@ export class ExpenseApi {
 	public static async settleExpense(
 		{ groupId, expenseId }: { groupId: string; expenseId: string },
 		headers?: any
-	): Promise<ApiRes<ApiResponses.SettleExpense>> {
+	) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.SettleExpense>,
 			ApiRequests.SettleExpense
@@ -87,7 +83,7 @@ export class ExpenseApi {
 	public static async deleteExpense(
 		{ groupId, expenseId }: { groupId: string; expenseId: string },
 		headers?: any
-	): Promise<ApiRes<ApiResponses.RemoveExpense>> {
+	) {
 		const response = await http.delete<ApiRes<ApiResponses.RemoveExpense>>(
 			`/group/expense?groupId=${groupId}&expenseId=${expenseId}`,
 			{ headers }

@@ -1,10 +1,8 @@
 import { http } from "@/connections";
-import { ApiRes, ApiRequests, ApiResponses } from "@/types";
+import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 
 export class GroupApi {
-	public static async getAllGroups(
-		headers?: any
-	): Promise<ApiRes<ApiResponses.GetGroupsForUser>> {
+	public static async getAllGroups(headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetGroupsForUser>>(
 			"/groups",
 			{ headers }
@@ -12,10 +10,7 @@ export class GroupApi {
 		return response.data;
 	}
 
-	public static async getGroupDetails(
-		id: string,
-		headers?: any
-	): Promise<ApiRes<ApiResponses.GetGroupDetails>> {
+	public static async getGroupDetails(id: string, headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetGroupDetails>>(
 			`/group?id=${id}`,
 			{ headers }
@@ -23,10 +18,7 @@ export class GroupApi {
 		return response.data;
 	}
 
-	public static async getGroupExpenses(
-		id: string,
-		headers?: any
-	): Promise<ApiRes<ApiResponses.GetGroupExpenses>> {
+	public static async getGroupExpenses(id: string, headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetGroupExpenses>>(
 			`/group/expenses?groupId=${id}`,
 			{ headers }
@@ -34,20 +26,14 @@ export class GroupApi {
 		return response.data;
 	}
 
-	public static async getBalancesSummary(
-		id: string,
-		headers?: any
-	): Promise<ApiRes<ApiResponses.GetBalancesSummary>> {
+	public static async getBalancesSummary(id: string, headers?: any) {
 		const response = await http.get<
 			ApiRes<ApiResponses.GetBalancesSummary>
 		>(`/group/summary?groupId=${id}`, { headers });
 		return response.data;
 	}
 
-	public static async getTransactions(
-		id: string,
-		headers?: any
-	): Promise<ApiRes<ApiResponses.GetTransactions>> {
+	public static async getTransactions(id: string, headers?: any) {
 		const response = await http.get<ApiRes<ApiResponses.GetTransactions>>(
 			`/group/transactions?groupId=${id}`,
 			{ headers }
@@ -58,7 +44,7 @@ export class GroupApi {
 	public static async createGroup(
 		data: ApiRequests.CreateGroup,
 		headers?: any
-	): Promise<ApiRes<ApiResponses.CreateGroup>> {
+	) {
 		const response = await http.post<
 			ApiRes<ApiResponses.CreateGroup>,
 			ApiRequests.CreateGroup
@@ -70,7 +56,7 @@ export class GroupApi {
 		id: string,
 		data: ApiRequests.UpdateGroup,
 		headers?: any
-	): Promise<ApiRes<ApiResponses.UpdateGroupDetails>> {
+	) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.UpdateGroupDetails>,
 			ApiRequests.UpdateGroup
@@ -78,10 +64,7 @@ export class GroupApi {
 		return response.data;
 	}
 
-	public static async deleteGroup(
-		id: string,
-		headers?: any
-	): Promise<ApiRes<ApiResponses.DeleteGroup>> {
+	public static async deleteGroup(id: string, headers?: any) {
 		const response = await http.delete<ApiRes<ApiResponses.DeleteGroup>>(
 			`/group?id=${id}`,
 			{ headers }
