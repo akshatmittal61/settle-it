@@ -1,8 +1,8 @@
 import { UserModel } from "@/models";
 import { User } from "@/schema";
 import { CreateModel, IUser } from "@/types";
-import { BaseRepo } from "./base";
 import { SafetyUtils } from "@/utils";
+import { BaseRepo } from "./base";
 
 class UserRepo extends BaseRepo<User, IUser> {
 	protected model = UserModel;

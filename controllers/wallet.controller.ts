@@ -1,7 +1,7 @@
+import { ApiSuccess } from "@/server";
+import { ExpenseService, WalletService } from "@/services";
 import { ApiRequest, ApiRequests, ApiResponse, ApiResponses } from "@/types";
 import { getSearchParam, StringUtils } from "@/utils";
-import { ExpenseService, WalletService } from "@/services";
-import { ApiSuccess } from "@/server";
 
 export class WalletController {
 	public static async getSplitsForExpense(req: ApiRequest, res: ApiResponse) {
@@ -63,13 +63,12 @@ export class WalletController {
 		// const sender = req.body.sender
 		const sender = StringUtils.getNonEmptyString(req.body.sender);
 		const receiver = StringUtils.getNonEmptyString(req.body.receiver);
-		const settledMember = await WalletService.settleMemberInGroup({
-			memberId: member,
+		await WalletService.settleMemberInGroup({
+			sender,
+			receiver,
 			groupId,
 			loggedInUserId,
 		});
-		return new ApiSuccess<ApiResponses.SettleMemberInGroup>(res).send(
-			settledMember
-		);
+		return new ApiSuccess<ApiResponses.SettleMemberInGroup>(res).send();
 	}
 }

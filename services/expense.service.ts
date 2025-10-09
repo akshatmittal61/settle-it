@@ -1,24 +1,21 @@
 import { Cache } from "@/cache";
-import { cacheParameter, EXPENSE_STATUS, HTTP } from "@/constants";
+import { cacheParameter, HTTP } from "@/constants";
 import { ApiError } from "@/errors";
-import { expenseRepo, memberRepo, splitRepo } from "@/repo";
+import { expenseRepo, splitRepo } from "@/repo";
+import { walletRepo } from "@/repo/wallet.repo";
+import { Expense, Split } from "@/schema";
 import {
 	CreateModel,
 	GroupSpread,
 	IExpense,
-	IMember,
 	ISplit,
 	UpdateExpenseData,
-	UpdateModel,
 	UpdateQuery,
 } from "@/types";
-import { CollectionUtils, isSubset, SafetyUtils, StringUtils } from "@/utils";
+import { CollectionUtils, SafetyUtils, StringUtils } from "@/utils";
+import { NumberUtils } from "@/utils/number";
 import { CacheService } from "./cache.service";
 import { GroupService } from "./group.service";
-import { MemberService } from "./member.service";
-import { Expense, Member, Split } from "@/schema";
-import { walletRepo } from "@/repo/wallet.repo";
-import { NumberUtils } from "@/utils/number";
 
 export class ExpenseService {
 	public static async getExpenseById(id: string): Promise<IExpense | null> {
@@ -328,7 +325,7 @@ export class ExpenseService {
 				if (
 					!CollectionUtils.isSubset(
 						[body.sender],
-						foundGroup.members.map((m) => m.user.id)
+						foundGroup!.members.map((m) => m.user.id)
 					)
 				) {
 					throw new ApiError(
@@ -344,7 +341,7 @@ export class ExpenseService {
 				if (
 					!CollectionUtils.isSubset(
 						[body.receiver],
-						foundGroup.members.map((m) => m.user.id)
+						foundGroup!.members.map((m) => m.user.id)
 					)
 				) {
 					throw new ApiError(
@@ -366,7 +363,7 @@ export class ExpenseService {
 		if (SafetyUtils.isNonNull(foundGroup)) {
 			Cache.invalidate(
 				CacheService.getKey(cacheParameter.GROUP_EXPENSES, {
-					groupId: foundGroup.id,
+					groupId: foundGroup!.id,
 				})
 			);
 		}
@@ -518,7 +515,9 @@ export class ExpenseService {
 		return updatedSplits;
 	}
 
-	public static async memberPaidForExpense({
+	// TODO: Implement -> Member paid custom amount for group / non-group
+	// Handle settling one-by-one splits
+	/* public static async memberPaidForExpense({
 		memberId,
 		loggedInUserId,
 		paidAmount,
@@ -568,7 +567,7 @@ export class ExpenseService {
 			})
 		);
 		return MemberService.getMembersOfExpense(foundMember.expense.id);
-	}
+	} */
 
 	public static async settleSplitInExpense({
 		splitId,

@@ -6,6 +6,7 @@ export type T_EXPENSE_METHOD = "UPI" | "CASH" | "CARD" | "NETBANKING";
 export type T_EXPENSE_STATUS = "PENDING" | "SETTLED";
 export type T_MEMBER_ROLE = "ADMIN" | "MEMBER";
 export type T_MEMBER_STATUS = "JOINED" | "INVITED" | "LEFT";
+export type T_SPLIT_STATUS = "PENDING" | "CONFIRMATION_PENDING" | "SETTLED";
 
 export type T_EMAIL_TEMPLATE =
 	| "OTP"

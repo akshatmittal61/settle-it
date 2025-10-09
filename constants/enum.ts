@@ -7,6 +7,7 @@ import {
 	T_MEMBER_ROLE,
 	T_MEMBER_STATUS,
 	T_OTP_STATUS,
+	T_SPLIT_STATUS,
 	T_USER_ROLE,
 	T_USER_STATUS,
 } from "@/types";
@@ -42,6 +43,12 @@ export const MEMBER_STATUS = getEnumeration<T_MEMBER_STATUS>([
 	"JOINED",
 	"INVITED",
 	"LEFT",
+]);
+
+export const SPLIT_STATUS = getEnumeration<T_SPLIT_STATUS>([
+	"PENDING",
+	"CONFIRMATION_PENDING",
+	"SETTLED",
 ]);
 
 export const apiMethods = getEnumeration<T_API_METHODS>([

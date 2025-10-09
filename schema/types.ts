@@ -5,10 +5,10 @@ import {
 	T_MEMBER_ROLE,
 	T_MEMBER_STATUS,
 	T_OTP_STATUS,
+	T_SPLIT_STATUS,
 	T_USER_ROLE,
 	T_USER_STATUS,
 } from "@/types";
-import { ObjectId } from "mongoose";
 
 /**
  * AuthMapping model
@@ -125,10 +125,12 @@ export type Expense = Model<{
  * @param {string} user - ID of the user (References User model)
  * @param {number} pending - Pending amount
  * @param {number} completed - Completed amount
+ * @param {string} status - Status of the split (Pending, Confirmation Pending, Settled)
  */
 export type Split = Model<{
 	expense: string;
 	user: string;
 	pending: number;
 	completed: number;
+	status: T_SPLIT_STATUS;
 }>;

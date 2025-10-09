@@ -12,12 +12,7 @@ import { Logger } from "@/log";
 import { userRepo } from "@/repo";
 import { User } from "@/schema";
 import { CreateModel, IUser } from "@/types";
-import {
-	CollectionUtils,
-	getUserDetails,
-	SafetyUtils,
-	StringUtils,
-} from "@/utils";
+import { getUserDetails, SafetyUtils, StringUtils } from "@/utils";
 import { CacheService } from "./cache.service";
 import { EmailService } from "./email";
 
@@ -25,8 +20,7 @@ type CollectionUser = { name: string; email: string };
 
 export class UserService {
 	public static async getAllUsers(): Promise<Array<IUser>> {
-		const allUsers = await userRepo.findAll();
-		return allUsers.map(SafetyUtils.getNonNullValue);
+		return await userRepo.findAll();
 	}
 
 	public static async getUserById(id: string): Promise<IUser | null> {

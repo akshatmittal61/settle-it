@@ -70,3 +70,4 @@ export type GetTransactions = {
 	expenditure: number;
 	transactions: Array<ITransaction>;
 };
+export type SettleMemberInGroup = null;
