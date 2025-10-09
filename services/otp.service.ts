@@ -19,7 +19,7 @@ import { SafetyUtils, StringUtils } from "@/utils";
 
 export class OtpService {
 	public static async requestOtpForEmail(email: string) {
-		const foundOtp = otpRepo.findOne({ email });
+		const foundOtp = await otpRepo.findOne({ email });
 		const newOtp = OtpService.generate();
 		if (SafetyUtils.isNonNull(foundOtp)) {
 			otpRepo.update(

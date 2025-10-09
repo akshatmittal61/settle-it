@@ -40,13 +40,16 @@ export class AuthService {
 	public static async getUserByAuthMappingId(
 		authMappingId: string
 	): Promise<IUser | null> {
-		const foundAuthMapping = await CacheService.fetch(
+		// TODO: Find a better way to optimize this instead of caching on auth mapping id
+		/* const foundAuthMapping = await CacheService.fetch(
 			CacheService.getKey(cacheParameter.AUTH_MAPPING, {
 				id: authMappingId,
 			}),
 			() => authRepo.findById(authMappingId)
-		);
-		if (!SafetyUtils.isNonNull(foundAuthMapping)) return null;
+		); */
+		const foundAuthMapping = await authRepo.findById(authMappingId);
+		if (!foundAuthMapping) return null;
+		Logger.debug("foundAuthMapping", foundAuthMapping);
 		return foundAuthMapping.user;
 	}
 
