@@ -1,5 +1,5 @@
 import { Cache } from "@/cache";
-import { cacheParameter, HTTP } from "@/constants";
+import { cacheParameter, HTTP, SPLIT_STATUS } from "@/constants";
 import { ApiError } from "@/errors";
 import { expenseRepo, splitRepo } from "@/repo";
 import { walletRepo } from "@/repo/wallet.repo";
@@ -12,7 +12,12 @@ import {
 	UpdateExpenseData,
 	UpdateQuery,
 } from "@/types";
-import { CollectionUtils, SafetyUtils, StringUtils } from "@/utils";
+import {
+	BooleanUtils,
+	CollectionUtils,
+	SafetyUtils,
+	StringUtils,
+} from "@/utils";
 import { NumberUtils } from "@/utils/number";
 import { CacheService } from "./cache.service";
 import { GroupService } from "./group.service";
@@ -29,7 +34,7 @@ export class ExpenseService {
 		userId: string
 	): Promise<Array<IExpense>> {
 		const expenses = await walletRepo.getExpensesForUser(userId);
-		if (!expenses) return [];
+		if (CollectionUtils.isEmpty(expenses)) return CollectionUtils.EMPTY;
 		return expenses;
 	}
 
@@ -104,12 +109,22 @@ export class ExpenseService {
 		const createdExpense = await expenseRepo.create(payload);
 		// initially, all members are pending, and they have to pay the expense
 		const splitsForCurrentExpense: Array<CreateModel<Split>> = splits.map(
-			(split) => ({
-				user: split.userId,
-				expense: createdExpense.id,
-				pending: split.userId === body.sender ? 0 : split.amount,
-				completed: split.userId === body.sender ? split.amount : 0,
-			})
+			(split) => {
+				const isSender = StringUtils.equals(split.userId, body.sender);
+				return {
+					user: split.userId,
+					expense: createdExpense.id,
+					pending: BooleanUtils.True.equals(isSender)
+						? 0
+						: split.amount,
+					completed: BooleanUtils.True.equals(isSender)
+						? split.amount
+						: 0,
+					status: BooleanUtils.True.equals(isSender)
+						? SPLIT_STATUS.SETTLED
+						: SPLIT_STATUS.PENDING,
+				};
+			}
 		);
 		await splitRepo.bulkCreate(splitsForCurrentExpense);
 		if (StringUtils.isNotEmpty(body.group)) {
@@ -148,7 +163,7 @@ export class ExpenseService {
 			NumberUtils.isNotEmpty(updatedAmount) &&
 			CollectionUtils.isNotEmpty(splits)
 		) {
-			const totalDistributedAmount = splits!
+			const totalDistributedAmount = splits
 				.map((split) => split.amount)
 				.reduce((a, b) => a + b, 0);
 			if (
@@ -171,14 +186,15 @@ export class ExpenseService {
 			}
 		}
 		const foundExpense = await ExpenseService.getExpenseById(id);
-		if (!foundExpense)
+		if (!SafetyUtils.isNonNull(foundExpense)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
+		}
 		// the user can only edit expense if
 		// - it is created by the user
 		// - or it is paid by the user
 		if (
-			foundExpense.author.id !== loggedInUserId &&
-			foundExpense.sender.id !== loggedInUserId
+			StringUtils.notEquals(foundExpense.author.id, loggedInUserId) &&
+			StringUtils.notEquals(foundExpense.sender.id, loggedInUserId)
 		) {
 			throw new ApiError(HTTP.status.FORBIDDEN, "Forbidden");
 		}
@@ -219,21 +235,28 @@ export class ExpenseService {
 			const currentSplitsOfExpense = await splitRepo.find({
 				expense: id,
 			});
-			if (currentSplitsOfExpense === null) {
+			if (CollectionUtils.isEmpty(currentSplitsOfExpense)) {
 				const splitsToCreateForCurrentExpense: Array<
 					CreateModel<Split>
-				> = splits.map((split) => ({
-					user: split.userId,
-					expense: id,
-					pending:
-						split.userId === (body.sender || foundExpense.sender.id)
+				> = splits.map((split) => {
+					const isSender = StringUtils.equals(
+						split.userId,
+						body.sender || foundExpense.sender.id
+					);
+					return {
+						user: split.userId,
+						expense: id,
+						pending: BooleanUtils.True.equals(isSender)
 							? 0
 							: split.amount,
-					completed:
-						split.userId === (body.sender || foundExpense.sender.id)
+						completed: BooleanUtils.True.equals(isSender)
 							? split.amount
 							: 0,
-				}));
+						status: BooleanUtils.True.equals(isSender)
+							? SPLIT_STATUS.SETTLED
+							: SPLIT_STATUS.PENDING,
+					};
+				});
 				await splitRepo.bulkCreate(splitsToCreateForCurrentExpense);
 			} else {
 				const splitsToUpdateForCurrentExpense: Array<
@@ -246,20 +269,23 @@ export class ExpenseService {
 						(s) => s.userId === split.user.id
 					);
 					if (foundSplit) {
+						const isSender = StringUtils.equals(
+							foundSplit.userId,
+							body.sender ?? foundExpense.sender.id
+						);
 						splitsToUpdateForCurrentExpense.push({
 							id: split.id,
 							user: split.user.id,
 							expense: split.expense.id,
-							pending:
-								foundSplit.userId ===
-								(body.sender ?? foundExpense.sender.id)
-									? 0
-									: foundSplit.amount,
-							completed:
-								foundSplit.userId ===
-								(body.sender ?? foundExpense.sender.id)
-									? foundSplit.amount
-									: 0,
+							pending: BooleanUtils.True.equals(isSender)
+								? 0
+								: foundSplit.amount,
+							completed: BooleanUtils.True.equals(isSender)
+								? foundSplit.amount
+								: 0,
+							status: BooleanUtils.True.equals(isSender)
+								? SPLIT_STATUS.SETTLED
+								: SPLIT_STATUS.PENDING,
 						});
 					} else {
 						splitsToRemoveForCurrentExpense.push({
@@ -278,24 +304,33 @@ export class ExpenseService {
 								.map((currentSplit) => currentSplit.user.id)
 								.includes(split.userId)
 					)
-					.map((split) => ({
-						user: split.userId,
-						expense: id,
-						pending:
-							split.userId ===
-							(body.sender ?? foundExpense.sender.id)
+					.map((split) => {
+						const isSender = StringUtils.equals(
+							split.userId,
+							body.sender ?? foundExpense.sender.id
+						);
+						return {
+							user: split.userId,
+							expense: id,
+							pending: BooleanUtils.True.equals(isSender)
 								? 0
 								: split.amount,
-						completed:
-							split.userId ===
-							(body.sender ?? foundExpense.sender.id)
+							completed: BooleanUtils.True.equals(isSender)
 								? split.amount
 								: 0,
-					}));
-				if (splitsToCreateForCurrentExpense.length > 0) {
+							status: BooleanUtils.True.equals(isSender)
+								? SPLIT_STATUS.SETTLED
+								: SPLIT_STATUS.PENDING,
+						};
+					});
+				if (
+					CollectionUtils.isNotEmpty(splitsToCreateForCurrentExpense)
+				) {
 					await splitRepo.bulkCreate(splitsToCreateForCurrentExpense);
 				}
-				if (splitsToRemoveForCurrentExpense.length > 0) {
+				if (
+					CollectionUtils.isNotEmpty(splitsToRemoveForCurrentExpense)
+				) {
 					await splitRepo.bulkRemove({
 						_id: {
 							$in: splitsToRemoveForCurrentExpense.map(
@@ -304,7 +339,9 @@ export class ExpenseService {
 						},
 					});
 				}
-				if (splitsToUpdateForCurrentExpense.length > 0) {
+				if (
+					CollectionUtils.isNotEmpty(splitsToUpdateForCurrentExpense)
+				) {
 					await splitRepo.bulkUpdate(
 						splitsToUpdateForCurrentExpense.map((split) => ({
 							filter: { _id: split.id },
@@ -335,13 +372,13 @@ export class ExpenseService {
 				}
 			}
 		}
-		if (body.receiver) {
+		if (StringUtils.isNotEmpty(body.receiver)) {
 			// for groups, person who received should be a part of the group
 			if (SafetyUtils.isNonNull(foundGroup)) {
 				if (
-					!CollectionUtils.isSubset(
-						[body.receiver],
-						foundGroup!.members.map((m) => m.user.id)
+					CollectionUtils.notIncludes(
+						foundGroup!.members.map((m) => m.user.id),
+						body.receiver
 					)
 				) {
 					throw new ApiError(
@@ -383,11 +420,11 @@ export class ExpenseService {
 		loggedInUserId: string;
 	}): Promise<IExpense> {
 		const foundExpense = await ExpenseService.getExpenseById(expenseId);
-		if (!foundExpense)
+		if (!SafetyUtils.isNonNull(foundExpense))
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
 		if (
-			foundExpense.author.id !== loggedInUserId &&
-			foundExpense.sender.id !== loggedInUserId
+			StringUtils.notEquals(foundExpense.author.id, loggedInUserId) &&
+			StringUtils.notEquals(foundExpense.sender.id, loggedInUserId)
 		) {
 			throw new ApiError(HTTP.status.FORBIDDEN, HTTP.message.FORBIDDEN);
 		}
@@ -447,9 +484,9 @@ export class ExpenseService {
 			}
 			// if the current user is not part of the group, throw forbidden
 			if (
-				!CollectionUtils.isSubset(
-					[loggedInUserId],
-					foundGroupDetails.members.map((m) => m.user.id)
+				CollectionUtils.notIncludes(
+					foundGroupDetails.members.map((m) => m.user.id),
+					loggedInUserId
 				)
 			) {
 				throw new ApiError(
@@ -468,7 +505,11 @@ export class ExpenseService {
 				StringUtils.notEquals(foundExpense.sender.id, loggedInUserId) &&
 				StringUtils.notEquals(foundExpense.receiver?.id, loggedInUserId)
 			) {
-				if (!splits.some((split) => split.user.id === loggedInUserId)) {
+				if (
+					!splits.some((split) =>
+						StringUtils.equals(split.user.id, loggedInUserId)
+					)
+				) {
 					throw new ApiError(
 						HTTP.status.FORBIDDEN,
 						"None of your business"
@@ -490,7 +531,7 @@ export class ExpenseService {
 		if (!SafetyUtils.isNonNull(foundExpense)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
 		}
-		if (foundExpense.sender.id !== loggedInUserId) {
+		if (StringUtils.notEquals(foundExpense.sender.id, loggedInUserId)) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
 				"Only the person who paid can settle"
@@ -582,7 +623,7 @@ export class ExpenseService {
 		}
 		const foundExpense = foundSplit.expense;
 		const expenseId = foundExpense.id;
-		if (foundExpense.sender.id !== loggedInUserId) {
+		if (StringUtils.notEquals(foundExpense.sender.id, loggedInUserId)) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
 				"You did not pay for this expense"

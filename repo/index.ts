@@ -5,3 +5,4 @@ export * from "./member.repo";
 export * from "./otp.repo";
 export * from "./split.repo";
 export * from "./user.repo";
+export * from "./wallet.repo";

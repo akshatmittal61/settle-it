@@ -26,7 +26,12 @@ import {
 	IGroup,
 	IMember,
 } from "@/types";
-import { CollectionUtils, getUserDetails, SafetyUtils } from "@/utils";
+import {
+	CollectionUtils,
+	getUserDetails,
+	SafetyUtils,
+	StringUtils,
+} from "@/utils";
 import { CacheService } from "./cache.service";
 import { UserService } from "./user.service";
 
@@ -115,9 +120,10 @@ export class GroupService {
 	): Promise<GroupSpread> {
 		const groupSpread = await GroupService.getGroupDetails(groupId);
 		if (
-			!groupSpread.members
-				.map((member) => member.user.id)
-				.includes(userId)
+			CollectionUtils.notIncludes(
+				groupSpread.members.map((member) => member.user.id),
+				userId
+			)
 		) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
@@ -142,7 +148,7 @@ export class GroupService {
 		const admin = CollectionUtils.getSingletonValue(
 			members.filter((member) => member.role === USER_ROLE.ADMIN)
 		);
-		if (admin.user.id !== userId) {
+		if (StringUtils.notEquals(admin.user.id, userId)) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
 				"User is not an admin of this group"
@@ -210,7 +216,7 @@ export class GroupService {
 		members: Array<string>;
 	}): Promise<GroupSpread> {
 		members = CollectionUtils.getUniqueValues(members);
-		if (!members.includes(loggedInUserId)) {
+		if (CollectionUtils.notIncludes(members, loggedInUserId)) {
 			members.push(loggedInUserId);
 		}
 		if (members.length <= 1) {
@@ -256,17 +262,17 @@ export class GroupService {
 			groupId
 		);
 		if (CollectionUtils.isNotEmpty(members)) {
-			if (!members.includes(loggedInUserId)) {
+			if (CollectionUtils.notIncludes(members, loggedInUserId)) {
 				members.push(loggedInUserId);
 			}
 			// get added members list
-			const addedMembers = members.filter(
-				(member) =>
-					!foundGroup.members
-						.map((member) => member.user.id)
-						.includes(member)
+			const addedMembers = members.filter((member) =>
+				CollectionUtils.notIncludes(
+					foundGroup.members.map((member) => member.user.id),
+					member
+				)
 			);
-			if (addedMembers.length > 0) {
+			if (CollectionUtils.isNotEmpty(addedMembers)) {
 				await GroupService.addMembers(groupId, addedMembers);
 			}
 			// get removed members list
@@ -356,24 +362,25 @@ export class GroupService {
 		);
 		if (
 			CollectionUtils.isEmpty(members) ||
-			(members.length === 1 && members.includes(loggedInUserId))
+			(members.length === 1 &&
+				CollectionUtils.includes(members, loggedInUserId))
 		) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"No members to update in group"
 			);
 		}
-		if (!members.includes(loggedInUserId)) {
+		if (!CollectionUtils.includes(members, loggedInUserId)) {
 			members.push(loggedInUserId);
 		}
 		const existingMemberUserIds = foundGroup.members.map(
 			(member) => member.user.id
 		);
-		const membersToAdd = members.filter(
-			(member) => !existingMemberUserIds.includes(member)
+		const membersToAdd = members.filter((member) =>
+			CollectionUtils.notIncludes(existingMemberUserIds, member)
 		);
-		const membersToRemove = existingMemberUserIds.filter(
-			(member) => !members.includes(member)
+		const membersToRemove = existingMemberUserIds.filter((member) =>
+			CollectionUtils.notIncludes(members, member)
 		);
 		if (
 			CollectionUtils.isEmpty(membersToAdd) &&

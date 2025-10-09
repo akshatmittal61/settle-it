@@ -1,7 +1,7 @@
-import { createTransport } from "nodemailer";
 import { googleEmailConfig } from "@/config";
 import { AppSeo, emailTemplates, frontendBaseUrl } from "@/constants";
 import { EmailTemplateGenerator, T_EMAIL_TEMPLATE } from "@/types";
+import { createTransport } from "nodemailer";
 import { emailTemplate } from "./template";
 
 export class EmailService {

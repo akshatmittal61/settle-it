@@ -1,7 +1,7 @@
 import { Cache } from "@/cache";
 import { Logger } from "@/log";
 import { cacheParameter, TTL_SECONDS } from "@/constants";
-import { CacheParameter, CachePayloadGenerator } from "@/types";
+import { CacheParameter, CachePayloadGenerator, IUser } from "@/types";
 
 export class CacheService {
 	/**
@@ -51,7 +51,7 @@ export class CacheService {
 			if ("id" in payload) {
 				return `auth-mapping:${payload.id}`;
 			} else if ("identifier" in payload && "provider" in payload) {
-				return `auth-mapping:${payload.identifier}:${payload.provider}`;
+				return `auth-mapping:${payload.provider}:${payload.identifier}`;
 			}
 			throw new Error(
 				"Invalid data: id or identifier and provider are missing"
@@ -86,6 +86,25 @@ export class CacheService {
 				[key]: Cache.get(key),
 			};
 		}, {});
+	}
+
+	public static setUser(keyGen: CachePayloadGenerator<"USER">, value: IUser) {
+		const key = this.getKey(cacheParameter.USER, keyGen);
+		Cache.set(key, value);
+	}
+
+	public static async fetchUser(
+		keyGen: CachePayloadGenerator<"USER">,
+		callback: () => Promise<IUser | null>
+	) {
+		return await CacheService.fetch(
+			this.getKey(cacheParameter.USER, keyGen),
+			callback
+		);
+	}
+
+	public static invalidateUser(keyGen: CachePayloadGenerator<"USER">) {
+		Cache.invalidate(this.getKey(cacheParameter.USER, keyGen));
 	}
 
 	public static clearAllCacheData() {

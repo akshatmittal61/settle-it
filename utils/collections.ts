@@ -1,4 +1,5 @@
 import { ParserSafetyError } from "@/errors";
+import { BooleanUtils } from "@/utils/boolean";
 
 export class CollectionUtils {
 	public static EMPTY = [];
@@ -42,10 +43,21 @@ export class CollectionUtils {
 		return Array.from(new Set(input));
 	}
 
+	public static includes<T>(arr: Array<T>, val: T) {
+		if (this.isEmpty(arr)) {
+			return BooleanUtils.False.value;
+		}
+		return BooleanUtils.True.equals(arr.includes(val));
+	}
+
+	public static notIncludes<T>(arr: Array<T>, val: T) {
+		return !this.includes(arr, val);
+	}
+
 	public static isSubset<T = any>(
 		subset: Array<T>,
 		superset: Array<T>
 	): boolean {
-		return subset.every((value) => superset.includes(value));
+		return subset.every((value) => this.includes(subset, value));
 	}
 }

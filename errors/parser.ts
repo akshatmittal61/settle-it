@@ -1,9 +1,10 @@
 export class ParserSafetyError extends Error {
-	public expected: string;
+	public method: string;
 	public found: any;
-	constructor(message: string, expected: string, found: any) {
+
+	constructor(message: string, method: string, found: any) {
 		super(message);
-		this.expected = expected;
+		this.method = method;
 		this.found = found;
 		this.name = "ParserSafetyError";
 	}

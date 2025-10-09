@@ -3,6 +3,7 @@ import { AuthService, EmailService } from "@/services";
 import {
 	AppSeo,
 	AuthConstants,
+	authMappingProvider,
 	emailTemplates,
 	HTTP,
 	OTP_STATUS,
@@ -14,12 +15,13 @@ import { otpRepo, userRepo } from "@/repo";
 import { ApiError } from "@/errors";
 import { UserService } from "@/services";
 import { Otp } from "@/schema";
+import { SafetyUtils, StringUtils } from "@/utils";
 
 export class OtpService {
 	public static async requestOtpForEmail(email: string) {
 		const foundOtp = otpRepo.findOne({ email });
 		const newOtp = OtpService.generate();
-		if (foundOtp != null) {
+		if (SafetyUtils.isNonNull(foundOtp)) {
 			otpRepo.update(
 				{ email },
 				{ otp: newOtp, status: OTP_STATUS.PENDING }
@@ -39,14 +41,14 @@ export class OtpService {
 		otp: string
 	): Promise<AuthResponse> {
 		const foundOtp = await otpRepo.findOne({ email });
-		if (foundOtp == null) {
+		if (!SafetyUtils.isNonNull(foundOtp)) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"No OTP was requested from this email"
 			);
 		}
 		// If OTP was already expired, return failure
-		if (foundOtp.status === OTP_STATUS.EXPIRED) {
+		if (StringUtils.equals(foundOtp.status, OTP_STATUS.EXPIRED)) {
 			throw new ApiError(HTTP.status.BAD_REQUEST, "OTP Expired");
 		}
 		// If greater than 5 minutes have passed, consider the OTP expired
@@ -54,7 +56,7 @@ export class OtpService {
 			otpRepo.update({ email }, { status: OTP_STATUS.EXPIRED });
 			throw new ApiError(HTTP.status.BAD_REQUEST, "OTP Expired");
 		}
-		if (foundOtp.otp !== otp) {
+		if (StringUtils.notEquals(foundOtp.otp, otp)) {
 			throw new ApiError(HTTP.status.BAD_REQUEST, "Invalid OTP");
 		}
 		// If OTP was valid, consider it valid, and mark that as expired
@@ -64,13 +66,13 @@ export class OtpService {
 			status: USER_STATUS.JOINED,
 			role: USER_ROLE.MEMBER,
 		});
-		if (user.status === USER_STATUS.INVITED) {
+		if (StringUtils.equals(user.status, USER_STATUS.INVITED)) {
 			// If an Invited user logs in, mark the user as Joined
 			userRepo.update({ email }, { status: USER_STATUS.JOINED });
 		}
 		const authMapping = await AuthService.findOrCreateAuthMapping(
 			email,
-			{ id: user.id, name: "otp" },
+			{ id: user.id, name: authMappingProvider.otp },
 			user.id
 		);
 		const tokens = AuthService.generateTokens(`${authMapping.id}`);

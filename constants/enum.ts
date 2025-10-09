@@ -1,5 +1,6 @@
 import {
 	T_API_METHODS,
+	T_AUTH_MAPPING_PROVIDER,
 	T_EMAIL_TEMPLATE,
 	T_EXPENSE_METHOD,
 	T_EXPENSE_STATUS,
@@ -49,6 +50,11 @@ export const SPLIT_STATUS = getEnumeration<T_SPLIT_STATUS>([
 	"PENDING",
 	"CONFIRMATION_PENDING",
 	"SETTLED",
+]);
+
+export const authMappingProvider = getEnumeration<T_AUTH_MAPPING_PROVIDER>([
+	"otp",
+	"google",
 ]);
 
 export const apiMethods = getEnumeration<T_API_METHODS>([

@@ -1,7 +1,5 @@
-import { Cache } from "@/cache";
 import {
 	AppSeo,
-	cacheParameter,
 	emailTemplates,
 	HTTP,
 	USER_ROLE,
@@ -11,8 +9,13 @@ import { ApiError } from "@/errors";
 import { Logger } from "@/log";
 import { userRepo } from "@/repo";
 import { User } from "@/schema";
-import { CreateModel, IUser } from "@/types";
-import { getUserDetails, SafetyUtils, StringUtils } from "@/utils";
+import { CreateModel, IUser, UpdateUser } from "@/types";
+import {
+	CollectionUtils,
+	getUserDetails,
+	SafetyUtils,
+	StringUtils,
+} from "@/utils";
 import { CacheService } from "./cache.service";
 import { EmailService } from "./email";
 
@@ -24,9 +27,8 @@ export class UserService {
 	}
 
 	public static async getUserById(id: string): Promise<IUser | null> {
-		return await CacheService.fetch(
-			CacheService.getKey(cacheParameter.USER, { id }),
-			() => userRepo.findById(id)
+		return await CacheService.fetchUser({ id }, () =>
+			userRepo.findById(id)
 		);
 	}
 
@@ -39,10 +41,7 @@ export class UserService {
 			return { user: foundUser, isNew: false };
 		}
 		const createdUser = await userRepo.create(body);
-		Cache.set(
-			CacheService.getKey(cacheParameter.USER, { email }),
-			createdUser
-		);
+		CacheService.setUser({ email }, createdUser);
 		return { user: createdUser, isNew: true };
 	}
 
@@ -50,16 +49,14 @@ export class UserService {
 		userIds: string[]
 	): Promise<Map<string, IUser>> {
 		const res = await userRepo.find({ _id: { $in: userIds } });
-		if (!res) return new Map();
-		const parsedRes = res.map(SafetyUtils.getNonNullValue);
-		return new Map<string, IUser>(parsedRes.map((user) => [user.id, user]));
+		if (CollectionUtils.isEmpty(res)) return new Map();
+		return new Map<string, IUser>(res.map((user) => [user.id, user]));
 	}
 
 	public static async getUserByEmail(email: string): Promise<IUser | null> {
 		try {
-			return await CacheService.fetch(
-				CacheService.getKey(cacheParameter.USER, { email }),
-				() => userRepo.findOne({ email })
+			return await CacheService.fetchUser({ email }, () =>
+				userRepo.findOne({ email })
 			);
 		} catch {
 			return null;
@@ -72,7 +69,7 @@ export class UserService {
 		// search by email, if the user is found, insert user in array,
 		// else insert null in its place in array
 		const users = await userRepo.find({ email: { $in: emails } });
-		if (!users) return emails.map(() => null);
+		if (CollectionUtils.isEmpty(users)) return emails.map(() => null);
 		const usersMap = new Map<string, IUser>(
 			users.map((user) => [user.email, user])
 		);
@@ -82,7 +79,7 @@ export class UserService {
 	public static async searchByEmail(
 		emailQuery: string
 	): Promise<Array<IUser>> {
-		if (!emailQuery) {
+		if (StringUtils.isEmpty(emailQuery)) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"Email query is required"
@@ -98,16 +95,16 @@ export class UserService {
 		const res = await userRepo.find({
 			email: { $regex: query, $options: "i" },
 		});
-		if (!res) return [];
+		if (CollectionUtils.isEmpty(res)) return CollectionUtils.EMPTY;
 		return res;
 	}
 
 	public static async updateUserDetails(
 		id: string,
-		update: Partial<IUser>
+		update: UpdateUser
 	): Promise<IUser> {
 		const foundUser = await UserService.getUserById(id);
-		if (!foundUser) {
+		if (!SafetyUtils.isNonNull(foundUser)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "User not found");
 		}
 		const keysToUpdate = ["name", "phone", "avatar"];
@@ -140,7 +137,7 @@ export class UserService {
 			const phoneExists = await userRepo.findOne({
 				phone: updatedBody.phone,
 			});
-			if (phoneExists) {
+			if (!SafetyUtils.isNonNull(phoneExists)) {
 				throw new ApiError(
 					HTTP.status.CONFLICT,
 					"Phone number already in use"
@@ -151,37 +148,35 @@ export class UserService {
 		if (!SafetyUtils.isNonNull(updatedUser)) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "User not found");
 		}
-		Cache.invalidate(CacheService.getKey(cacheParameter.USER, { id }));
-		Cache.invalidate(
-			CacheService.getKey(cacheParameter.USER, { email: foundUser.email })
-		);
+		CacheService.invalidateUser({ id });
+		CacheService.invalidateUser({ email: foundUser.email });
 		return updatedUser;
 	}
 
 	public static async inviteUser(
 		invitedByUserId: string,
-		invitee: string
+		inviteeUserId: string
 	): Promise<IUser> {
-		if (invitedByUserId === invitee) {
+		if (StringUtils.equals(invitedByUserId, inviteeUserId)) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"You cannot invite yourself"
 			);
 		}
-		const userExists = await UserService.getUserById(invitee);
-		if (userExists) {
+		const userExists = await UserService.getUserById(inviteeUserId);
+		if (SafetyUtils.isNonNull(userExists)) {
 			throw new ApiError(HTTP.status.CONFLICT, "User already exists");
 		}
 		const invitedByUser = await UserService.getUserById(invitedByUserId);
-		if (!invitedByUser) {
+		if (!SafetyUtils.isNonNull(invitedByUser)) {
 			throw new ApiError(
 				HTTP.status.NOT_FOUND,
 				"Invited by user not found"
 			);
 		}
-		await this.invite(invitee, invitedByUser);
+		await this.invite(inviteeUserId, invitedByUser);
 		return await userRepo.create({
-			email: invitee,
+			email: inviteeUserId,
 			status: USER_STATUS.INVITED,
 			role: USER_ROLE.MEMBER,
 			invitedBy: invitedByUserId,
@@ -201,24 +196,24 @@ export class UserService {
 		Logger.debug("emails", emails);
 		const users = await UserService.getUsersByEmails(emails);
 		const allFoundUsers = users.filter((user) => user !== null);
-		const nonFoundUsers = emails.filter(
-			(email) => !allFoundUsers.find((user) => user.email === email)
+		const nonFoundCollectionUsers = usersFromQuery.filter(
+			(userCollection) =>
+				!allFoundUsers.find(
+					(user) => user.email === userCollection.email
+				)
 		);
-		if (nonFoundUsers.length > 0) {
-			Logger.debug("nonFoundUsers", nonFoundUsers);
-			await UserService.inviteMany(nonFoundUsers, invitee);
+		if (CollectionUtils.isNotEmpty(nonFoundCollectionUsers)) {
+			Logger.debug("nonFoundUsers", nonFoundCollectionUsers);
+			await UserService.inviteMany(nonFoundCollectionUsers, invitee);
 		}
 		const newUsersCollection = await UserService.getUsersByEmails(emails);
-		const finalCollection = newUsersCollection.filter(
-			(user) => user !== null
-		);
+		const finalCollection = newUsersCollection.filter((a) => a !== null);
 		if (!finalCollection.map((a) => a.email).includes(invitee.email)) {
 			finalCollection.push(invitee);
 		}
-		const message =
-			nonFoundUsers.length > 0
-				? `Invited ${nonFoundUsers.length} users`
-				: "";
+		const message = CollectionUtils.isNotEmpty(nonFoundCollectionUsers)
+			? `Invited ${nonFoundCollectionUsers.length} users`
+			: StringUtils.EMPTY;
 		return {
 			users: finalCollection,
 			message,
@@ -239,18 +234,21 @@ export class UserService {
 		);
 	}
 
-	public static async inviteMany(emails: string[], invitedByUser: IUser) {
+	public static async inviteMany(
+		collectionUsers: Array<CollectionUser>,
+		invitedByUser: IUser
+	) {
 		await userRepo.bulkCreate(
-			emails.map((email) => ({
-				name: email.split("@")[0],
-				email,
+			collectionUsers.map((collectionUser) => ({
+				name: collectionUser.name,
+				email: collectionUser.email,
 				status: USER_STATUS.INVITED,
 				role: USER_ROLE.MEMBER,
 				invitedBy: invitedByUser.id,
 			}))
 		);
 		await EmailService.bulkSendByTemplate(
-			emails,
+			collectionUsers.map((collectionUser) => collectionUser.email),
 			`Invite to ${AppSeo.title}`,
 			emailTemplates.USER_INVITED,
 			{

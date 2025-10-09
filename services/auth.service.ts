@@ -3,9 +3,9 @@ import { AuthConstants, cacheParameter } from "@/constants";
 import { Logger } from "@/log";
 import { authRepo } from "@/repo";
 import { AuthResponse, Cookie, IAuthMapping, IUser, Tokens } from "@/types";
+import { BooleanUtils, SafetyUtils, StringUtils } from "@/utils";
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { CacheService } from "./cache.service";
-import { BooleanUtils, StringUtils } from "@/utils";
 
 export class AuthService {
 	public static async findOrCreateAuthMapping(
@@ -25,7 +25,7 @@ export class AuthService {
 					providerName: provider.name,
 				})
 		);
-		if (foundAuthMapping) {
+		if (SafetyUtils.isNonNull(foundAuthMapping)) {
 			return foundAuthMapping;
 		}
 		return await authRepo.create({
@@ -46,8 +46,7 @@ export class AuthService {
 			}),
 			() => authRepo.findById(authMappingId)
 		);
-		if (!foundAuthMapping) return null;
-		Logger.debug("foundAuthMapping", foundAuthMapping);
+		if (!SafetyUtils.isNonNull(foundAuthMapping)) return null;
 		return foundAuthMapping.user;
 	}
 
@@ -101,7 +100,7 @@ export class AuthService {
 			// Get user by auth mapping ID
 			const user =
 				await AuthService.getUserByAuthMappingId(authMappingId);
-			if (!user) return null;
+			if (!SafetyUtils.isNonNull(user)) return null;
 
 			Logger.debug("getAuthenticatedUser -> user by accessToken", user);
 
@@ -142,7 +141,7 @@ export class AuthService {
 			// Get user by auth mapping ID from refresh token
 			const user =
 				await AuthService.getUserByAuthMappingId(authMappingId);
-			if (!user) return null;
+			if (!SafetyUtils.isNonNull(user)) return null;
 
 			Logger.debug("getAuthenticatedUser -> user by refreshToken", user);
 
@@ -236,14 +235,14 @@ export class AuthService {
 
 	public static getUpdatedCookies(old: Tokens, newTokens: Tokens) {
 		const cookiesToSet = [];
-		if (StringUtils.equals(old.accessToken, newTokens.accessToken)) {
+		if (StringUtils.notEquals(old.accessToken, newTokens.accessToken)) {
 			cookiesToSet.push({
 				name: AuthConstants.ACCESS_TOKEN,
 				value: newTokens.accessToken,
 				maxAge: AuthConstants.COOKIES_EXPIRY,
 			});
 		}
-		if (old.refreshToken !== newTokens.refreshToken) {
+		if (StringUtils.notEquals(old.refreshToken, newTokens.refreshToken)) {
 			cookiesToSet.push({
 				name: AuthConstants.REFRESH_TOKEN,
 				value: newTokens.refreshToken,

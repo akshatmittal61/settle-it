@@ -1,16 +1,5 @@
-import { Cache } from "@/cache";
-import { cacheParameter, HTTP } from "@/constants";
-import { ApiError } from "@/errors";
-import { expenseRepo, memberRepo } from "@/repo";
-import { IBalancesSummary, IMember } from "@/types";
-import { CacheService } from "./cache.service";
-import { ExpenseService } from "./expense.service";
-import { GroupService } from "./group.service";
-import { UserService } from "./user.service";
-import { Logger } from "@/log";
-
 export class MemberService {
-	public static async getMembersOfExpense(
+	/* public static async getMembersOfExpense(
 		expenseId: string
 	): Promise<Array<IMember>> {
 		const foundExpense = await ExpenseService.getExpenseById(expenseId);
@@ -109,5 +98,5 @@ export class MemberService {
 			})
 		);
 		return owed;
-	}
+	} */
 }

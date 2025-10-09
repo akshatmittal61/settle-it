@@ -1,4 +1,7 @@
-import { walletRepo } from "@/repo/wallet.repo";
+import { HTTP } from "@/constants";
+import { ApiError } from "@/errors";
+import { expenseRepo, splitRepo, walletRepo } from "@/repo";
+import { GroupService } from "@/services/group.service";
 import { UserService } from "@/services/user.service";
 import {
 	IBalancesSummary,
@@ -13,10 +16,6 @@ import {
 	simplifyFraction,
 	StringUtils,
 } from "@/utils";
-import { GroupService } from "@/services/group.service";
-import { ApiError } from "@/errors";
-import { HTTP } from "@/constants";
-import { expenseRepo, splitRepo } from "@/repo";
 
 export class WalletService {
 	public static async settleMemberInGroup({

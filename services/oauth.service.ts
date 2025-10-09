@@ -1,6 +1,8 @@
 import { Cache } from "@/cache";
 import { jwtSecret, oauth_google } from "@/config";
 import {
+	AuthConstants,
+	authMappingProvider,
 	cacheParameter,
 	fallbackAssets,
 	HTTP,
@@ -10,14 +12,14 @@ import {
 import { ApiError } from "@/errors";
 import { Logger } from "@/log";
 import { authRepo } from "@/repo";
+import { CacheService } from "@/services/cache.service";
 import { AuthResponse } from "@/types";
-import { genericParse, getNonEmptyString, safeParse } from "@/utils";
+import { BooleanUtils, SafetyUtils, StringUtils } from "@/utils";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 import { AuthService } from "./auth.service";
 import { UserService } from "./user.service";
-import { CacheService } from "@/services/cache.service";
 
 export class OAuthService {
 	private static client: OAuth2Client;
@@ -28,21 +30,30 @@ export class OAuthService {
 
 	public static async verifyOAuthSignIn(code: string): Promise<string> {
 		Logger.debug("Verifying OAuth sign in", code);
-		const { id_token } = await OAuthService.verifyOAuthRequestByCode(code);
+		const oAuthResponse = await OAuthService.verifyOAuthRequestByCode(code);
+		const id_token = StringUtils.getNonEmptyString(oAuthResponse.id_token);
 		Logger.debug("Verified OAuth id token", id_token);
 		const userFromOAuth = await OAuthService.fetchUserFromIdToken(id_token);
-		if (!userFromOAuth) {
+		if (!SafetyUtils.isNonNull(userFromOAuth)) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"Auth failed, please try again or contact support"
 			);
 		}
 		Logger.debug("User from OAuth", userFromOAuth);
-		const email = genericParse(getNonEmptyString, userFromOAuth.email);
-		const name = safeParse(getNonEmptyString, userFromOAuth.name) || "";
-		const picture = userFromOAuth.picture;
+		// const email = genericParse(getNonEmptyString, userFromOAuth.email);
+		// const name = safeParse(getNonEmptyString, userFromOAuth.name) || "";
+		const email = StringUtils.getNonEmptyString(userFromOAuth.email);
+		const name = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			userFromOAuth.name
+		);
+		const picture = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			userFromOAuth.picture
+		);
 		const { user, isNew } = await UserService.findOrCreateUser({
-			name,
+			name: name || StringUtils.EMPTY,
 			email,
 			avatar: picture || fallbackAssets.avatar,
 			status: USER_STATUS.JOINED,
@@ -51,17 +62,21 @@ export class OAuthService {
 		Logger.debug("Found or created user", { user, isNew });
 		const authMapping = await AuthService.findOrCreateAuthMapping(
 			email,
-			{ id: userFromOAuth.sub, name: "google" },
+			{ id: userFromOAuth.sub, name: authMappingProvider.google },
 			user.id,
 			{ name, avatar: picture }
 		);
 		Logger.debug("Found or created auth mapping", authMapping);
-		if (isNew || !authMapping.user || authMapping.user.id !== user.id) {
+		if (
+			BooleanUtils.True.equals(isNew) ||
+			!SafetyUtils.isNonNull(authMapping.user) ||
+			StringUtils.notEquals(authMapping.user.id, user.id)
+		) {
 			await authRepo.update({ id: authMapping.id }, { user: user.id });
 			Cache.set(
 				CacheService.getKey(cacheParameter.AUTH_MAPPING, {
 					identifier: email,
-					provider: "google",
+					provider: authMappingProvider.google,
 				}),
 				authMapping
 			);
@@ -75,7 +90,7 @@ export class OAuthService {
 		const oauthValidatorToken = jwt.sign(
 			{ id: authMapping.id },
 			jwtSecret.oauthValidator,
-			{ expiresIn: "1m" }
+			{ expiresIn: AuthConstants.OAUTH_TOKEN_EXPIRY }
 		);
 		Logger.debug("Generated validator token", oauthValidatorToken);
 		return oauthValidatorToken;
@@ -88,7 +103,7 @@ export class OAuthService {
 			jwtSecret.oauthValidator
 		);
 		Logger.debug("Decoded validator token", decodedToken);
-		const authMappingId = genericParse(getNonEmptyString, decodedToken.id);
+		const authMappingId = StringUtils.getNonEmptyString(decodedToken.id);
 		Logger.debug("Decoded auth mapping id", authMappingId);
 		const foundAuthMapping = await CacheService.fetch(
 			CacheService.getKey(cacheParameter.AUTH_MAPPING, {
@@ -97,7 +112,10 @@ export class OAuthService {
 			() => authRepo.findById(authMappingId)
 		);
 		Logger.debug("Found auth mapping", foundAuthMapping);
-		if (!foundAuthMapping || !foundAuthMapping.user) {
+		if (
+			!SafetyUtils.isNonNull(foundAuthMapping) ||
+			!SafetyUtils.isNonNull(foundAuthMapping.user)
+		) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
 				"Auth failed, please try again or contact support"
