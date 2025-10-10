@@ -1,4 +1,6 @@
 import {
+	AppNetworkStatus,
+	AppTheme,
 	T_API_METHODS,
 	T_AUTH_MAPPING_PROVIDER,
 	T_EMAIL_TEMPLATE,
@@ -70,6 +72,12 @@ export const emailTemplates = getEnumeration<T_EMAIL_TEMPLATE>([
 	"NEW_USER_ONBOARDED",
 	"USER_INVITED",
 	"USER_ADDED_TO_GROUP",
+]);
+
+export const appTheme = getEnumeration<AppTheme>(["light", "dark"]);
+export const appNetworkStatus = getEnumeration<AppNetworkStatus>([
+	"online",
+	"offline",
 ]);
 
 const message = Object.freeze({

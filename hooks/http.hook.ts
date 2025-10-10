@@ -1,19 +1,16 @@
 import { http } from "@/connections";
 import { ApiRes } from "@/types";
-import { AsyncThunk } from "@reduxjs/toolkit";
 import { AxiosRequestConfig } from "axios";
 import { useState } from "react";
-import { useStore } from "./store.hook";
 
 export const useHttpClient = <Type extends any = any>(
 	initialData: Type = {} as Type,
 	initialIdentifier: string = ""
 ) => {
-	const [indentifier, setIndentifier] = useState(initialIdentifier);
+	const [identifier, setIdentifier] = useState(initialIdentifier);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<unknown>();
 	const [data, setData] = useState<Type>(initialData);
-	const { dispatch: dispatchToStore } = useStore();
 
 	const client = {
 		get: async <T = any>(
@@ -126,35 +123,15 @@ export const useHttpClient = <Type extends any = any>(
 		}
 	};
 
-	const dispatch = async <T extends any, U extends any = undefined>(
-		callback: AsyncThunk<T, U, any>,
-		args: U
-	): Promise<T> => {
-		try {
-			setLoading(true);
-			const response = await dispatchToStore(
-				callback(args as U & undefined)
-			).unwrap();
-			if (response === null) throw new Error("No data found");
-			return response;
-		} catch (err) {
-			setError(err);
-			throw err;
-		} finally {
-			setLoading(false);
-		}
-	};
-
 	const updateId = (id: string) => {
-		setIndentifier(id);
+		setIdentifier(id);
 	};
 
 	return {
-		id: indentifier,
+		id: identifier,
 		updateId,
 		http: client,
 		call,
-		dispatch,
 		loading,
 		data,
 		error,
