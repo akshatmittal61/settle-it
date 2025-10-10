@@ -1,6 +1,6 @@
 import { appNetworkStatus, appTheme } from "@/constants";
 import { AppNetworkStatus, AppTheme } from "@/types";
-import { hexToRgb, notify } from "@/utils";
+import { hexToRgb, Notify } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
@@ -69,7 +69,7 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			const status = navigator.onLine ? "online" : "offline";
 			store.getState().setNetworkStatus(status);
 			if (status === "offline") {
-				notify.error("You are offline");
+				Notify.error("You are offline");
 			}
 		};
 

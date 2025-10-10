@@ -3,7 +3,7 @@ import { routes } from "@/constants";
 import { useStore } from "@/hooks";
 import { Logger } from "@/log";
 import styles from "@/styles/pages/Auth.module.scss";
-import { genericParse, getNonEmptyString, notify, stylesConfig } from "@/utils";
+import { genericParse, getNonEmptyString, Notify, stylesConfig } from "@/utils";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
@@ -25,7 +25,7 @@ const GoogleOAuthRedirectedPage: GoogleOAuthRedirectedPageProps = (props) => {
 				router.push(routes.ONBOARDING);
 			}
 		} catch {
-			notify.error("Something went wrong, please try again");
+			Notify.error("Something went wrong, please try again");
 			router.push(routes.HOME);
 		}
 	};

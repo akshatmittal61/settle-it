@@ -21,7 +21,7 @@ import {
 	ServerSideResult,
 	UpdateGroupData,
 } from "@/types";
-import { getNonEmptyString, notify, stylesConfig } from "@/utils";
+import { getNonEmptyString, Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FiPlus } from "react-icons/fi";
@@ -63,7 +63,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 				.concat(fetchedExpenses);
 			dispatch(setExpenses(groupExpenses));
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 
@@ -81,7 +81,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 				setOpenManageGroupPopup(false);
 			}
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 
@@ -93,7 +93,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 				router.push(routes.HOME);
 			}
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 
@@ -106,7 +106,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 				setOpenAddExpensePopup(false);
 			}
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 

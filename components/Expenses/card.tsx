@@ -2,7 +2,7 @@ import { UpdateExpense, ViewExpense } from "@/components";
 import { useConfirmationModal, useHttpClient, useStore } from "@/hooks";
 import { Typography } from "@/library";
 import { IExpense, UpdateExpenseData } from "@/types";
-import { getUserDetails, notify, stylesConfig } from "@/utils";
+import { getUserDetails, Notify, stylesConfig } from "@/utils";
 import moment from "moment";
 import React, { useState } from "react";
 import styles from "./styles.module.scss";
@@ -39,7 +39,7 @@ const Expense: React.FC<IExpenseProps> = ({
 			setOpenEditExpensePopup(false);
 			setOpenViewExpensePopup(true);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setUpdating(false);
 		}
@@ -56,7 +56,7 @@ const Expense: React.FC<IExpenseProps> = ({
 			setOpenEditExpensePopup(false);
 			setOpenViewExpensePopup(false);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setDeleting(false);
 		}

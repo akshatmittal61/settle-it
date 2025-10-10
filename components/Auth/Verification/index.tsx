@@ -1,5 +1,5 @@
 import { Button, Typography } from "@/library";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import React, { useState } from "react";
 import styles from "./styles.module.scss";
 
@@ -26,7 +26,7 @@ const AuthVerification: React.FC<IAuthVerificationProps> = ({
 				onSubmit={(e) => {
 					e.preventDefault();
 					if (otp.join("").length !== 6)
-						return notify.error("Invalid OTP");
+						return Notify.error("Invalid OTP");
 					onSubmit(otp.join(""));
 				}}
 			>

@@ -3,7 +3,7 @@ import { useStore } from "@/hooks";
 import { Masonry } from "@/layouts";
 import { Avatar, Typography } from "@/library";
 import { IOwedRecord } from "@/types";
-import { getUserDetails, notify, stylesConfig } from "@/utils";
+import { getUserDetails, Notify, stylesConfig } from "@/utils";
 import React, { useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { IoChevronDown } from "react-icons/io5";
@@ -42,7 +42,7 @@ const GroupOwedDataPerson: React.FC<GroupOwedDataPersonProps> = ({
 			);
 			await onUpdate(res.data);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setSettling(false);
 		}

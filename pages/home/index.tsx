@@ -6,7 +6,7 @@ import { Responsive, Seo } from "@/layouts";
 import { Avatar, Avatars, Button, MaterialIcon, Typography } from "@/library";
 import styles from "@/styles/pages/Home.module.scss";
 import { CreateGroupData, IUser, ServerSideResult } from "@/types";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -28,7 +28,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 		try {
 			await client.dispatch(getAllGroups, undefined);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 
@@ -45,7 +45,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 				setOpenCreateGroupPopup(false);
 			}
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setCreatingGroup(false);
 		}

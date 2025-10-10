@@ -1,5 +1,5 @@
 import { http } from "@/connections";
-import { notify } from "@/utils";
+import { Notify } from "@/utils";
 import React, { useState } from "react";
 
 const TempPage: React.FC = () => {
@@ -7,9 +7,9 @@ const TempPage: React.FC = () => {
 	const hit = async (endpoint: string) => {
 		try {
 			const res = await http.get(endpoint);
-			notify.info(res.data?.message);
+			Notify.info(res.data?.message);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 	return (

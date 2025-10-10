@@ -8,7 +8,7 @@ import { Typography } from "@/library";
 import { Logger } from "@/log";
 import styles from "@/styles/pages/Auth.module.scss";
 import { IUser, ServerSideResult } from "@/types";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -38,7 +38,7 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 			setAuthFrame("otp-verification");
 		} catch (error: any) {
 			Logger.error(error);
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setRequestingOtp(false);
 		}
@@ -58,7 +58,7 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 			}
 		} catch (error: any) {
 			Logger.error(error);
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setVerifyingOtp(false);
 		}
@@ -72,7 +72,7 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 			router.push(routes.HOME);
 		} catch (error: any) {
 			Logger.error(error);
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setUpdatingUserDetails(false);
 		}

@@ -3,7 +3,7 @@ import { useStore } from "@/hooks";
 import { Responsive } from "@/layouts";
 import { Avatar, Button, Pane, Typography } from "@/library";
 import { IExpense, IMember } from "@/types";
-import { getUserDetails, notify, roundOff, stylesConfig } from "@/utils";
+import { getUserDetails, Notify, roundOff, stylesConfig } from "@/utils";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { IoCheckmarkOutline } from "react-icons/io5";
@@ -43,7 +43,7 @@ const ExpenseMember: React.FC<ExpenseMemberProps> = ({
 			});
 			onUpdateMembers(updatedMembersRes.data);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setSettling(false);
 		}
@@ -135,9 +135,9 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 				expenseId: id,
 			});
 			setMembers(updatedMembersRes.data);
-			notify.success("This expense has been settled");
+			Notify.success("This expense has been settled");
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setSettlingExpense(false);
 		}
@@ -153,7 +153,7 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 				});
 				setMembers(res.data);
 			} catch (error) {
-				notify.error(error);
+				Notify.error(error);
 			} finally {
 				setGettingMembers(false);
 			}

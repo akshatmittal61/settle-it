@@ -6,7 +6,7 @@ import { Seo } from "@/layouts";
 import { Button, Table, Typography } from "@/library";
 import styles from "@/styles/pages/Admin.module.scss";
 import { IUser, ServerSideResult } from "@/types";
-import { copyToClipboard, notify, stylesConfig } from "@/utils";
+import { copyToClipboard, Notify, stylesConfig } from "@/utils";
 import React, { useEffect } from "react";
 
 type AdminPanelCacheProps = {
@@ -25,9 +25,9 @@ const AdminPanelCache: React.FC<AdminPanelCacheProps> = () => {
 				removeData(AdminApi.clearCacheData),
 				getData(AdminApi.getAllCacheData),
 			]);
-			notify.success("Cache cleared successfully.");
+			Notify.success("Cache cleared successfully.");
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 

@@ -1,6 +1,6 @@
 import { regex } from "@/constants";
 import { Button, Input } from "@/library";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import React from "react";
 import { IoMailOutline } from "react-icons/io5";
 import styles from "./styles.module.scss";
@@ -26,7 +26,7 @@ const AuthContent: React.FC<IAuthContentProps> = ({
 			onSubmit={(e) => {
 				e.preventDefault();
 				if (!regex.email.test(email))
-					return notify.error("Invalid email");
+					return Notify.error("Invalid email");
 				onContinueWithEmail();
 			}}
 		>

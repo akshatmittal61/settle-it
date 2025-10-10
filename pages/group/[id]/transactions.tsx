@@ -7,7 +7,7 @@ import { Seo } from "@/layouts";
 import PageNotFound from "@/pages/404";
 import styles from "@/styles/pages/Group.module.scss";
 import { IGroup, ITransaction, IUser, ServerSideResult } from "@/types";
-import { getNonEmptyString, notify, stylesConfig } from "@/utils";
+import { getNonEmptyString, Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
@@ -33,7 +33,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 			);
 			setTransactions(fetchedTransactions.transactions);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 

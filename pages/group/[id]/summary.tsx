@@ -21,7 +21,7 @@ import {
 	IUser,
 	ServerSideResult,
 } from "@/types";
-import { getNonEmptyString, notify, stylesConfig } from "@/utils";
+import { getNonEmptyString, Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
@@ -65,7 +65,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 				setActiveTab("summary");
 			}
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		}
 	};
 

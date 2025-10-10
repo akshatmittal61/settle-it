@@ -11,7 +11,7 @@ import {
 	userSlice,
 } from "@/context/slices";
 import { AppTheme, IUser } from "@/types";
-import { hexToRgb, notify } from "@/utils";
+import { hexToRgb, Notify } from "@/utils";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -46,7 +46,7 @@ export const useStore = () => {
 		const status = navigator.onLine ? "online" : "offline";
 		dispatch(uiSlice.actions.setNetworkStatus(status));
 		if (status === "offline") {
-			notify.error("You are offline");
+			Notify.error("You are offline");
 		}
 	};
 
@@ -64,7 +64,7 @@ export const useStore = () => {
 				dispatch(allHelpers.expenseHelpers.getAllExpenses()),
 			]);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			dispatch(uiSlice.actions.setIsSyncing(false));
 		}

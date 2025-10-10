@@ -5,7 +5,7 @@ import { Responsive, Seo } from "@/layouts";
 import { Avatar, Button, Input, Typography } from "@/library";
 import styles from "@/styles/pages/Profile.module.scss";
 import { IUser, ServerSideResult } from "@/types";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { FiArrowLeft, FiLogOut } from "react-icons/fi";
@@ -38,9 +38,9 @@ const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 		setUpdating(true);
 		try {
 			await dispatch(updateUser(fields)).unwrap();
-			notify.success("Updated successfully");
+			Notify.success("Updated successfully");
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setUpdating(false);
 		}

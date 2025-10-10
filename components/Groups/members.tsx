@@ -12,7 +12,7 @@ import {
 	Typography,
 } from "@/library";
 import { IUser } from "@/types";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { Loader } from "..";
@@ -55,7 +55,7 @@ const MembersPlaceholder: React.FC<MembersPlaceholderProps> = ({
 			const res = await UserApi.inviteUser(searchStr);
 			onInvited(res.data);
 		} catch (error) {
-			notify.error(error);
+			Notify.error(error);
 		} finally {
 			setInviting(false);
 		}
@@ -135,7 +135,7 @@ const MembersBulkEditor: React.FC<MembersBulkEditorProps> = ({
 	const handleSearchInBulkEditor = async (value: string) => {
 		const response = await bulkEditorCall(UserApi.searchInBulk, value);
 		if (response.message) {
-			notify.success(response.message);
+			Notify.success(response.message);
 		}
 		setSelectedMembers(response.users);
 	};

@@ -3,7 +3,7 @@ import { useStore } from "@/hooks";
 import { Responsive } from "@/layouts";
 import { Button, Input, Pane } from "@/library";
 import { UpdateExpenseData } from "@/types";
-import { getNonNullValue, getUserDetails, notify, stylesConfig } from "@/utils";
+import { getNonNullValue, getUserDetails, Notify, stylesConfig } from "@/utils";
 import React, { useEffect, useState } from "react";
 import {
 	distributionMethods,
@@ -100,7 +100,7 @@ const UpdateExpense: React.FC<IUpdateExpenseProps> = ({
 					}));
 				setMembers([...newMembers, ...nonExpenseGroupMembers]);
 			} catch (error) {
-				notify.error(error);
+				Notify.error(error);
 			} finally {
 				setGettingMembers(false);
 			}

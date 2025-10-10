@@ -2,7 +2,7 @@ import { useStore } from "@/hooks";
 import { Responsive } from "@/layouts";
 import { Button, Input, Pane } from "@/library";
 import { CreateGroupData, IUser } from "@/types";
-import { notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig } from "@/utils";
 import React, { useState } from "react";
 import Members from "./members";
 import styles from "./styles.module.scss";
@@ -42,7 +42,7 @@ const CreateGroup: React.FC<ICreateGroupProps> = ({
 			(selectedMembers.length === 1 &&
 				selectedMembers[0].id === loggedInuser.id)
 		) {
-			return notify.error("Please select at least 1 member");
+			return Notify.error("Please select at least 1 member");
 		}
 		if (selectedMembers.map((user) => user.id).includes(loggedInuser.id)) {
 			onSave(fields);
