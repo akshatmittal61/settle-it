@@ -1,6 +1,6 @@
 import { appNetworkStatus, appTheme } from "@/constants";
 import { AppNetworkStatus, AppTheme } from "@/types";
-import { hexToRgb, Notify } from "@/utils";
+import { hexToRgb, Notify, StringUtils } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
@@ -48,7 +48,10 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 	useSetup: ({ store, options }) => {
 		const syncTheme = () => {
 			const theme = localStorage.getItem("theme");
-			if (theme && ["light", "dark"].includes(theme)) {
+			if (
+				StringUtils.equalsIgnoreCase(theme, appTheme.light) ||
+				StringUtils.equalsIgnoreCase(theme, appTheme.dark)
+			) {
 				store.getState().setTheme(theme as AppTheme);
 			} else {
 				const h = window.matchMedia("(prefers-color-scheme: dark)");
@@ -66,9 +69,11 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 		};
 
 		const syncNetworkStatus = () => {
-			const status = navigator.onLine ? "online" : "offline";
+			const status = navigator.onLine
+				? appNetworkStatus.online
+				: appNetworkStatus.offline;
 			store.getState().setNetworkStatus(status);
-			if (status === "offline") {
+			if (StringUtils.equals(status, appNetworkStatus.offline)) {
 				Notify.error("You are offline");
 			}
 		};

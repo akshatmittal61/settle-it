@@ -9,5 +9,4 @@ export * from "./parser";
 export * from "./payloads";
 export * from "./server";
 export * from "./seo";
-export * from "./store";
 export * from "./ui";

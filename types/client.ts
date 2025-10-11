@@ -48,6 +48,9 @@ export type Share = {
 	user: string;
 	amount: number;
 };
+export type ExpenseSpread = IExpense & {
+	splits: Array<Omit<ISplit, "expense">>;
+};
 export type IShare = {
 	user: IUser;
 	amount: number;

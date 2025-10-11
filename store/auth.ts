@@ -1,22 +1,26 @@
 import { AuthApi, UserApi } from "@/api";
+import { USER_STATUS } from "@/constants";
 import { useHttpClient } from "@/hooks";
-import { IUser } from "@/types";
-import { SafetyUtils, StringUtils } from "@/utils";
+import { IUser, UpdateUser } from "@/types";
+import { BooleanUtils, SafetyUtils, StringUtils } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
 type State = {
 	user: IUser | null;
-	isLoading: boolean;
+	// user will be marked as onboarded if he has joined the application and saved the name
+	isOnboarded: boolean;
+	isSyncing: boolean;
 	isLoggedIn: boolean;
 };
 
 type Action = {
 	getUser: Getter<State, "user">;
-	getIsLoading: Getter<State, "isLoading">;
+	getIsOnboarded: Getter<State, "isOnboarded">;
+	getIsSyncing: Getter<State, "isSyncing">;
 	getIsLoggedIn: Getter<State, "isLoggedIn">;
 	setUser: Setter<State, "user">;
-	setIsLoading: Setter<State, "isLoading">;
+	setIsSyncing: Setter<State, "isSyncing">;
 };
 
 type Options = {
@@ -25,48 +29,48 @@ type Options = {
 
 type Extras = {
 	sync: () => Promise<void>;
-	isUpdating: boolean;
-	isLoading: boolean;
-	update: (_: Partial<IUser>) => Promise<void>;
+	isUpdatingProfile: boolean;
+	updateProfile: (_: UpdateUser) => Promise<void>;
 	logout: () => Promise<void>;
 };
 
 export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 	createState: (set, get) => ({
 		user: null,
-		isLoading: false,
+		isOnboarded: false,
+		isSyncing: false,
 		isLoggedIn: false,
 		getUser: () => get().user,
-		getIsLoading: () => get().isLoading,
+		getIsOnboarded: () => get().isOnboarded,
+		getIsSyncing: () => get().isSyncing,
 		getIsLoggedIn: () => get().isLoggedIn,
 		setUser: (user) => {
-			if (
-				SafetyUtils.isNonNull(user) &&
-				StringUtils.isNotEmpty(user.id)
-			) {
-				set({ user, isLoggedIn: true });
-			} else {
-				set({ user, isLoggedIn: false });
-			}
+			const isLoggedIn = SafetyUtils.isNonNull(user);
+			const isOnboarded =
+				isLoggedIn &&
+				StringUtils.equals(user.status, USER_STATUS.JOINED) &&
+				StringUtils.isNotEmpty(user.name);
+			set({ user, isLoggedIn, isOnboarded });
 		},
-		setIsLoading: (isLoading) => set({ isLoading }),
+		setIsSyncing: (isSyncing) => set({ isSyncing }),
 	}),
 	useSetup: ({ store, options }) => {
-		const { loading: isUpdating, call: updateApi } = useHttpClient<IUser>();
+		const { loading: isUpdatingProfile, call: updateApi } =
+			useHttpClient<IUser>();
 
 		const sync = async () => {
 			try {
-				store.getState().setIsLoading(true);
+				store.getState().setIsSyncing(true);
 				const res = await AuthApi.verifyUserIfLoggedIn();
 				store.getState().setUser(res.data);
 			} catch {
 				store.getState().setUser(null);
 			} finally {
-				store.getState().setIsLoading(false);
+				store.getState().setIsSyncing(false);
 			}
 		};
 
-		const update = async (body: Partial<IUser>) => {
+		const updateProfile = async (body: UpdateUser) => {
 			const updated = await updateApi(UserApi.updateUser, body);
 			store.getState().setUser(updated);
 		};
@@ -77,7 +81,7 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 		};
 
 		useEffect(() => {
-			if (options.syncOnMount) {
+			if (BooleanUtils.True.equals(options.syncOnMount)) {
 				void sync();
 			}
 			// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,9 +89,8 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 
 		return {
 			sync,
-			isUpdating,
-			isLoading: store.getState().isLoading,
-			update,
+			isUpdatingProfile,
+			updateProfile,
 			logout,
 		};
 	},

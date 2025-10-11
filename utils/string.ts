@@ -3,9 +3,9 @@ import { ParserSafetyError } from "@/errors";
 export class StringUtils {
 	public static EMPTY = "";
 
-	public static equals(
-		str1: string | null | undefined,
-		str2: string | null | undefined
+	public static equals<T extends string | null | undefined>(
+		str1: T,
+		str2: T
 	): boolean {
 		if (StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str2)) {
 			return str1.length === str2.length && str1 === str2;
@@ -15,15 +15,30 @@ export class StringUtils {
 		return false;
 	}
 
-	public static notEquals(
-		str1: string | null | undefined,
-		str2: string | null | undefined
+	public static notEquals<T extends string | null | undefined>(
+		str1: T,
+		str2: T
 	): boolean {
 		return !StringUtils.equals(str1, str2);
 	}
 
-	public static equalsIgnoreCase(str1: string, str2: string): boolean {
-		return str1.toLowerCase() === str2.toLowerCase();
+	public static equalsIgnoreCase<T extends string | null | undefined>(
+		str1: T,
+		str2: T
+	): boolean {
+		if (this.equals(str1, str2)) {
+			return true;
+		}
+		if (StringUtils.isNotEmpty(str1) && StringUtils.isNotEmpty(str2)) {
+			return (
+				str1.length === str2.length &&
+				str1.toLowerCase() === str2.toLowerCase()
+			);
+		} else if (StringUtils.isEmpty(str1) && StringUtils.isEmpty(str2)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public static isEmpty(
