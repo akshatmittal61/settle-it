@@ -4,10 +4,10 @@ import { Responsive } from "@/layouts";
 import { Avatar, Button, Pane, Typography } from "@/library";
 import { IExpense, IMember } from "@/types";
 import { getUserDetails, Notify, roundOff, stylesConfig } from "@/utils";
-import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { IoCheckmarkOutline } from "react-icons/io5";
 import styles from "./styles.module.scss";
+import dayjs from "dayjs";
 
 interface IViewExpenseProps {
 	id: string;
@@ -190,7 +190,7 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 							{expense.title}
 						</Typography>
 						<Typography size="sm">
-							{moment(expense.paidOn ?? expense.createdAt).format(
+							{dayjs(expense.paidOn ?? expense.createdAt).format(
 								"MMM DD, YYYY"
 							)}
 						</Typography>

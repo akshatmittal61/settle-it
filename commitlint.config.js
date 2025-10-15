@@ -8,8 +8,9 @@
 // style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 // test: Adding missing tests or correcting existing tests
 // config: Changes to configuration files
+// content: Changes to content
 
-module.exports = {
+const config = {
 	extends: ["@commitlint/config-conventional"],
 	rules: {
 		"body-leading-blank": [1, "always"],
@@ -44,7 +45,10 @@ module.exports = {
 				"style",
 				"test",
 				"config",
+				"content",
 			],
 		],
 	},
 };
+
+export default config;

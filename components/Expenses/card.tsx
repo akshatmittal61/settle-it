@@ -3,9 +3,9 @@ import { useConfirmationModal, useHttpClient, useStore } from "@/hooks";
 import { Typography } from "@/library";
 import { IExpense, UpdateExpenseData } from "@/types";
 import { getUserDetails, Notify, stylesConfig } from "@/utils";
-import moment from "moment";
 import React, { useState } from "react";
 import styles from "./styles.module.scss";
+import dayjs from "dayjs";
 
 interface IExpenseProps extends IExpense {}
 
@@ -86,7 +86,7 @@ const Expense: React.FC<IExpenseProps> = ({
 				onClick={() => setOpenViewExpensePopup(true)}
 			>
 				<Typography className={classes("-date")}>
-					{moment(paidOn ?? createdAt).format("MMM DD, YYYY")}
+					{dayjs(paidOn ?? createdAt).format("MMM DD, YYYY")}
 				</Typography>
 				<Typography className={classes("-title")}>{title}</Typography>
 				<Typography className={classes("-amount")}>
