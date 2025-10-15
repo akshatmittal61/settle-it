@@ -5,6 +5,7 @@ import { IUser, UpdateUser } from "@/types";
 import { BooleanUtils, Notify, SafetyUtils, StringUtils } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
+import { useRouter } from "next/router";
 
 type State = {
 	user: IUser | null;
@@ -28,15 +29,15 @@ type Options = {
 };
 
 type Extras = {
-	sync: () => Promise<void>;
+	sync: () => Promise<IUser>;
 	isUpdatingProfile: boolean;
 	isRequestingOtp: boolean;
 	isVerifyingOtp: boolean;
-	updateProfile: (_body: UpdateUser) => Promise<void>;
-	requestOtpWithEmail: (_email: string) => Promise<void>;
-	verifyOtpWithEmail: (_email: string, _otp: string) => Promise<void>;
-	continueOAuthWithGoogle: (_token: string) => Promise<void>;
-	logout: () => Promise<void>;
+	updateProfile: (_body: UpdateUser) => Promise<IUser>;
+	requestOtpWithEmail: (_email: string) => Promise<null>;
+	verifyOtpWithEmail: (_email: string, _otp: string) => Promise<IUser>;
+	continueOAuthWithGoogle: (_token: string) => Promise<IUser>;
+	logout: () => Promise<null>;
 };
 
 export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
@@ -60,60 +61,41 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 		setIsSyncing: (isSyncing) => set({ isSyncing }),
 	}),
 	useSetup: ({ store, options }) => {
-		const { loading: isUpdatingProfile, trigger: updateApi } =
+		const router = useRouter();
+		const { trigger: sync, loading: isSyncing } = useHttpClient({
+			trigger: AuthApi.verifyUserIfLoggedIn,
+			onSuccess: store.getState().setUser,
+			onError: () => {
+				store.getState().setUser(null);
+				void router.push(redirectToLogin(router.pathname));
+			},
+		});
+		const { trigger: updateProfile, loading: isUpdatingProfile } =
 			useHttpClient({
 				trigger: UserApi.updateUser,
+				onSuccess: store.getState().setUser,
 				onError: Notify.error,
 			});
-		const { loading: isRequestingOtp, trigger: requestOtpApi } =
+		const { trigger: requestOtpWithEmail, loading: isRequestingOtp } =
 			useHttpClient({
 				trigger: AuthApi.requestOtpWithEmail,
 				onError: Notify.error,
 			});
-		const { loading: isVerifyingOtp, trigger: verifyOtpApi } =
+		const { trigger: verifyOtpWithEmail, loading: isVerifyingOtp } =
 			useHttpClient({
 				trigger: AuthApi.verifyOtpWithEmail,
+				onSuccess: store.getState().setUser,
 				onError: Notify.error,
 			});
-		const { trigger: continueOAuthWithGoogleApi } = useHttpClient({
+		const { trigger: continueOAuthWithGoogle } = useHttpClient({
 			trigger: AuthApi.continueOAuthWithGoogle,
+			onSuccess: store.getState().setUser,
 		});
-
-		const sync = async () => {
-			try {
-				store.getState().setIsSyncing(true);
-				const res = await AuthApi.verifyUserIfLoggedIn();
-				store.getState().setUser(res.data);
-			} catch {
-				store.getState().setUser(null);
-			} finally {
-				store.getState().setIsSyncing(false);
-			}
-		};
-
-		const updateProfile = async (body: UpdateUser) => {
-			const updated = await updateApi(body);
-			store.getState().setUser(updated);
-		};
-
-		const requestOtpWithEmail = async (email: string) => {
-			await requestOtpApi(email);
-		};
-
-		const verifyOtpWithEmail = async (email: string, otp: string) => {
-			const updated = await verifyOtpApi(email, otp);
-			store.getState().setUser(updated);
-		};
-
-		const continueOAuthWithGoogle = async (token: string) => {
-			const loggedInUser = await continueOAuthWithGoogleApi(token);
-			store.getState().setUser(loggedInUser);
-		};
-
-		const logout = async () => {
-			await AuthApi.logout();
-			store.getState().setUser(null);
-		};
+		const { trigger: logout } = useHttpClient({
+			trigger: AuthApi.logout,
+			onSuccess: () => store.getState().setUser(null),
+			onError: Notify.error,
+		});
 
 		useEffect(() => {
 			if (BooleanUtils.True.equals(options.syncOnMount)) {
@@ -121,6 +103,14 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 			}
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		}, [options.syncOnMount]);
+
+		useEffect(() => {
+			// have kept the isSyncing state
+			// that is to be accessed outside the hook in root state instead on hook level
+			// because it gets reset on hook remount, but not in root state
+			store.getState().setIsSyncing(isSyncing);
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [isSyncing]);
 
 		return {
 			sync,

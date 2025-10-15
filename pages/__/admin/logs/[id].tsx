@@ -1,44 +1,44 @@
 import { adminPage } from "@/client";
-import { AdminApi } from "@/connections";
+import { AdminApi } from "@/api";
 import { routes } from "@/constants";
-import { Button, Typography } from "@/library";
+import { Button, Loader, Typography } from "@/library";
 import styles from "@/styles/pages/Admin.module.scss";
 import { IUser, ServerSideResult } from "@/types";
-import {
-	getNonEmptyString,
-	getNonNullValue,
-	safeParse,
-	saveFile,
-	stylesConfig,
-} from "@/utils";
-import React from "react";
+import { saveFile, StringUtils, stylesConfig } from "@/utils";
+import React, { useEffect } from "react";
 import { FiDownload } from "react-icons/fi";
+import { useHttpClient } from "@/hooks";
 
 type AdminPanelLogPageProps = {
 	user: IUser;
 	file: string;
-	content: string;
 };
 
 const classes = stylesConfig(styles, "admin");
 
 const AdminPanelLogPage: React.FC<AdminPanelLogPageProps> = (props) => {
-	return props.content ? (
+	const { loading, data, trigger } = useHttpClient({
+		trigger: AdminApi.getLogFileByName,
+	});
+	useEffect(() => {
+		void trigger(props.file);
+	}, []);
+	return loading ? (
+		<Loader.Spinner />
+	) : data ? (
 		<main className={classes("")}>
 			<Typography size="xxl" weight="medium" as="h1">
 				Logs for {props.file}
 			</Typography>
 			<Button
 				onClick={() => {
-					saveFile(props.content, props.file, "log");
+					saveFile(data, props.file, "log");
 				}}
 				icon={<FiDownload />}
 			>
 				Download file
 			</Button>
-			<pre style={{ width: "100%", overflowX: "auto" }}>
-				{props.content}
-			</pre>
+			<pre style={{ width: "100%", overflowX: "auto" }}>{data}</pre>
 		</main>
 	) : (
 		"No logs found"
@@ -53,9 +53,8 @@ export const getServerSideProps = (
 	return adminPage(context, {
 		async onAdmin(user, headers) {
 			try {
-				// const fileName = context.query.id as string;
-				const fileName = getNonNullValue(
-					safeParse(getNonEmptyString, context.query.id)
+				const fileName = StringUtils.getNonEmptyString(
+					context.query.id
 				);
 				const res = await AdminApi.getLogFileByName(fileName, headers);
 				return {

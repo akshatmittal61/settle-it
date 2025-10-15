@@ -1,3 +1,5 @@
+import { StringUtils } from "@/utils";
+
 export const routes = Object.freeze({
 	ROOT: "/",
 	ABOUT: "/about",
@@ -41,6 +43,6 @@ export const routesSupportingContainer: Array<string | Function> = [
 	routes.PROFILE,
 ];
 
-export const redirectToLogin = (currentPath: string) => {
+export const redirectToLogin = (currentPath: string = StringUtils.EMPTY) => {
 	return routes.LOGIN + `?redirect=${currentPath}`;
 };
