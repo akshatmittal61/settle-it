@@ -1,9 +1,14 @@
-import { Footer, Header, Loader, SideBar } from "@/components";
-import { AppSeo, routes } from "@/constants";
-import { useDevice, useStore } from "@/hooks";
-import { Seo } from "@/layouts";
+import { Header, Seo, SideBar } from "@/components";
+import {
+	AppSeo,
+	protectedRoutes,
+	routesSupportingContainer,
+} from "@/constants";
+import { useDevice } from "@/hooks";
+import { Loader } from "@/library";
+import { useAuthStore, useUiStore } from "@/store";
 import { IUser } from "@/types";
-import { stylesConfig } from "@/utils";
+import { BooleanUtils, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
@@ -18,34 +23,14 @@ const classes = stylesConfig(styles, "wrapper");
 
 export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 	const router = useRouter();
-	const { type: device } = useDevice();
-	const { initStore, syncNetworkStatus, closeSideBar } = useStore();
 	const [showLoader, setShowLoader] = useState(false);
-	const pagesSupportingHeader: Array<string> = [
-		routes.ROOT,
-		routes.ERROR,
-		routes.PRIVACY_POLICY,
-		routes.HOME,
-		routes.GROUP("[id]"),
-		routes.GROUP_SUMMARY("[id]"),
-		routes.GROUP_TRANSACTIONS("[id]"),
-		routes.PROFILE,
-	];
-	const pagesSupportingFooter: Array<string> = [
-		routes.ROOT,
-		routes.ERROR,
-		routes.PRIVACY_POLICY,
-	];
-	const pagesSupportingContainer: Array<string> = [
-		routes.HOME,
-		routes.GROUP("[id]"),
-		routes.GROUP_SUMMARY("[id]"),
-		routes.GROUP_TRANSACTIONS("[id]"),
-		routes.PROFILE,
-	];
+	const { sync: syncAuth, setUser, getIsLoggedIn } = useAuthStore();
+	const { openSidebar, syncNetworkStatus } = useUiStore({
+		syncOnMount: true,
+	});
+	const { device } = useDevice();
 
 	// only show router when route is changing
-
 	useEffect(() => {
 		router.events.on("routeChangeStart", () => {
 			setShowLoader(true);
@@ -59,19 +44,31 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 	}, [router.events]);
 
 	useEffect(() => {
-		initStore(user);
-		setInterval(() => {
-			syncNetworkStatus();
-		}, 10000);
+		if (user) {
+			setUser(user);
+		} else {
+			if (
+				BooleanUtils.False.equals(getIsLoggedIn()) &&
+				protectedRoutes.includes(router.pathname)
+			) {
+				void syncAuth();
+			}
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [user, router.pathname]);
 
 	useEffect(() => {
 		if (device === "mobile") {
-			closeSideBar();
+			openSidebar();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [device, router.pathname]);
+
+	useEffect(() => {
+		setInterval(() => {
+			syncNetworkStatus();
+		}, 5000);
+	}, [syncNetworkStatus]);
 
 	return (
 		<>
@@ -84,28 +81,24 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 				icons={AppSeo.icons}
 				twitter={AppSeo.twitter}
 				og={AppSeo.og}
-				author={AppSeo.author}
-				siteName={AppSeo.siteName}
 			/>
-			{pagesSupportingHeader.includes(router.pathname) ? (
-				<Header />
-			) : null}
-			{pagesSupportingContainer.includes(router.pathname) ? (
-				<SideBar />
+			{routesSupportingContainer.includes(router.pathname) ? (
+				<>
+					<Header />
+					<SideBar />
+				</>
 			) : null}
 			{showLoader ? <Loader.Bar /> : null}
 			<main
 				className={
-					pagesSupportingContainer.includes(router.pathname)
+					routesSupportingContainer.includes(router.pathname)
 						? classes("")
 						: ""
 				}
 			>
 				{children}
 			</main>
-			{pagesSupportingFooter.includes(router.pathname) ? (
-				<Footer />
-			) : null}
+			{/*<ActionBar />*/}
 			<Toaster position="top-center" />
 		</>
 	);

@@ -4,6 +4,7 @@ export { default as IconButton } from "./Button/icon";
 export * from "./Checkbox";
 export * from "./icons";
 export * from "./Input";
+export * as Loader from "./Loader";
 export * from "./Pane";
 export * from "./Popup";
 export * from "./Table";

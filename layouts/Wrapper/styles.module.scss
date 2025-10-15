@@ -4,25 +4,20 @@
 	position: fixed;
 	top: var(--head-height);
 	left: var(--side-width);
-	width: calc(100% - var(--side-width) - 1rem);
-	height: calc(100vh - var(--head-height) - 1rem);
-	border-radius: 32px;
+	width: calc(100% - var(--side-width));
+	height: 100vh;
 	background-color: var(--theme-bg);
 	overflow-y: auto;
 	overflow-x: hidden;
-	z-index: 60;
+	z-index: 50;
+	border-right: 1px solid var(--grey-600);
+	box-shadow: -4px 0px 4px -4px rgba(0, 0, 0, 0.1);
 
 	@include responsive(phone) {
 		left: 0;
 		width: 100%;
-		border-radius: 0;
-
-		@include theme(light) {
-			background-color: var(--accent-color-200);
-		}
-
-		@include theme(dark) {
-			background-color: var(--bgcolor-400);
-		}
+		height: calc(100vh - var(--head-height));
+		border-right: 0;
+		box-shadow: none;
 	}
 }

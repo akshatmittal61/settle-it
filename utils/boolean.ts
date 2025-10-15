@@ -43,4 +43,8 @@ export class BooleanUtils {
 			return input;
 		}
 	}
+
+	public static invert(input: any): boolean {
+		return !BooleanUtils.valueOf(input);
+	}
 }

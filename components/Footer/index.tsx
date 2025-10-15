@@ -8,7 +8,7 @@ import styles from "./styles.module.scss";
 
 const classes = stylesConfig(styles, "footer");
 
-const Footer: React.FC = () => {
+export const Footer: React.FC = () => {
 	const router = useRouter();
 	return (
 		<footer className={classes("")}>
@@ -54,5 +54,3 @@ const Footer: React.FC = () => {
 		</footer>
 	);
 };
-
-export default Footer;

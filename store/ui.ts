@@ -1,6 +1,18 @@
-import { appNetworkStatus, appTheme } from "@/constants";
-import { AppNetworkStatus, AppTheme } from "@/types";
-import { hexToRgb, Notify, StringUtils } from "@/utils";
+import { appNetworkStatus, appTheme, getSideBarLinks } from "@/constants";
+import {
+	AppNetworkStatus,
+	AppTheme,
+	DashboardHeader,
+	Navigation,
+	Sidebar,
+} from "@/types";
+import {
+	BooleanUtils,
+	CollectionUtils,
+	hexToRgb,
+	Notify,
+	StringUtils,
+} from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
@@ -9,6 +21,8 @@ type State = {
 	theme: AppTheme;
 	accentColor: string;
 	networkStatus: AppNetworkStatus;
+	sidebar: Sidebar;
+	header: DashboardHeader;
 };
 
 export type Actions = {
@@ -18,6 +32,20 @@ export type Actions = {
 	setAccentColor: Setter<State, "accentColor">;
 	getNetworkStatus: Getter<State, "networkStatus">;
 	setNetworkStatus: Setter<State, "networkStatus">;
+	getSidebar: Getter<State, "sidebar">;
+	setSidebar: Setter<State, "sidebar">;
+	getSidebarExpanded: Getter<State["sidebar"], "expanded">;
+	setSidebarExpanded: Setter<State["sidebar"], "expanded">;
+	getSidebarNavigation: Getter<State["sidebar"], "navigation">;
+	setSidebarNavigation: Setter<State["sidebar"], "navigation">;
+	getSidebarOptions: Getter<State["sidebar"], "options">;
+	setSidebarOptions: Setter<State["sidebar"], "options">;
+	getHeader: Getter<State, "header">;
+	setHeader: Setter<State, "header">;
+	getHeaderContent: Getter<State["header"], "content">;
+	setHeaderContent: Setter<State["header"], "content">;
+	getHeaderNavigation: Getter<State["header"], "navigation">;
+	setHeaderNavigation: Setter<State["header"], "navigation">;
 };
 
 export type Options = {
@@ -29,6 +57,9 @@ export type Extras = {
 	syncTheme: () => void;
 	syncNetworkStatus: () => void;
 	toggleTheme: () => void;
+	openSidebar: () => void;
+	closeSidebar: () => void;
+	toggleSidebar: () => void;
 };
 
 export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
@@ -37,12 +68,40 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 		theme: appTheme.light,
 		accentColor: "0, 0, 0",
 		networkStatus: appNetworkStatus.online,
+		sidebar: {
+			expanded: BooleanUtils.False.value,
+			navigation: CollectionUtils.EMPTY,
+			options: CollectionUtils.EMPTY,
+		},
+		header: {
+			content: null,
+			navigation: CollectionUtils.EMPTY,
+		},
 		getTheme: () => get().theme,
 		setTheme: (theme) => set({ theme }),
 		getAccentColor: () => get().accentColor,
 		setAccentColor: (accentColor) => set({ accentColor }),
 		getNetworkStatus: () => get().networkStatus,
 		setNetworkStatus: (networkStatus) => set({ networkStatus }),
+		getSidebar: () => get().sidebar,
+		setSidebar: (sidebar) => set({ sidebar }),
+		getSidebarExpanded: () => get().getSidebar().expanded,
+		setSidebarExpanded: (expanded) =>
+			set({ sidebar: { ...get().getSidebar(), expanded } }),
+		getSidebarNavigation: () => get().getSidebar().navigation,
+		setSidebarNavigation: (navigation) =>
+			set({ sidebar: { ...get().getSidebar(), navigation } }),
+		getSidebarOptions: () => get().getSidebar().options,
+		setSidebarOptions: (options) =>
+			set({ sidebar: { ...get().getSidebar(), options } }),
+		getHeader: () => get().header,
+		setHeader: (header) => set({ header }),
+		getHeaderContent: () => get().getHeader().content,
+		setHeaderContent: (content) =>
+			set({ header: { ...get().getHeader(), content } }),
+		getHeaderNavigation: () => get().getHeader().navigation,
+		setHeaderNavigation: (navigation) =>
+			set({ header: { ...get().getHeader(), navigation } }),
 	}),
 	defaults: { syncOnMount: true },
 	useSetup: ({ store, options }) => {
@@ -93,6 +152,19 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			}
 		};
 
+		const openSidebar = () => {
+			store.getState().setSidebarExpanded(true);
+		};
+
+		const closeSidebar = () => {
+			store.getState().setSidebarExpanded(false);
+		};
+
+		const toggleSidebar = () => {
+			const currentState = store.getState().getSidebarExpanded();
+			store.getState().setSidebarExpanded(!currentState);
+		};
+
 		useEffect(() => {
 			if (!options.syncOnMount) return;
 			if (typeof window === "undefined") return;
@@ -105,6 +177,9 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			syncTheme,
 			syncNetworkStatus,
 			toggleTheme,
+			openSidebar,
+			closeSidebar,
+			toggleSidebar,
 		};
 	},
 });

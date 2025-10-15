@@ -37,9 +37,7 @@ export class SafetyUtils {
 		);
 	}
 
-	public static isNonNull<
-		T extends string | number | boolean | [] | object | null | undefined,
-	>(input: T): input is NonNullable<T> {
+	public static isNonNull<T>(input: T): input is NonNullable<T> {
 		if (input === null || input === undefined) return false;
 		if (typeof input === "undefined") return false;
 		if (typeof input === "string") return StringUtils.isNotEmpty(input);

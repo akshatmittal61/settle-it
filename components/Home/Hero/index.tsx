@@ -46,7 +46,7 @@ const HomeHero: React.FC<IHomeHeroProps> = () => {
 						icon={<AiOutlineArrowRight />}
 						iconPosition="right"
 						onClick={() => {
-							router.push(routes.LOGIN);
+							void router.push(routes.LOGIN);
 						}}
 					>
 						Get Started Today

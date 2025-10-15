@@ -6,7 +6,7 @@ type PlatformType = "client" | "server";
 
 export const useDevice = () => {
 	const [device, setDevice] = useState<DeviceType>("desktop");
-	const [screenOrientation, setScreenOrientation] =
+	const [orientation, setOrientation] =
 		useState<ScreenOrientationType>("landscape");
 	const [platform, setPlatform] = useState<PlatformType>("server");
 
@@ -31,9 +31,9 @@ export const useDevice = () => {
 			}
 
 			if (window.innerHeight > window.innerWidth) {
-				setScreenOrientation("portrait");
+				setOrientation("portrait");
 			} else {
-				setScreenOrientation("landscape");
+				setOrientation("landscape");
 			}
 		};
 
@@ -50,9 +50,5 @@ export const useDevice = () => {
 		};
 	}, []);
 
-	return {
-		type: device,
-		orientation: screenOrientation,
-		platform: platform,
-	};
+	return { device, orientation, platform };
 };

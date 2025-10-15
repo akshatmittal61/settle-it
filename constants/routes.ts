@@ -7,7 +7,6 @@ export const routes = Object.freeze({
 	CONTACT: "/contact",
 	LOGIN: "/login",
 	EXPENSES: "/expenses",
-	EXPENSE: "/expenses/:id",
 	ONBOARDING: "/login",
 	PROFILE: "/me",
 	ERROR: "/500",
@@ -29,6 +28,16 @@ export const protectedRoutes: Array<String | Function> = [
 	routes.CACHE,
 	routes.LOGS,
 	routes.LOG_FILE,
+	routes.PROFILE,
+];
+
+export const routesSupportingContainer: Array<string | Function> = [
+	routes.GROUP,
+	routes.GROUP_SUMMARY,
+	routes.GROUP_TRANSACTIONS,
+	routes.ADMIN,
+	routes.CACHE,
+	routes.EXPENSES,
 	routes.PROFILE,
 ];
 

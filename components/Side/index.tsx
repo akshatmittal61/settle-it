@@ -1,105 +1,269 @@
-import { useStore } from "@/hooks";
-import { MaterialIcon, Typography } from "@/library";
-import { Navigation } from "@/types";
-import { stylesConfig } from "@/utils";
+import { appTheme, redirectToLogin, routes } from "@/constants";
+import { useOnClickOutside } from "@/hooks";
+import { Avatar, Typography } from "@/library";
+import { useAuthStore, useUiStore, useWalletStore } from "@/store";
+import {
+	BooleanUtils,
+	getUserDetails,
+	SafetyUtils,
+	StringUtils,
+	stylesConfig,
+} from "@/utils";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+	FiChevronDown,
+	FiLogOut,
+	FiMoon,
+	FiRefreshCw,
+	FiSun,
+	FiUser,
+} from "react-icons/fi";
 import styles from "./styles.module.scss";
 
 interface ISideBarProps {}
 
 const classes = stylesConfig(styles, "side-bar");
 
-const SideBarItem: React.FC<Navigation> = ({ title, icon, route, options }) => {
+export const SideBar: React.FC<ISideBarProps> = () => {
 	const router = useRouter();
-	const { isSidebarExpanded } = useStore();
-	const [expanded, setExpanded] = useState(false);
+	const {
+		getUser,
+		getIsLoggedIn,
+		sync: syncAuthState,
+		logout,
+	} = useAuthStore();
+	const { sync: syncWalletState } = useWalletStore();
+	const {
+		getTheme,
+		openSidebar,
+		getSidebarNavigation,
+		getSidebarExpanded,
+		toggleTheme,
+		sync: syncUiState,
+	} = useUiStore();
+	const bottomContainerRef = useRef<HTMLDivElement>(null);
+	const [expandOptionsMenu, setExpandOptionsMenu] = useState(false);
+	const [isSyncing, setIsSyncing] = useState(false);
+	useOnClickOutside(bottomContainerRef, () => setExpandOptionsMenu(false));
+	const sync = async () => {
+		setIsSyncing(true);
+		await Promise.all([syncAuthState(), syncWalletState(), syncUiState()]);
+		setIsSyncing(false);
+		syncUiState();
+	};
 
-	return (
-		<>
-			<li className={classes("-list__item")}>
-				<Link
-					href={route}
-					className={classes("-link", {
-						"-link--active": route === router.pathname,
-					})}
-				>
-					{isSidebarExpanded && options && options.length > 0 ? (
-						<button
-							onClick={(e: any) => {
-								e.preventDefault();
-								e.stopPropagation();
-								setExpanded((p) => !p);
-							}}
-							className={classes("-list__arrow", {
-								"-list__arrow--expanded": expanded,
-							})}
-						>
-							<MaterialIcon icon="arrow_right" />
-						</button>
-					) : null}
-					<MaterialIcon
-						className={classes("-link__icon")}
-						icon={icon}
-					/>
-					<Typography className={classes("-link__title")} size="md">
-						{title}
-					</Typography>
-				</Link>
-			</li>
-			{isSidebarExpanded && expanded && options && options.length > 0 ? (
-				<ul className={classes("-list", "-sub-list")}>
-					{options.map((option, index) => (
-						<li
-							className={classes(
-								"-list__item",
-								"-sub-list__item"
-							)}
-							key={index}
-						>
-							<Link
-								href={option.route}
-								className={classes("-link", "-sub-list__link", {
-									"-link--active":
-										option.route === router.asPath,
-								})}
-							>
-								<MaterialIcon
-									className={classes("-link__icon")}
-									icon={option.icon}
-								/>
-								{option.title}
-							</Link>
-						</li>
-					))}
-				</ul>
-			) : null}
-		</>
-	);
-};
+	const logoutUser = async () => {
+		await logout();
+		const routeToNavigate = redirectToLogin(router.pathname);
+		void router.push(routeToNavigate);
+	};
 
-const SideBar: React.FC<ISideBarProps> = () => {
-	const { closeSideBar, sideBarLinks, isSidebarExpanded } = useStore();
+	useEffect(() => {
+		setExpandOptionsMenu(false);
+	}, [router.pathname]);
+
 	return (
 		<>
 			<aside
 				className={classes("", {
-					"--expanded": isSidebarExpanded,
-					"--collapsed": !isSidebarExpanded,
+					"--expanded": BooleanUtils.valueOf(getSidebarExpanded()),
+					"--collapsed": BooleanUtils.invert(getSidebarExpanded()),
 				})}
 			>
-				<nav className={classes("-nav")}>
-					<ul className={classes("-list")}>
-						{sideBarLinks.map((item, index) => (
-							<SideBarItem key={index} {...item} />
-						))}
-					</ul>
-				</nav>
+				<div className={classes("-top")}>
+					<Link
+						className={classes("-logo")}
+						href={
+							BooleanUtils.True.equals(getIsLoggedIn())
+								? routes.HOME
+								: routes.ROOT
+						}
+					>
+						<Image
+							className={classes("-logo__image")}
+							src={
+								BooleanUtils.True.equals(getSidebarExpanded())
+									? "/logo-full.png"
+									: "/favicon.svg"
+							}
+							alt="logo"
+							width={512}
+							height={512}
+						/>
+					</Link>
+					<nav className={classes("-nav")}>
+						<ul className={classes("-list")}>
+							{getSidebarNavigation().map((item) => (
+								<li
+									key={`side-bar-item-${item.title}`}
+									className={classes("-list__item")}
+								>
+									<Link
+										href={item.route}
+										className={classes("-link", {
+											"-link--active":
+												item.route === router.pathname,
+										})}
+									>
+										<span
+											className={classes("-link__icon")}
+										>
+											{item.icon}
+										</span>
+										<Typography
+											className={classes("-link__title")}
+											size="sm"
+										>
+											{item.title}
+										</Typography>
+									</Link>
+								</li>
+							))}
+						</ul>
+					</nav>
+				</div>
+				<div ref={bottomContainerRef} className={classes("-bottom")}>
+					{expandOptionsMenu ? (
+						<>
+							<div className={classes("-option")} onClick={sync}>
+								<FiRefreshCw
+									className={classes("-option-icon", {
+										"-option-icon--loading":
+											BooleanUtils.valueOf(isSyncing),
+									})}
+								/>
+								<Typography
+									size="sm"
+									className={classes("-option-title")}
+								>
+									Sync
+								</Typography>
+							</div>
+							<div
+								className={classes("-option", "-theme")}
+								onClick={toggleTheme}
+							>
+								{StringUtils.equals(
+									getTheme(),
+									appTheme.light
+								) ? (
+									<FiMoon
+										className={classes("-option-icon")}
+									/>
+								) : (
+									<FiSun
+										className={classes("-option-icon")}
+									/>
+								)}
+								<Typography
+									size="sm"
+									className={classes("-option-title")}
+								>
+									{StringUtils.equals(
+										getTheme(),
+										appTheme.light
+									)
+										? "Dark Mode"
+										: "Light Mode"}
+								</Typography>
+							</div>
+							{router.pathname !== routes.PROFILE ? (
+								<div
+									className={classes("-option")}
+									onClick={() => {
+										void router.push(routes.PROFILE);
+									}}
+								>
+									<FiUser
+										className={classes("-option-icon")}
+									/>
+									<Typography
+										size="sm"
+										className={classes("-option-title")}
+									>
+										My profile
+									</Typography>
+								</div>
+							) : null}
+							<div
+								className={classes("-option")}
+								onClick={logoutUser}
+							>
+								<FiLogOut className={classes("-option-icon")} />
+								<Typography
+									size="sm"
+									className={classes("-option-title")}
+								>
+									Logout
+								</Typography>
+							</div>
+						</>
+					) : null}
+					{BooleanUtils.True.equals(getIsLoggedIn()) &&
+					SafetyUtils.isNonNull(getUser()) ? (
+						<div
+							className={classes("-option", "-user")}
+							onClick={() => {
+								if (
+									BooleanUtils.True.equals(
+										getSidebarExpanded()
+									)
+								) {
+									setExpandOptionsMenu(BooleanUtils.invert);
+								} else {
+									void router.push(routes.PROFILE);
+								}
+							}}
+						>
+							<Avatar
+								src={
+									getUserDetails(
+										SafetyUtils.getNonNullValue(getUser())
+									).avatar || ""
+								}
+								alt={
+									getUserDetails(
+										SafetyUtils.getNonNullValue(getUser())
+									).name || ""
+								}
+								size={
+									BooleanUtils.valueOf(getSidebarExpanded())
+										? 24
+										: 36
+								}
+							/>
+							<Typography
+								size="sm"
+								className={classes(
+									"-option-title",
+									"-user-name"
+								)}
+							>
+								{getUserDetails(
+									SafetyUtils.getNonNullValue(getUser())
+								).name || ""}
+							</Typography>
+							<FiChevronDown
+								className={classes(
+									"-option-action",
+									"-user-action",
+									{
+										"-user-action--expanded":
+											expandOptionsMenu,
+									}
+								)}
+							/>
+						</div>
+					) : null}
+				</div>
 			</aside>
-			<div className={classes("-overlay")} onClick={closeSideBar} />
+			<div
+				className={classes("-overlay")}
+				onClick={() => openSidebar()}
+			/>
 		</>
 	);
 };
-
-export default SideBar;

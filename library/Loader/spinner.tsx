@@ -6,7 +6,7 @@ interface ILoaderProps {}
 
 const classes = stylesConfig(styles, "loader-spinner");
 
-const Spinner: React.FC<ILoaderProps> = () => {
+export const Spinner: React.FC<ILoaderProps> = () => {
 	return (
 		<div className={classes("")}>
 			<span className={classes("-ball")} />
@@ -16,5 +16,3 @@ const Spinner: React.FC<ILoaderProps> = () => {
 		</div>
 	);
 };
-
-export default Spinner;

@@ -58,9 +58,9 @@ export function createBaseStore<
 	const store = create<State & Actions>(builder.createState);
 	const useStore = createSelectors(store) as WithSelectors<typeof store>;
 
-	const useHook = (options?: Partial<Options>): State & Actions & Extras => {
+	const useHook = (options?: Partial<Options>): Actions & Extras => {
 		const s = useStore;
-		const state = s();
+		const state = s() as Actions;
 		const mergedOptions = {
 			...(builder.defaults ?? {}),
 			...options,

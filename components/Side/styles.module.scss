@@ -1,36 +1,72 @@
+@import "@/styles/config/animations";
 @import "@/styles/config/mixins";
+@import "@/styles/config/shadows";
 
 .side-bar {
 	width: var(--side-width);
-	height: calc(100vh - var(--head-height));
+	height: 100vh;
 	position: fixed;
-	top: var(--head-height);
+	top: 0;
 	left: 0;
 	z-index: 50;
 	display: flex;
 	justify-content: flex-start;
 	align-items: center;
 	flex-direction: column;
-	border-radius: 32px;
+	background: var(--accent-color-light);
+	color: var(--theme-fg);
+	padding: 0.5rem;
 
 	@include responsive(phone) {
 		width: 50%;
 		transform: translateX(-100%);
 		z-index: 70;
-		background-color: var(--accent-color);
-		border-radius: 0 32px 32px 0;
+	}
+
+	@include theme(dark) {
+		background: var(--accent-color);
 	}
 
 	&--expanded {
 		@include responsive(phone) {
 			transform: translateX(0);
+			@include shadow(2);
 		}
+	}
+
+	&-top {
+		width: 100%;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		flex-direction: column;
+	}
+
+	&-logo {
+		display: inline-flex;
+		justify-content: flex-start;
+		align-items: center;
+		width: auto;
+		height: var(--head-height);
+		cursor: pointer;
+		user-select: none;
+		margin-right: auto;
+
+		img {
+			height: 100%;
+			width: auto;
+			object-fit: contain;
+		}
+	}
+
+	&--collapsed &-logo {
+		justify-content: center;
+		margin-right: unset;
 	}
 
 	&-nav {
 		width: 100%;
 		margin: 1rem 0;
-		padding: 0 0.25rem;
 	}
 
 	&-list {
@@ -39,12 +75,11 @@
 		flex-flow: column;
 		justify-content: flex-start;
 		align-items: flex-start;
+		gap: 0.5rem;
 		list-style: none;
 
 		&__item {
 			width: 100%;
-			height: 3.5rem;
-			margin: 0.5rem 0;
 			display: flex;
 			justify-content: center;
 			align-items: center;
@@ -66,19 +101,14 @@
 		}
 	}
 
-	&-sub-list {
-		width: 95%;
-		margin-left: 5%;
-	}
-
 	&-link {
 		width: 90%;
 		height: 100%;
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
-		border-radius: 32px;
-		padding: 0.2rem 0 0.2rem 0.6rem;
+		border-radius: 0.5rem;
+		padding: 0.2rem 0 0.2rem 0;
 		color: inherit;
 		text-decoration: none;
 		cursor: pointer;
@@ -101,10 +131,14 @@
 		}
 
 		&--active {
-			background-color: var(--accent-color-500);
+			background-color: var(--back-shadow-light);
+
+			&:hover {
+				background-color: var(--back-shadow-light);
+			}
 
 			@include theme(dark) {
-				background-color: var(--accent-color-300);
+				background-color: var(--back-shadow-light);
 			}
 		}
 
@@ -116,10 +150,10 @@
 		}
 
 		&__icon {
-			width: 1.5rem;
-			height: 1.5rem;
+			width: 1rem;
+			height: 1rem;
 			margin: 0.25rem 0.5rem;
-			font-size: 1.25rem;
+			font-size: 1rem;
 			display: inline-flex;
 			justify-content: center;
 			align-items: center;
@@ -131,9 +165,8 @@
 	}
 
 	&--collapsed &-link {
-		width: 3rem;
-		height: 3rem;
-		border-radius: 500px;
+		width: 2.25rem;
+		height: 2.25rem;
 		justify-content: center;
 		padding: 0.4rem;
 	}
@@ -155,6 +188,66 @@
 	&--expanded + &-overlay {
 		@include responsive(phone) {
 			display: block;
+		}
+	}
+
+	&-bottom {
+		width: 100%;
+		margin-top: auto;
+	}
+
+	&-option {
+		width: 100%;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		cursor: pointer;
+		user-select: none;
+		border-radius: 0.25rem;
+
+		&:hover {
+			background: var(--back-shadow-light);
+		}
+
+		&-icon {
+			width: 1rem;
+			height: 1rem;
+			font-size: 1rem;
+			display: inline-flex;
+			justify-content: center;
+			align-items: center;
+
+			&--loading {
+				animation: spin 2s infinite linear;
+			}
+		}
+
+		&-action {
+			margin-left: auto;
+		}
+	}
+
+	&--collapsed &-option-action,
+	&--collapsed &-option-title {
+		display: none;
+	}
+
+	&--collapsed &-user {
+		width: 3rem;
+		height: 3rem;
+		justify-content: center;
+		margin: 0 auto;
+	}
+
+	&-user {
+		&-action {
+			margin-left: auto;
+
+			&--expanded {
+				transform: rotate(180deg);
+			}
 		}
 	}
 }

@@ -1,97 +1,63 @@
 @import "@/styles/config/mixins";
 
 .header {
-	width: 100%;
+	width: calc(100% - var(--side-width));
 	height: var(--head-height);
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 	align-items: center;
+	gap: 0.5rem;
 	position: fixed;
 	top: 0;
-	left: 0;
-	z-index: 50;
+	left: var(--side-width);
+	z-index: 60;
+	background-color: var(--theme-bg);
+	border-right: 1px solid var(--grey-600);
+	box-shadow: -4px 0px 4px -4px rgba(0, 0, 0, 0.1);
+	padding: 0.5rem;
 
-	&--visible {
-		border-bottom-color: var(--back-shadow-light);
+	@include responsive(phone) {
+		left: 0;
+		width: 100%;
+		border-right: 0;
+		box-shadow: none;
 	}
 
-	&-left {
-		height: 100%;
+	&-navigation {
 		display: flex;
-		justify-content: space-evenly;
+		justify-content: flex-start;
 		align-items: center;
-		padding-left: 0.75rem;
-
-		&-burger {
-			margin-left: 0.5rem;
-			font-size: 2rem;
-		}
-
-		&-logo {
-			height: 100%;
-			font-size: 1.75rem;
-			padding: 0.5rem 0;
-			margin-left: 1rem;
-
-			&__image {
-				width: auto;
-				height: 100%;
-				object-fit: cover;
-			}
-		}
+		gap: 0.5rem;
 	}
 
-	a {
-		height: 100%;
-		display: inline-flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	&-logo {
-		width: auto;
-		height: 100%;
-		object-fit: contain;
-		cursor: pointer;
-		user-select: none;
-	}
-
-	&-right {
-		padding: 0 1.5rem;
+	&-content {
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
+		margin-left: auto;
+	}
 
-		@include responsive(phone) {
-			padding: 0 0.5rem;
+	&-button {
+		@include init-button;
+		border-radius: 0.5rem;
+		width: 1.5rem;
+		height: 1.5rem;
+		padding: 0.25rem;
+
+		svg {
+			width: 0.875rem;
+			height: 0.875rem;
 		}
 
-		button {
-			margin: 0 0.5rem;
+		&:hover {
+			background-color: var(--back-shadow-light);
 		}
 	}
 
-	&-avatar {
-		margin-left: 1rem;
-	}
-
-	&-sync {
-		&--loading {
-			animation: spin 2s infinite linear;
-		}
-	}
-}
-
-@keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
-
-	50% {
-		transform: rotate(-180deg);
-	}
-
-	100% {
-		transform: rotate(-360deg);
+	&-divider {
+		width: 1px;
+		height: 90%;
+		margin: auto 0;
+		background-color: var(--back-shadow);
 	}
 }
