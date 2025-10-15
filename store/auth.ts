@@ -1,8 +1,8 @@
 import { AuthApi, UserApi } from "@/api";
-import { USER_STATUS } from "@/constants";
+import { redirectToLogin, USER_STATUS } from "@/constants";
 import { useHttpClient } from "@/hooks";
 import { IUser, UpdateUser } from "@/types";
-import { BooleanUtils, SafetyUtils, StringUtils } from "@/utils";
+import { BooleanUtils, Notify, SafetyUtils, StringUtils } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
@@ -30,7 +30,12 @@ type Options = {
 type Extras = {
 	sync: () => Promise<void>;
 	isUpdatingProfile: boolean;
-	updateProfile: (_: UpdateUser) => Promise<void>;
+	isRequestingOtp: boolean;
+	isVerifyingOtp: boolean;
+	updateProfile: (_body: UpdateUser) => Promise<void>;
+	requestOtpWithEmail: (_email: string) => Promise<void>;
+	verifyOtpWithEmail: (_email: string, _otp: string) => Promise<void>;
+	continueOAuthWithGoogle: (_token: string) => Promise<void>;
 	logout: () => Promise<void>;
 };
 
@@ -55,8 +60,24 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 		setIsSyncing: (isSyncing) => set({ isSyncing }),
 	}),
 	useSetup: ({ store, options }) => {
-		const { loading: isUpdatingProfile, call: updateApi } =
-			useHttpClient<IUser>();
+		const { loading: isUpdatingProfile, trigger: updateApi } =
+			useHttpClient({
+				trigger: UserApi.updateUser,
+				onError: Notify.error,
+			});
+		const { loading: isRequestingOtp, trigger: requestOtpApi } =
+			useHttpClient({
+				trigger: AuthApi.requestOtpWithEmail,
+				onError: Notify.error,
+			});
+		const { loading: isVerifyingOtp, trigger: verifyOtpApi } =
+			useHttpClient({
+				trigger: AuthApi.verifyOtpWithEmail,
+				onError: Notify.error,
+			});
+		const { trigger: continueOAuthWithGoogleApi } = useHttpClient({
+			trigger: AuthApi.continueOAuthWithGoogle,
+		});
 
 		const sync = async () => {
 			try {
@@ -71,8 +92,22 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 		};
 
 		const updateProfile = async (body: UpdateUser) => {
-			const updated = await updateApi(UserApi.updateUser, body);
+			const updated = await updateApi(body);
 			store.getState().setUser(updated);
+		};
+
+		const requestOtpWithEmail = async (email: string) => {
+			await requestOtpApi(email);
+		};
+
+		const verifyOtpWithEmail = async (email: string, otp: string) => {
+			const updated = await verifyOtpApi(email, otp);
+			store.getState().setUser(updated);
+		};
+
+		const continueOAuthWithGoogle = async (token: string) => {
+			const loggedInUser = await continueOAuthWithGoogleApi(token);
+			store.getState().setUser(loggedInUser);
 		};
 
 		const logout = async () => {
@@ -90,7 +125,12 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 		return {
 			sync,
 			isUpdatingProfile,
+			isRequestingOtp,
+			isVerifyingOtp,
 			updateProfile,
+			requestOtpWithEmail,
+			verifyOtpWithEmail,
+			continueOAuthWithGoogle,
 			logout,
 		};
 	},

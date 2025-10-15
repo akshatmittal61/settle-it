@@ -1,14 +1,14 @@
-import { authenticatedPage } from "@/client";
+import { authRouterInterceptor } from "@/client";
 import { Auth, Auth as Components } from "@/components";
-import { AuthApi, UserApi } from "@/connections";
 import { AppSeo, routes } from "@/constants";
-import { useStore } from "@/hooks";
 import { Seo } from "@/layouts";
 import { Typography } from "@/library";
 import { Logger } from "@/log";
+import { useAuthStore } from "@/store";
 import styles from "@/styles/pages/Auth.module.scss";
 import { IUser, ServerSideResult } from "@/types";
-import { Notify, stylesConfig } from "@/utils";
+import { Notify, StringUtils, stylesConfig } from "@/utils";
+import { GetServerSidePropsContext } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -23,58 +23,61 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = (props) => {
-	const { setUser, syncUserState } = useStore();
 	const router = useRouter();
+	const {
+		requestOtpWithEmail,
+		verifyOtpWithEmail,
+		updateProfile,
+		isRequestingOtp,
+		isVerifyingOtp,
+		isUpdatingProfile,
+		getIsOnboarded,
+	} = useAuthStore();
 	const [authFrame, setAuthFrame] = useState<T_Auth_Frame>(props.frame);
-	const [email, setEmail] = useState("");
-	const [requestingOtp, setRequestingOtp] = useState(false);
-	const [verifyingOtp, setVerifyingOtp] = useState(false);
-	const [updatingUserDetails, setUpdatingUserDetails] = useState(false);
+	const [email, setEmail] = useState(StringUtils.EMPTY);
 
-	const requestOtpWithEmail = async () => {
+	const requestOtp = async () => {
 		try {
-			setRequestingOtp(true);
-			await AuthApi.requestOtpWithEmail(email);
+			await requestOtpWithEmail(email);
 			setAuthFrame("otp-verification");
 		} catch (error: any) {
 			Logger.error(error);
-			Notify.error(error);
-		} finally {
-			setRequestingOtp(false);
 		}
 	};
 
 	const verifyOtp = async (otp: string) => {
 		try {
-			setVerifyingOtp(true);
-			const res = await AuthApi.verifyOtpWithEmail(email, otp);
-			syncUserState(res.data);
-			if (res.data.name) {
-				const redirectUrl =
-					router.query.redirect?.toString() ?? routes.HOME;
-				router.push(redirectUrl);
+			await verifyOtpWithEmail(email, otp);
+			if (getIsOnboarded()) {
+				const redirect = router.query.redirect;
+				const redirectPath = StringUtils.getNonEmptyStringOrElse(
+					redirect,
+					routes.HOME
+				);
+				void router.push(redirectPath);
 			} else {
 				setAuthFrame("onboarding");
 			}
 		} catch (error: any) {
 			Logger.error(error);
-			Notify.error(error);
-		} finally {
-			setVerifyingOtp(false);
 		}
 	};
 
 	const saveUserDetails = async (data: Auth.UserDetails) => {
 		try {
-			setUpdatingUserDetails(true);
-			const res = await UserApi.updateUser(data);
-			setUser(res.data);
-			router.push(routes.HOME);
+			await updateProfile(data);
+			if (getIsOnboarded()) {
+				const redirect = router.query.redirect;
+				const redirectPath = StringUtils.getNonEmptyStringOrElse(
+					redirect,
+					routes.HOME
+				);
+				void router.push(redirectPath);
+			} else {
+				Notify.error("Please enter your name at least!");
+			}
 		} catch (error: any) {
 			Logger.error(error);
-			Notify.error(error);
-		} finally {
-			setUpdatingUserDetails(false);
 		}
 	};
 
@@ -96,22 +99,22 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 							<Components.Content
 								email={email}
 								setEmail={(value) => setEmail(value)}
-								onContinueWithEmail={requestOtpWithEmail}
-								requestingOtp={requestingOtp}
+								onContinueWithEmail={requestOtp}
+								requestingOtp={isRequestingOtp}
 							/>
 							<span className={classes("-divider")}>
 								<Typography size="md">OR</Typography>
 							</span>
 							<Components.GoogleOAuthButton
 								onClick={() => {
-									router.push("/__/oauth/google");
+									void router.push("/__/oauth/google");
 								}}
 							/>
 						</>
 					) : authFrame === "otp-verification" ? (
 						<Components.Verification
 							email={email}
-							verifyingOtp={verifyingOtp}
+							verifyingOtp={isVerifyingOtp}
 							onSubmit={verifyOtp}
 							onGoBack={() => {
 								setAuthFrame("input");
@@ -119,7 +122,7 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 						/>
 					) : authFrame === "onboarding" ? (
 						<Components.Onboarding
-							loading={updatingUserDetails}
+							loading={isUpdatingProfile}
 							onContinue={saveUserDetails}
 						/>
 					) : null}
@@ -137,14 +140,18 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 export default LoginPage;
 
 export const getServerSideProps = (
-	context: any
+	context: GetServerSidePropsContext
 ): Promise<ServerSideResult<LoginPageProps>> => {
-	return authenticatedPage(context, {
+	return authRouterInterceptor(context, {
 		onLoggedInAndOnboarded() {
 			const { redirect } = context.query;
+			const redirectPath = StringUtils.getNonEmptyStringOrElse(
+				redirect,
+				routes.HOME
+			);
 			return {
 				redirect: {
-					destination: redirect ?? routes.HOME,
+					destination: redirectPath,
 					permanent: false,
 				},
 			};

@@ -1,4 +1,4 @@
-import { http } from "@/connections";
+import { http } from "@/client";
 import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 
 export class AdminApi {

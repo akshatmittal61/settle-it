@@ -1,18 +1,23 @@
-import { AuthApi } from "@/connections";
-import { AuthConstants, cacheParameter } from "@/constants";
+import { AuthApi } from "@/api";
+import { routes } from "@/constants";
 import { Logger } from "@/log";
-import { ServerSideAdminMiddleware, ServerSideAuthMiddleware } from "@/types";
-import { CacheService } from "@/services";
+import {
+	IUser,
+	ServerSideAdminInterceptor,
+	ServerSideAuthInterceptor,
+	ServerSideResult,
+} from "@/types";
+import { UserUtils } from "@/utils";
+import { GetServerSidePropsContext } from "next";
 
-export const authenticatedPage: ServerSideAuthMiddleware = async (
-	context: any,
-	{ onLoggedInAndNotOnboarded, onLoggedInAndOnboarded, onLoggedOut }
+export const authRouterInterceptor: ServerSideAuthInterceptor = async (
+	context,
+	actions
 ) => {
 	const { req } = context;
-	Logger.debug("ssr cookies", req.headers.cookie, req.cookies);
 	const cookies = req.cookies;
-	if (!cookies.accessToken && !cookies.refreshToken) {
-		return onLoggedOut();
+	if (!cookies.accessToken || !cookies.refreshToken) {
+		return actions.onLoggedOut();
 	}
 	try {
 		const headers = { cookie: req.headers.cookie };
@@ -27,43 +32,67 @@ export const authenticatedPage: ServerSideAuthMiddleware = async (
 		const user = await AuthApi.verifyUserIfLoggedIn(headers).then(
 			(res) => res.data
 		);
-		Logger.debug("authenticatedPage -> user", user);
-		if (user.name) {
-			return onLoggedInAndOnboarded(user, headers);
+		if ("onLoggedIn" in actions) {
+			actions.onLoggedIn(user, headers);
 		} else {
-			return onLoggedInAndNotOnboarded(user, headers);
+			if (UserUtils.isUserOnboarded(user)) {
+				return actions.onLoggedInAndNotOnboarded(user, headers);
+			} else {
+				return actions.onLoggedInAndOnboarded(user, headers);
+			}
 		}
+		return actions.onLoggedOut();
 	} catch (error: any) {
-		Logger.error(error.message);
-		return onLoggedOut();
+		return actions.onLoggedOut();
 	}
 };
 
-export const adminPage: ServerSideAdminMiddleware = async (
+export const withAuthPage = <T = any>(
+	handler: (_: IUser) => ServerSideResult<T>
+) => {
+	return async (context: GetServerSidePropsContext) =>
+		authRouterInterceptor<ServerSideResult<T>>(context, {
+			onLoggedIn: (user) => handler(user),
+			onLoggedOut: () => ({
+				redirect: { destination: routes.LOGIN, permanent: false },
+			}),
+		});
+};
+
+export const withAuthOnboardingPage = <T = any>(
+	handler: (_: IUser) => ServerSideResult<T>
+) => {
+	return async (context: GetServerSidePropsContext) =>
+		authRouterInterceptor<ServerSideResult<T>>(context, {
+			onLoggedInAndOnboarded: (user) => handler(user),
+			onLoggedInAndNotOnboarded: (user) => handler(user),
+			onLoggedOut: () => ({
+				redirect: { destination: routes.LOGIN, permanent: false },
+			}),
+		});
+};
+
+export const adminPage: ServerSideAdminInterceptor = async (
 	context: any,
-	{ onAdmin, onNonAdmin, onLoggedOut }
+	actions
 ) => {
 	const { req } = context;
 	const cookies = req.cookies;
 	if (!cookies.accessToken && !cookies.refreshToken) {
-		return onLoggedOut();
+		return actions.onLoggedOut();
 	}
 	try {
 		const headers = { cookie: req.headers.cookie };
-		const user = await CacheService.fetch(
-			CacheService.getKey(cacheParameter.USER, {
-				id: cookies.accessToken,
-			}),
-			() => AuthApi.verifyUserIfLoggedIn(headers).then((res) => res.data),
-			AuthConstants.ACCESS_TOKEN_EXPIRY
+		const user = await AuthApi.verifyUserIfLoggedIn(headers).then(
+			(res) => res.data
 		);
-		if (AuthConstants.admins.includes(user.email)) {
-			return onAdmin(user, headers);
+		if (UserUtils.isAdmin(user)) {
+			return actions.onAdmin(user, headers);
 		} else {
-			return onNonAdmin(user, headers);
+			return actions.onNonAdmin(user, headers);
 		}
 	} catch (error: any) {
 		Logger.error(error.message);
-		return onLoggedOut();
+		return actions.onLoggedOut();
 	}
 };

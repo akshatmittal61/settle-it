@@ -16,7 +16,7 @@ export type VerifyOtp = { email: string; otp: string };
 export type Logout = null;
 
 // User
-export type UpdateUser = Partial<IUser>;
+export type UpdateUser = Partial<Omit<IUser, "email">>;
 export type SearchUsers = { query: string };
 export type InviteUser = { email: string };
 export type BulkUserSearch = { query: string };

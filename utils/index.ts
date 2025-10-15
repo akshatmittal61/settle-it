@@ -1,5 +1,6 @@
 export * from "./boolean";
 export * from "./collections";
+export * from "./entities";
 export * from "./files";
 export * from "./functions";
 export * from "./notify";

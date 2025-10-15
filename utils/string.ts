@@ -80,4 +80,23 @@ export class StringUtils {
 		}
 		return output;
 	}
+
+	public static getNonEmptyStringOrElse<T extends string>(
+		input: any,
+		fallback: T
+	): T {
+		try {
+			const value = StringUtils.valueOf<T>(input);
+			if (StringUtils.isNotEmpty(value)) {
+				return value;
+			} else {
+				return fallback;
+			}
+		} catch (e) {
+			if (e instanceof ParserSafetyError) {
+				return fallback;
+			}
+			throw e;
+		}
+	}
 }

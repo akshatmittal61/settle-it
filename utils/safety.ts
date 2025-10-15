@@ -1,6 +1,7 @@
 import { ParserSafetyError } from "@/errors";
 import { StringUtils } from "./string";
 import { NumberUtils } from "./number";
+import { validateExplainTimeoutOptions } from "mongodb/src/explain";
 
 export class SafetyUtils {
 	public static genericParse<T>(parse: (_: any) => T, input: any): T {
@@ -43,5 +44,20 @@ export class SafetyUtils {
 		if (typeof input === "string") return StringUtils.isNotEmpty(input);
 		if (typeof input === "number") return NumberUtils.isNotEmpty(input);
 		return true;
+	}
+
+	public static getNonNullValueOrElse<T>(
+		input: T | undefined | null,
+		fallback: T
+	): T {
+		try {
+			const value = SafetyUtils.getNonNullValue<T>(input);
+			return value;
+		} catch (e) {
+			if (e instanceof ParserSafetyError) {
+				return fallback;
+			}
+			throw e;
+		}
 	}
 }
