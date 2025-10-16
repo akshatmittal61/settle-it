@@ -1,15 +1,16 @@
+import { ObjectId } from "@/db";
 import { ExpenseModel, SplitModel } from "@/models";
-import { BaseRepo } from "@/repo/base";
-import { Expense, Split } from "@/schema";
 import {
+	Expense,
 	IExpense,
 	ITransaction,
 	IUser,
-	ObjectId,
 	Share,
+	Split,
 	Transaction,
 } from "@/types";
 import { getObjectFromMongoResponse, NumberUtils, SafetyUtils } from "@/utils";
+import { BaseRepo } from "./base";
 
 class WalletRepo extends BaseRepo<Expense, IExpense> {
 	model = ExpenseModel;

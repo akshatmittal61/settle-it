@@ -1,5 +1,4 @@
 import { HTTP } from "@/constants";
-import { Group } from "@/schema";
 import { ApiFailure, ApiSuccess } from "@/server";
 import { GroupService, WalletService } from "@/services";
 import {
@@ -8,6 +7,7 @@ import {
 	ApiResponse,
 	ApiResponses,
 	CreateGroupData,
+	Group,
 } from "@/types";
 import { CollectionUtils, SafetyUtils, StringUtils } from "@/utils";
 

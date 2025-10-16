@@ -1,9 +1,17 @@
-import { server } from "@/connections";
-import { apiMethods, HTTP } from "@/constants";
+import { apiMethods, HTTP, serverBaseUrl } from "@/constants";
 import { Logger } from "@/log";
 import { ApiRequest, ApiResponse, T_API_METHODS } from "@/types";
 import { NextApiHandler } from "next";
 import { SafetyUtils, StringUtils } from "@/utils";
+import axios from "axios";
+
+const server = axios.create({
+	baseURL: serverBaseUrl + "/api/v1",
+	headers: {
+		"Content-Type": "application/json",
+	},
+	withCredentials: true,
+});
 
 const getCallMethod = (method: T_API_METHODS) => {
 	switch (method) {

@@ -3,7 +3,7 @@ import { Masonry } from "@/layouts";
 import { Avatar, Typography } from "@/library";
 import { useAuthStore } from "@/store";
 import { IOwedRecord } from "@/types";
-import { getUserDetails, Notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig, UserUtils } from "@/utils";
 import React, { useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { IoChevronDown } from "react-icons/io5";
@@ -52,8 +52,8 @@ const GroupOwedDataPerson: React.FC<GroupOwedDataPersonProps> = ({
 		<>
 			<div className={classes("-person", "-person--sub")}>
 				<Avatar
-					src={getUserDetails(transaction.user).avatar || ""}
-					alt={getUserDetails(transaction.user).name || ""}
+					src={UserUtils.getUserAvatar(transaction.user)}
+					alt={UserUtils.getNameOfUser(transaction.user)}
 					size={32}
 					className={classes("-person", "-person--sub__avatar")}
 				/>
@@ -61,7 +61,7 @@ const GroupOwedDataPerson: React.FC<GroupOwedDataPersonProps> = ({
 					size="s"
 					className={classes("-person", "-person--details")}
 				>
-					{`owes ${transaction.amount.toFixed(2)} to ${getUserDetails(transaction.user).name}`}
+					{`owes ${transaction.amount.toFixed(2)} to ${UserUtils.getNameOfUser(transaction.user)}`}
 				</Typography>
 				{transaction.user.id === loggedInUser.id ? (
 					<button
@@ -130,17 +130,15 @@ const GroupOwedData: React.FC<IGroupOwedDataProps> = ({
 								}}
 							>
 								<Avatar
-									src={
-										getUserDetails(record.user).avatar || ""
-									}
-									alt={getUserDetails(record.user).name || ""}
+									src={UserUtils.getUserAvatar(record.user)}
+									alt={UserUtils.getNameOfUser(record.user)}
 									size={56}
 								/>
 								<div
 									className={classes("-person-details__text")}
 								>
 									<Typography size="lg">
-										{getUserDetails(record.user).name || ""}
+										{UserUtils.getNameOfUser(record.user)}
 									</Typography>
 									<Typography size="s">
 										{`owes ${record.amount.toFixed(2)} in total`}

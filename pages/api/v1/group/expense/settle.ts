@@ -1,8 +1,8 @@
 import { ApiRoute } from "@/server";
-import { ExpenseController } from "@/controllers";
+import { WalletController } from "@/controllers";
 
 const apiRoute = new ApiRoute(
-	{ PATCH: ExpenseController.settleExpense },
+	{ PATCH: WalletController.settleExpense },
 	{ db: true, auth: true, groupMember: true }
 );
 

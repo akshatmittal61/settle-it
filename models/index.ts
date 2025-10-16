@@ -1,19 +1,13 @@
 import {
-	AuthMapping,
 	AuthMappingSchema,
-	Expense,
 	ExpenseSchema,
-	Group,
 	GroupSchema,
-	Member,
 	MemberSchema,
-	Otp,
 	OtpSchema,
-	Split,
 	SplitSchema,
-	User,
 	UserSchema,
 } from "@/schema";
+import { AuthMapping, Expense, Group, Member, Otp, Split, User } from "@/types";
 import { ModelFactory } from "./base";
 
 export const AuthMappingModel = new ModelFactory<AuthMapping>(

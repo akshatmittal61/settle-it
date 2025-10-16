@@ -1,6 +1,5 @@
 import { GroupModel } from "@/models";
-import { Group, Member, User } from "@/schema";
-import { CreateModel, GroupSpread, IGroup } from "@/types";
+import { CreateModel, Group, GroupSpread, IGroup, Member, User } from "@/types";
 import {
 	CollectionUtils,
 	getObjectFromMongoResponse,

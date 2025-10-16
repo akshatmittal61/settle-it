@@ -1,11 +1,5 @@
-import { appNetworkStatus, appTheme, getSideBarLinks } from "@/constants";
-import {
-	AppNetworkStatus,
-	AppTheme,
-	DashboardHeader,
-	Navigation,
-	Sidebar,
-} from "@/types";
+import { appNetworkStatus, appTheme } from "@/constants";
+import { AppNetworkStatus, AppTheme, DashboardHeader, Sidebar } from "@/types";
 import {
 	BooleanUtils,
 	CollectionUtils,
@@ -25,7 +19,7 @@ type State = {
 	header: DashboardHeader;
 };
 
-export type Actions = {
+type Actions = {
 	getTheme: Getter<State, "theme">;
 	setTheme: Setter<State, "theme">;
 	getAccentColor: Getter<State, "accentColor">;

@@ -8,7 +8,7 @@ import { Loader } from "@/library";
 import PageNotFound from "@/pages/404";
 import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Group.module.scss";
-import { IGroup, IUser } from "@/types";
+import { GroupSpread, IUser } from "@/types";
 import { Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -17,7 +17,7 @@ const classes = stylesConfig(styles, "group");
 
 type GroupTransactionsPageProps = {
 	user: IUser;
-	group: IGroup;
+	group: GroupSpread;
 };
 
 const GroupTransactionsPage: React.FC<GroupTransactionsPageProps> = (props) => {
@@ -31,7 +31,7 @@ const GroupTransactionsPage: React.FC<GroupTransactionsPageProps> = (props) => {
 		trigger: GroupApi.getTransactions,
 		onError: Notify.error,
 	});
-	const [groupDetails, setGroupDetails] = useState<IGroup>(props.group);
+	const [groupDetails, setGroupDetails] = useState(props.group);
 
 	useEffect(() => {
 		void getGroupTransactions(props.group.id);

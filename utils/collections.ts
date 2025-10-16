@@ -1,5 +1,5 @@
 import { ParserSafetyError } from "@/errors";
-import { BooleanUtils } from "@/utils/boolean";
+import { BooleanUtils } from "./boolean";
 
 export class CollectionUtils {
 	public static EMPTY = [];

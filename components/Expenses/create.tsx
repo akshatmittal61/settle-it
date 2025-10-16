@@ -3,7 +3,7 @@ import { Responsive } from "@/layouts";
 import { Button, Input, Pane } from "@/library";
 import { useAuthStore, useWalletStore } from "@/store";
 import { CreateExpenseData } from "@/types";
-import { getUserDetails, stylesConfig, UserUtils } from "@/utils";
+import { stylesConfig, UserUtils } from "@/utils";
 import React, { useState } from "react";
 import styles from "./styles.module.scss";
 
@@ -119,8 +119,7 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 								enabled: true,
 								options: group.members.map((member) => ({
 									id: member.user.id,
-									label:
-										getUserDetails(member.user).name || "",
+									label: UserUtils.getNameOfUser(member.user),
 									value: member.user.id,
 								})),
 								onSelect(user) {

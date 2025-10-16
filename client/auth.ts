@@ -2,7 +2,7 @@ import { AuthApi, GroupApi } from "@/api";
 import { redirectToLogin, routes } from "@/constants";
 import { Logger } from "@/log";
 import {
-	IGroup,
+	GroupSpread,
 	IUser,
 	ServerSideAdminInterceptor,
 	ServerSideAuthInterceptor,
@@ -69,7 +69,7 @@ export const withAuthPage = <T = any>(
 export const withGroupPage = <T = any>(
 	handler: (
 		_user: IUser,
-		_group: IGroup,
+		_group: GroupSpread,
 		context: GetServerSidePropsContext
 	) => ServerSideResult<T> | Promise<ServerSideResult<T>>
 ) => {

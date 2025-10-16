@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { CreateModel, FilterQuery, UpdateQuery } from "@/types";
+import { FilterQuery, UpdateQuery } from "@/db";
+import { CreateModel } from "@/types";
 import { getObjectFromMongoResponse, SafetyUtils } from "@/utils";
 
 export abstract class BaseRepo<T = any, P = T> {

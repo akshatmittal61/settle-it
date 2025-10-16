@@ -1,6 +1,6 @@
 import { Avatar, Typography } from "@/library";
 import { IBalance } from "@/types";
-import { getUserDetails, stylesConfig } from "@/utils";
+import { stylesConfig, UserUtils } from "@/utils";
 import React from "react";
 import styles from "./styles.module.scss";
 
@@ -23,13 +23,13 @@ const GroupSummary: React.FC<IGroupSummaryProps> = ({ data }) => {
 				>
 					<div className={classes("-person-details")}>
 						<Avatar
-							src={getUserDetails(balance.user).avatar || ""}
-							alt={getUserDetails(balance.user).name || ""}
+							src={UserUtils.getUserAvatar(balance.user)}
+							alt={UserUtils.getNameOfUser(balance.user)}
 							size={56}
 						/>
 						<div className={classes("-person-details__text")}>
 							<Typography size="lg">
-								{getUserDetails(balance.user).name || ""}
+								{UserUtils.getNameOfUser(balance.user)}
 							</Typography>
 							<Typography size="s">
 								{balance.gives > 0
@@ -51,9 +51,9 @@ const GroupSummary: React.FC<IGroupSummaryProps> = ({ data }) => {
 							size="sm"
 						>
 							{balance.gives > 0
-								? `${getUserDetails(balance.user).name} gives ${transaction.gives.toFixed(2)} to ${getUserDetails(transaction.user).name}`
+								? `${UserUtils.getNameOfUser(balance.user)} gives ${transaction.gives.toFixed(2)} to ${UserUtils.getNameOfUser(transaction.user)}`
 								: balance.gets > 0
-									? `${getUserDetails(balance.user).name} gets ${transaction.gets.toFixed(2)} from ${getUserDetails(transaction.user).name}`
+									? `${UserUtils.getNameOfUser(balance.user)} gets ${transaction.gets.toFixed(2)} from ${UserUtils.getNameOfUser(transaction.user)}`
 									: null}
 						</Typography>
 					))}

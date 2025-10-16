@@ -1,12 +1,6 @@
+import { FilterQuery, UpdateQuery } from "@/db";
 import { AuthMappingModel } from "@/models";
-import { AuthMapping } from "@/schema";
-import {
-	CreateModel,
-	FilterQuery,
-	IAuthMapping,
-	IUser,
-	UpdateQuery,
-} from "@/types";
+import { AuthMapping, CreateModel, IAuthMapping, IUser } from "@/types";
 import { getObjectFromMongoResponse, SafetyUtils } from "@/utils";
 import { BaseRepo } from "./base";
 

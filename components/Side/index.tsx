@@ -4,10 +4,10 @@ import { Avatar, Typography } from "@/library";
 import { useAuthStore, useUiStore, useWalletStore } from "@/store";
 import {
 	BooleanUtils,
-	getUserDetails,
 	SafetyUtils,
 	StringUtils,
 	stylesConfig,
+	UserUtils,
 } from "@/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -219,16 +219,12 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 							}}
 						>
 							<Avatar
-								src={
-									getUserDetails(
-										SafetyUtils.getNonNullValue(getUser())
-									).avatar || ""
-								}
-								alt={
-									getUserDetails(
-										SafetyUtils.getNonNullValue(getUser())
-									).name || ""
-								}
+								src={UserUtils.getUserAvatar(
+									SafetyUtils.getNonNullValue(getUser())
+								)}
+								alt={UserUtils.getNameOfUser(
+									SafetyUtils.getNonNullValue(getUser())
+								)}
 								size={
 									BooleanUtils.valueOf(getSidebarExpanded())
 										? 24
@@ -242,9 +238,9 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 									"-user-name"
 								)}
 							>
-								{getUserDetails(
+								{UserUtils.getNameOfUser(
 									SafetyUtils.getNonNullValue(getUser())
-								).name || ""}
+								)}
 							</Typography>
 							<FiChevronDown
 								className={classes(

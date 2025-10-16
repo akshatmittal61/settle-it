@@ -1,6 +1,5 @@
 import { ExpenseModel } from "@/models";
-import { Expense, Group, User } from "@/schema";
-import { CreateModel, IExpense } from "@/types";
+import { CreateModel, Expense, Group, IExpense, User } from "@/types";
 import { getObjectFromMongoResponse, omitKeys, SafetyUtils } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";

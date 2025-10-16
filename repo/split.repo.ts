@@ -1,6 +1,5 @@
 import { SplitModel } from "@/models";
-import { Expense, Split, User } from "@/schema";
-import { CreateModel, ISplit } from "@/types";
+import { CreateModel, Expense, ISplit, Split, User } from "@/types";
 import {
 	CollectionUtils,
 	getObjectFromMongoResponse,

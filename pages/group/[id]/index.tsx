@@ -13,7 +13,12 @@ import { Button, Loader } from "@/library";
 import PageNotFound from "@/pages/404";
 import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Group.module.scss";
-import { CreateExpenseData, IGroup, IUser, UpdateGroupData } from "@/types";
+import {
+	CreateExpenseData,
+	GroupSpread,
+	IUser,
+	UpdateGroupData,
+} from "@/types";
 import { CollectionUtils, Notify, StringUtils, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -23,7 +28,7 @@ const classes = stylesConfig(styles, "group");
 
 type GroupPageProps = {
 	user: IUser;
-	group: IGroup;
+	group: GroupSpread;
 };
 
 const GroupPage: React.FC<GroupPageProps> = (props) => {
@@ -44,7 +49,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 	const router = useRouter();
 	const [openManageGroupPopup, setOpenManageGroupPopup] = useState(false);
 	const [openAddExpensePopup, setOpenAddExpensePopup] = useState(false);
-	const [groupDetails, setGroupDetails] = useState<IGroup>(props.group);
+	const [groupDetails, setGroupDetails] = useState<GroupSpread>(props.group);
 
 	const updateGroupHelper = async (
 		id: string,

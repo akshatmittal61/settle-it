@@ -2,7 +2,7 @@ import { Responsive } from "@/layouts";
 import { Avatar, Typography } from "@/library";
 import { useUiStore } from "@/store";
 import { IShare } from "@/types";
-import { getUserDetails, stylesConfig } from "@/utils";
+import { stylesConfig, UserUtils } from "@/utils";
 import React from "react";
 import styles from "./styles.module.scss";
 
@@ -31,7 +31,7 @@ const GroupContributions: React.FC<IGroupContributionsProps> = ({ shares }) => {
 								className={classes("-bar__item--user__name")}
 								size="s"
 							>
-								{getUserDetails(share.user).name || ""}
+								{UserUtils.getNameOfUser(share.user)}
 							</Typography>
 							<Typography
 								className={classes("-bar__item--user__share")}
@@ -71,17 +71,15 @@ const GroupContributions: React.FC<IGroupContributionsProps> = ({ shares }) => {
 								}}
 							>
 								<Avatar
-									src={
-										getUserDetails(record.user).avatar || ""
-									}
-									alt={getUserDetails(record.user).name || ""}
+									src={UserUtils.getUserAvatar(record.user)}
+									alt={UserUtils.getNameOfUser(record.user)}
 									size={56}
 								/>
 								<div
 									className={classes("-person-details__text")}
 								>
 									<Typography size="lg">
-										{getUserDetails(record.user).name || ""}
+										{UserUtils.getNameOfUser(record.user)}
 									</Typography>
 									<Typography size="s">
 										{record.percentage.toFixed(2)}%

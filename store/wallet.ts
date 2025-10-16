@@ -12,14 +12,14 @@ import { Notify } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
-export type State = {
+type State = {
 	groups: Array<GroupSpread>;
 	expenses: Array<IExpense>;
 	tags: Array<String>;
 	isSyncing: boolean;
 };
 
-export type Actions = {
+type Actions = {
 	getGroups: Getter<State, "groups">;
 	getExpenses: Getter<State, "expenses">;
 	getTags: Getter<State, "tags">;
@@ -29,11 +29,11 @@ export type Actions = {
 	setIsSyncing: Setter<State, "isSyncing">;
 };
 
-export type Options = {
+type Options = {
 	syncOnMount?: boolean;
 };
 
-export type Extras = {
+type Extras = {
 	isGettingGroups: boolean;
 	isAddingGroup: boolean;
 	isUpdatingGroup: boolean;

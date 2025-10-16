@@ -1,4 +1,4 @@
-import { AuthMapping, Expense, Group, Member, Split, User } from "@/schema";
+import { AuthMapping, Expense, Group, Member, Split, User } from "@/types";
 import { CreateModel, UpdateModel } from "./parser";
 
 // User

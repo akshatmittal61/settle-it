@@ -1,6 +1,5 @@
 import { UserModel } from "@/models";
-import { User } from "@/schema";
-import { CreateModel, IUser } from "@/types";
+import { CreateModel, IUser, User } from "@/types";
 import { SafetyUtils } from "@/utils";
 import { BaseRepo } from "./base";
 

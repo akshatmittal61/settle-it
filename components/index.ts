@@ -8,3 +8,4 @@ export * from "./Header";
 export * as Home from "./Home";
 export * from "./Seo";
 export * from "./Side";
+export * from "./Wrapper";

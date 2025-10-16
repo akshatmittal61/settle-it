@@ -1,5 +1,5 @@
 import { apiMethods, dbUri, HTTP } from "@/constants";
-import { DatabaseManager } from "@/db";
+import { DatabaseManager, DbContainer } from "@/db";
 import { ApiError, DbConnectionError, ParserSafetyError } from "@/errors";
 import { Logger } from "@/log";
 import { ApiFailure, ServerMiddleware } from "@/server";
@@ -9,7 +9,6 @@ import {
 	ApiRequest,
 	ApiResponse,
 	ApiWrapperOptions,
-	DbContainer,
 	T_API_METHODS,
 } from "@/types";
 import { MongooseError } from "mongoose";

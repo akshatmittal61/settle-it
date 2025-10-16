@@ -1,5 +1,3 @@
-import { ApiRequest } from "@/types";
-
 /**
  * Opens a link in a new tab.
  * @param {string} link - The link to open.
@@ -15,7 +13,7 @@ export const openLink = (link: string): void => {
  * @returns {void} None.
  */
 export const copyToClipboard = (text: string): void => {
-	navigator.clipboard.writeText(text);
+	void navigator.clipboard.writeText(text);
 };
 
 /**
@@ -190,12 +188,11 @@ export const switchDateFormat = (
 ): string => {
 	if (from === "utc" && to === "locale") {
 		const utcSeconds = new Date(date).getTime() / 1000;
-		const isoLocal = new Date(
+		return new Date(
 			utcSeconds * 1000 - new Date().getTimezoneOffset() * 60000
 		)
 			.toISOString()
 			.slice(0, -1);
-		return isoLocal;
 	} else if (from === "locale" && to === "utc") {
 		return new Date(date).toISOString();
 	} else {
@@ -210,7 +207,7 @@ export const switchDateFormat = (
  * @param {string} timestamp The timestamp to sanitize.
  * @returns {string} The sanitized timestamp.
  */
-export const sanitizeTimestampToDate = (timestamp: string) => {
+export const sanitizeTimestampToDate = (timestamp: string): string => {
 	return checkDateFormat(timestamp) === "utc"
 		? switchDateFormat(timestamp, "utc", "locale").split("T")[0]
 		: timestamp.split("T")[0];
@@ -235,11 +232,10 @@ export const generateRandomColor = (): string => {
 export const getEnumeration = <T extends string>(
 	arr: Array<T>
 ): { [K in T]: K } => {
-	const enumeration: { [K in T]: K } = arr.reduce((acc, key) => {
+	return arr.reduce((acc, key) => {
 		acc[key] = key;
 		return acc;
 	}, {} as any);
-	return enumeration;
 };
 
 /**
@@ -254,8 +250,7 @@ export const getImageUrlFromDriveLink = (link: string): string => {
 	const regex = /^https:\/\/drive\.google\.com\/file\/d\/([^\/]+)(\/|$)/;
 	const match = link.match(regex);
 	if (match && match[1]) {
-		const assetUrl = `https://lh3.googleusercontent.com/d/${match[1]}=w1000`;
-		return assetUrl;
+		return `https://lh3.googleusercontent.com/d/${match[1]}=w1000`;
 	} else {
 		return link;
 	}

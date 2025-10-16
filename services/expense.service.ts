@@ -1,16 +1,16 @@
 import { Cache } from "@/cache";
 import { cacheParameter, HTTP, SPLIT_STATUS } from "@/constants";
+import { UpdateQuery } from "@/db";
 import { ApiError } from "@/errors";
-import { expenseRepo, splitRepo } from "@/repo";
-import { walletRepo } from "@/repo/wallet.repo";
-import { Expense, Split } from "@/schema";
+import { expenseRepo, splitRepo, walletRepo } from "@/repo";
 import {
 	CreateModel,
+	Expense,
 	GroupSpread,
 	IExpense,
 	ISplit,
+	Split,
 	UpdateExpenseData,
-	UpdateQuery,
 } from "@/types";
 import {
 	BooleanUtils,

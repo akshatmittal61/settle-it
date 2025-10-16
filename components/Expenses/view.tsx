@@ -3,7 +3,7 @@ import { useHttpClient } from "@/hooks";
 import { Avatar, Pane, Typography } from "@/library";
 import { useAuthStore, useWalletStore } from "@/store";
 import { IExpense, IMember } from "@/types";
-import { getUserDetails, stylesConfig, UserUtils } from "@/utils";
+import { stylesConfig, UserUtils } from "@/utils";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.scss";
@@ -50,8 +50,8 @@ export const ExpenseMember: React.FC<ExpenseMemberProps> = ({ user }) => {
 			})}
 		>
 			<Avatar
-				src={getUserDetails(user).avatar || ""}
-				alt={getUserDetails(user).name || ""}
+				src={UserUtils.getUserAvatar(user)}
+				alt={UserUtils.getNameOfUser(user)}
 				size={36}
 			/>
 			{/* (() => {

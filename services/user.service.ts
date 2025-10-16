@@ -8,14 +8,8 @@ import {
 import { ApiError } from "@/errors";
 import { Logger } from "@/log";
 import { userRepo } from "@/repo";
-import { User } from "@/schema";
-import { CreateModel, IUser, UpdateUser } from "@/types";
-import {
-	CollectionUtils,
-	getUserDetails,
-	SafetyUtils,
-	StringUtils,
-} from "@/utils";
+import { CreateModel, IUser, UpdateUser, User } from "@/types";
+import { CollectionUtils, SafetyUtils, StringUtils, UserUtils } from "@/utils";
 import { CacheService } from "./cache.service";
 import { EmailService } from "./email";
 
@@ -253,8 +247,8 @@ export class UserService {
 			emailTemplates.USER_INVITED,
 			{
 				invitedBy: {
-					email: getUserDetails(invitedByUser).email,
-					name: getUserDetails(invitedByUser).name || "",
+					email: UserUtils.getUserDetails(invitedByUser).email,
+					name: UserUtils.getNameOfUser(invitedByUser),
 				},
 			}
 		);

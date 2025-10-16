@@ -1,6 +1,6 @@
 import { fallbackAssets } from "@/constants";
-import { ObjectId, Schema } from "@/types";
-import { Group } from "./types";
+import { ObjectId } from "@/db";
+import { Group, Schema } from "@/types";
 
 export const GroupSchema: Schema<Group> = {
 	name: {

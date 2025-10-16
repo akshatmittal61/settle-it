@@ -16,7 +16,7 @@ import {
 	userRepo,
 } from "@/repo";
 import { walletRepo } from "@/repo/wallet.repo";
-import { Group } from "@/schema";
+import { Group } from "@/types";
 import { EmailService } from "@/services/email";
 import {
 	CreateGroupData,
@@ -26,12 +26,7 @@ import {
 	IGroup,
 	IMember,
 } from "@/types";
-import {
-	CollectionUtils,
-	getUserDetails,
-	SafetyUtils,
-	StringUtils,
-} from "@/utils";
+import { CollectionUtils, SafetyUtils, StringUtils, UserUtils } from "@/utils";
 import { CacheService } from "./cache.service";
 import { UserService } from "./user.service";
 
@@ -180,8 +175,8 @@ export class GroupService {
 				"USER_ADDED_TO_GROUP",
 				{
 					invitedBy: {
-						email: getUserDetails(invitedByUser).email,
-						name: getUserDetails(invitedByUser).name || "",
+						email: UserUtils.getUserDetails(invitedByUser).email,
+						name: UserUtils.getNameOfUser(invitedByUser),
 					},
 					group: {
 						id: group.id,

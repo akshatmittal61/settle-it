@@ -1,6 +1,6 @@
 import { SPLIT_STATUS } from "@/constants";
-import { ObjectId, Schema } from "@/types";
-import { Split } from "./types";
+import { ObjectId } from "@/db";
+import { Schema, Split } from "@/types";
 
 export const SplitSchema: Schema<Split> = {
 	expense: {

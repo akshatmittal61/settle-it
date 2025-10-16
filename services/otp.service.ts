@@ -10,11 +10,10 @@ import {
 	USER_ROLE,
 	USER_STATUS,
 } from "@/constants";
-import { AuthResponse } from "@/types";
+import { AuthResponse, Otp } from "@/types";
 import { otpRepo, userRepo } from "@/repo";
 import { ApiError } from "@/errors";
 import { UserService } from "@/services";
-import { Otp } from "@/schema";
 import { SafetyUtils, StringUtils } from "@/utils";
 
 export class OtpService {
@@ -22,12 +21,12 @@ export class OtpService {
 		const foundOtp = await otpRepo.findOne({ email });
 		const newOtp = OtpService.generate();
 		if (SafetyUtils.isNonNull(foundOtp)) {
-			otpRepo.update(
+			void otpRepo.update(
 				{ email },
 				{ otp: newOtp, status: OTP_STATUS.PENDING }
 			);
 		} else {
-			otpRepo.create({
+			void otpRepo.create({
 				email,
 				otp: newOtp,
 				status: OTP_STATUS.PENDING,
@@ -53,14 +52,14 @@ export class OtpService {
 		}
 		// If greater than 5 minutes have passed, consider the OTP expired
 		if (OtpService.isExpired(foundOtp)) {
-			otpRepo.update({ email }, { status: OTP_STATUS.EXPIRED });
+			void otpRepo.update({ email }, { status: OTP_STATUS.EXPIRED });
 			throw new ApiError(HTTP.status.BAD_REQUEST, "OTP Expired");
 		}
 		if (StringUtils.notEquals(foundOtp.otp, otp)) {
 			throw new ApiError(HTTP.status.BAD_REQUEST, "Invalid OTP");
 		}
 		// If OTP was valid, consider it valid, and mark that as expired
-		otpRepo.update({ email }, { status: OTP_STATUS.EXPIRED });
+		void otpRepo.update({ email }, { status: OTP_STATUS.EXPIRED });
 		const { user, isNew } = await UserService.findOrCreateUser({
 			email,
 			status: USER_STATUS.JOINED,
@@ -68,7 +67,7 @@ export class OtpService {
 		});
 		if (StringUtils.equals(user.status, USER_STATUS.INVITED)) {
 			// If an Invited user logs in, mark the user as Joined
-			userRepo.update({ email }, { status: USER_STATUS.JOINED });
+			void userRepo.update({ email }, { status: USER_STATUS.JOINED });
 		}
 		const authMapping = await AuthService.findOrCreateAuthMapping(
 			email,

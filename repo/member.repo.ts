@@ -1,8 +1,7 @@
 import { MemberModel } from "@/models";
-import { groupRepo } from "@/repo/group.repo";
-import { userRepo } from "@/repo/user.repo";
-import { Group, Member, User } from "@/schema";
-import { CreateModel, IMember } from "@/types";
+import { groupRepo } from "./group.repo";
+import { userRepo } from "./user.repo";
+import { CreateModel, Group, IMember, Member, User } from "@/types";
 import { getObjectFromMongoResponse, SafetyUtils } from "@/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { BaseRepo } from "./base";

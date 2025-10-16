@@ -1,7 +1,6 @@
 import { ParserSafetyError } from "@/errors";
 import { StringUtils } from "./string";
 import { NumberUtils } from "./number";
-import { validateExplainTimeoutOptions } from "mongodb/src/explain";
 
 export class SafetyUtils {
 	public static genericParse<T>(parse: (_: any) => T, input: any): T {

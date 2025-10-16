@@ -14,7 +14,7 @@ import { Loader, Typography } from "@/library";
 import PageNotFound from "@/pages/404";
 import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Group.module.scss";
-import { IBalancesSummary, IGroup, IShare, IUser } from "@/types";
+import { GroupSpread, IBalancesSummary, IShare, IUser } from "@/types";
 import { Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ const classes = stylesConfig(styles, "group");
 
 type GroupSummaryPageProps = {
 	user: IUser;
-	group: IGroup;
+	group: GroupSpread;
 };
 
 type GroupSummaryWindow = "owed" | "summary" | "contributions";
@@ -34,7 +34,7 @@ const GroupSummaryPage: React.FC<GroupSummaryPageProps> = (props) => {
 	const { trigger: getBalancesSummary, loading } = useHttpClient({
 		trigger: GroupApi.getBalancesSummary,
 	});
-	const [groupDetails, setGroupDetails] = useState<IGroup>(props.group);
+	const [groupDetails, setGroupDetails] = useState(props.group);
 	const [expenditure, setExpenditure] = useState(0);
 	const [balances, setBalances] = useState<IBalancesSummary>({
 		owes: [],
