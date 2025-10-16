@@ -1,7 +1,7 @@
-import { MemberApi } from "@/connections";
-import { useStore } from "@/hooks";
+import { MemberApi } from "@/api";
 import { Masonry } from "@/layouts";
 import { Avatar, Typography } from "@/library";
+import { useAuthStore } from "@/store";
 import { IOwedRecord } from "@/types";
 import { getUserDetails, Notify, stylesConfig } from "@/utils";
 import React, { useState } from "react";
@@ -30,7 +30,8 @@ const GroupOwedDataPerson: React.FC<GroupOwedDataPersonProps> = ({
 	transaction,
 	onUpdate,
 }) => {
-	const { user: loggedInUser } = useStore();
+	const { getUser } = useAuthStore();
+	const loggedInUser = getUser()!;
 	const [settling, setSettling] = useState(false);
 	const settleTwoUsers = async (userA: string, userB: string) => {
 		try {
@@ -69,7 +70,10 @@ const GroupOwedDataPerson: React.FC<GroupOwedDataPersonProps> = ({
 							"-person--sub__button--loading": settling,
 						})}
 						onClick={() => {
-							settleTwoUsers(record.user.id, transaction.user.id);
+							void settleTwoUsers(
+								record.user.id,
+								transaction.user.id
+							);
 						}}
 					>
 						{settling ? (

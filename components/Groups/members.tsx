@@ -1,21 +1,22 @@
-import { UserApi } from "@/connections";
+import { UserApi } from "@/api";
 import { fallbackAssets, regex } from "@/constants";
-import { useDebounce, useHttpClient, useStore } from "@/hooks";
+import { useDebounce, useHttpClient } from "@/hooks";
 import {
 	Avatar,
 	Button,
 	CheckBox,
 	IconButton,
 	Input,
+	Loader,
 	MaterialIcon,
 	Textarea,
 	Typography,
 } from "@/library";
+import { useAuthStore } from "@/store";
 import { IUser } from "@/types";
-import { Notify, stylesConfig } from "@/utils";
+import { Notify, StringUtils, stylesConfig } from "@/utils";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { Loader } from "..";
 import styles from "./styles.module.scss";
 
 interface MembersPlaceholderProps {
@@ -127,13 +128,12 @@ const MembersBulkEditor: React.FC<MembersBulkEditorProps> = ({
 			selectedMembers.map((user) => user.email).join(", "),
 			1000
 		);
-	const { call: bulkEditorCall } = useHttpClient<{
-		message: string;
-		users: Array<IUser>;
-	}>();
+	const { trigger: bulkEditorCall } = useHttpClient({
+		trigger: UserApi.searchInBulk,
+	});
 
 	const handleSearchInBulkEditor = async (value: string) => {
-		const response = await bulkEditorCall(UserApi.searchInBulk, value);
+		const response = await bulkEditorCall(value);
 		if (response.message) {
 			Notify.success(response.message);
 		}
@@ -141,8 +141,9 @@ const MembersBulkEditor: React.FC<MembersBulkEditorProps> = ({
 	};
 
 	useEffect(() => {
-		if (debouncedEditorEmails.length > 0)
-			handleSearchInBulkEditor(debouncedEditorEmails);
+		if (StringUtils.isNotEmpty(debouncedEditorEmails)) {
+			void handleSearchInBulkEditor(debouncedEditorEmails);
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [debouncedEditorEmails]);
 
@@ -200,19 +201,20 @@ const MembersWindow: React.FC<MembersWindowProps> = ({
 	selectedMembers,
 	setSelectedMembers,
 }) => {
-	const { user: loggedInUser } = useStore();
+	const { getUser } = useAuthStore();
+	const loggedInUser = getUser()!;
 	const [searchResults, setSearchResults] = useState<Array<IUser>>([]);
 	const [openBulkEditor, setOpenBulkEditor] = useState(false);
-	const { loading: searching, call: searchApiCall } = useHttpClient<
-		Array<IUser>
-	>([]);
+	const { loading: searching, trigger: searchApiCall } = useHttpClient({
+		trigger: UserApi.searchForUsers,
+	});
 	const [searchStr, debouncedSearchStr, setSearchStr] = useDebounce<string>(
 		"",
 		1000
 	);
 
 	const handleSearch = async (searchStr: any) => {
-		const res = await searchApiCall(UserApi.searchForUsers, searchStr);
+		const res = await searchApiCall(searchStr);
 		setSearchResults(res);
 	};
 
@@ -232,7 +234,7 @@ const MembersWindow: React.FC<MembersWindowProps> = ({
 
 	useEffect(() => {
 		if (debouncedSearchStr && debouncedSearchStr.length >= 3) {
-			handleSearch(debouncedSearchStr);
+			void handleSearch(debouncedSearchStr);
 		} else {
 			setSearchResults([]);
 		}

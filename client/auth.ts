@@ -1,13 +1,14 @@
-import { AuthApi } from "@/api";
-import { routes } from "@/constants";
+import { AuthApi, GroupApi } from "@/api";
+import { redirectToLogin, routes } from "@/constants";
 import { Logger } from "@/log";
 import {
+	IGroup,
 	IUser,
 	ServerSideAdminInterceptor,
 	ServerSideAuthInterceptor,
 	ServerSideResult,
 } from "@/types";
-import { UserUtils } from "@/utils";
+import { StringUtils, UserUtils } from "@/utils";
 import { GetServerSidePropsContext } from "next";
 
 export const authRouterInterceptor: ServerSideAuthInterceptor = async (
@@ -48,13 +49,57 @@ export const authRouterInterceptor: ServerSideAuthInterceptor = async (
 };
 
 export const withAuthPage = <T = any>(
-	handler: (_: IUser) => ServerSideResult<T>
+	handler: (
+		_user: IUser,
+		_context: GetServerSidePropsContext
+	) => ServerSideResult<T> | Promise<ServerSideResult<T>>
 ) => {
 	return async (context: GetServerSidePropsContext) =>
 		authRouterInterceptor<ServerSideResult<T>>(context, {
-			onLoggedIn: (user) => handler(user),
+			onLoggedIn: (user) => handler(user, context),
 			onLoggedOut: () => ({
-				redirect: { destination: routes.LOGIN, permanent: false },
+				redirect: {
+					destination: redirectToLogin(context.req.url),
+					permanent: false,
+				},
+			}),
+		});
+};
+
+export const withGroupPage = <T = any>(
+	handler: (
+		_user: IUser,
+		_group: IGroup,
+		context: GetServerSidePropsContext
+	) => ServerSideResult<T> | Promise<ServerSideResult<T>>
+) => {
+	return async (context: GetServerSidePropsContext) =>
+		authRouterInterceptor<ServerSideResult<T>>(context, {
+			onLoggedIn: async (user) => {
+				try {
+					const groupId = StringUtils.getNonEmptyString(
+						context.query.id
+					);
+					const { data: group } =
+						await GroupApi.getGroupDetails(groupId);
+					return handler(user, group, context);
+				} catch (e: any) {
+					return {
+						props: {
+							error: StringUtils.valueOf(
+								e?.response?.data?.message ||
+									e?.message ||
+									StringUtils.EMPTY
+							),
+						},
+					};
+				}
+			},
+			onLoggedOut: () => ({
+				redirect: {
+					destination: redirectToLogin(context.req.url),
+					permanent: false,
+				},
 			}),
 		});
 };

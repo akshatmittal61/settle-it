@@ -25,7 +25,7 @@ export const FractionDistribution: React.FC<IFractionDistributionProps> = ({
 		updatedValue: string,
 		part: "numerator" | "denominator"
 	) => {
-		let newValue = [];
+		let newValue: any[];
 		if (part === "numerator") {
 			newValue = [updatedValue, value[1]];
 		} else {

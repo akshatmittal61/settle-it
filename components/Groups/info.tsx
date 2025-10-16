@@ -1,7 +1,7 @@
 import { fallbackAssets, USER_STATUS } from "@/constants";
 import { Avatar, Pane, Typography } from "@/library";
-import { IGroup } from "@/types";
-import { copyToClipboard, stylesConfig } from "@/utils";
+import { GroupSpread } from "@/types";
+import { copyToClipboard, StringUtils, stylesConfig, UserUtils } from "@/utils";
 import React from "react";
 import { FiCopy, FiSettings, FiX } from "react-icons/fi";
 import styles from "./styles.module.scss";
@@ -9,7 +9,7 @@ import styles from "./styles.module.scss";
 interface IGroupInfoProps {
 	onClose: () => void;
 	onUpdate?: () => void;
-	group: IGroup;
+	group: GroupSpread;
 }
 
 const classes = stylesConfig(styles, "group-info");
@@ -17,7 +17,8 @@ const classes = stylesConfig(styles, "group-info");
 const GroupInfo: React.FC<IGroupInfoProps> = ({ onClose, onUpdate, group }) => {
 	const copyMembers = () => {
 		const text = group.members
-			.map((m) => `${m.name || m.email.split("@")[0]} <${m.email}>`)
+			.map((m) => m.user)
+			.map((m) => `${UserUtils.getNameOfUser(m)} <${m.email}>`)
 			.join(", ");
 		copyToClipboard(text);
 	};
@@ -75,37 +76,59 @@ const GroupInfo: React.FC<IGroupInfoProps> = ({ onClose, onUpdate, group }) => {
 						</button>
 					</div>
 					<div className={classes("-members")}>
-						{group.members.map((member) => (
-							<div key={member.id} className={classes("-member")}>
-								<Avatar
-									src={member.avatar || fallbackAssets.avatar}
-									alt={member.name || member.email}
-									size={48}
-								/>
-								<Typography
-									className={classes("-member-name")}
-									size="lg"
+						{group.members
+							.map((m) => m.user)
+							.map((member) => (
+								<div
+									key={member.id}
+									className={classes("-member")}
 								>
-									{member.name || member.email}
-								</Typography>
-								<Typography
-									size="s"
-									className={classes("-member-chip", {
-										"-member-chip--admin":
-											group.createdBy.id === member.id,
-										"-member-chip--invited":
-											member.status ===
-											USER_STATUS.INVITED,
-									})}
-								>
-									{group.createdBy.id === member.id
-										? "Group Admin"
-										: member.status === USER_STATUS.INVITED
-											? "Invited"
-											: null}
-								</Typography>
-							</div>
-						))}
+									<Avatar
+										src={
+											member.avatar ||
+											fallbackAssets.avatar
+										}
+										alt={member.name || member.email}
+										size={48}
+									/>
+									<Typography
+										className={classes("-member-name")}
+										size="lg"
+									>
+										{member.name || member.email}
+									</Typography>
+									<Typography
+										size="s"
+										className={classes("-member-chip", {
+											"-member-chip--admin":
+												group.author.id === member.id,
+											"-member-chip--invited":
+												member.status ===
+												USER_STATUS.INVITED,
+										})}
+									>
+										{(() => {
+											if (
+												StringUtils.equals(
+													group.author.id,
+													member.id
+												)
+											) {
+												return "Group Admin";
+											} else if (
+												StringUtils.equals(
+													member.status,
+													USER_STATUS.INVITED
+												)
+											) {
+												return "Invited";
+											} else {
+												return null;
+											}
+										})()}
+									</Typography>
+								</div>
+							))}
 					</div>
 				</section>
 			</div>

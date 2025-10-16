@@ -1,12 +1,20 @@
-import { GroupApi } from "@/api";
+import { ExpenseApi, GroupApi } from "@/api";
 import { useHttpClient } from "@/hooks";
-import { ApiRequests, ExpenseSpread, GroupSpread, IGroup } from "@/types";
+import {
+	ApiRequests,
+	CreateExpenseData,
+	GroupSpread,
+	IExpense,
+	IGroup,
+	UpdateExpenseData,
+} from "@/types";
+import { Notify } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 
 export type State = {
 	groups: Array<GroupSpread>;
-	expenses: Array<ExpenseSpread>;
+	expenses: Array<IExpense>;
 	tags: Array<String>;
 	isSyncing: boolean;
 };
@@ -30,6 +38,10 @@ export type Extras = {
 	isAddingGroup: boolean;
 	isUpdatingGroup: boolean;
 	isDeletingGroup: boolean;
+	isGettingGroupExpenses: boolean;
+	isCreatingExpense: boolean;
+	isUpdatingExpense: boolean;
+	isDeletingExpense: boolean;
 	sync: () => Promise<void>;
 	createGroup: (_body: ApiRequests.CreateGroup) => Promise<GroupSpread>;
 	updateGroup: (
@@ -37,6 +49,10 @@ export type Extras = {
 		_body: ApiRequests.UpdateGroup
 	) => Promise<GroupSpread>;
 	deleteGroup: (_id: string) => Promise<IGroup>;
+	getGroupExpenses: (_id: string) => Promise<Array<IExpense>>;
+	createExpense: (_body: CreateExpenseData) => Promise<IExpense>;
+	updateExpense: (_id: string, _body: UpdateExpenseData) => Promise<IExpense>;
+	deleteExpense: (_id: string) => Promise<IExpense>;
 };
 
 export const useWalletStore = createBaseStore<State, Actions, Options, Extras>({
@@ -57,39 +73,70 @@ export const useWalletStore = createBaseStore<State, Actions, Options, Extras>({
 		setIsSyncing: (isSyncing) => set({ isSyncing }),
 	}),
 	useSetup: ({ store, options }) => {
+		const { trigger: getGroupsClient, loading: isGettingGroups } =
+			useHttpClient({
+				trigger: GroupApi.getAllGroups,
+				onSuccess: store.getState().setGroups,
+			});
 		const {
-			call: getGroupsClient,
-			data: fetchedGroups,
-			loading: isGettingGroups,
-		} = useHttpClient<Array<GroupSpread>>();
-		const {
-			call: createGroupClient,
+			trigger: createGroupClient,
 			data: createdGroup,
 			loading: isAddingGroup,
-		} = useHttpClient<GroupSpread>();
+		} = useHttpClient({ trigger: GroupApi.createGroup });
 		const {
-			call: updateGroupClient,
+			trigger: updateGroupClient,
 			data: updatedGroup,
 			loading: isUpdatingGroup,
-		} = useHttpClient<GroupSpread>();
+		} = useHttpClient({ trigger: GroupApi.updateGroup });
 		const {
-			call: deleteGroupClient,
+			trigger: deleteGroupClient,
 			data: deletedGroup,
 			loading: isDeletingGroup,
-		} = useHttpClient<IGroup>();
+		} = useHttpClient({ trigger: GroupApi.deleteGroup });
+		const {
+			trigger: getGroupExpensesClient,
+			data: groupExpenses,
+			loading: isGettingGroupExpenses,
+		} = useHttpClient({
+			trigger: GroupApi.getGroupExpenses,
+			onError: Notify.error,
+		});
+		const {
+			trigger: createExpenseClient,
+			data: createdExpense,
+			loading: isCreatingExpense,
+		} = useHttpClient({
+			trigger: ExpenseApi.createExpense,
+			onError: Notify.error,
+		});
+		const {
+			trigger: updateExpenseClient,
+			data: updatedExpense,
+			loading: isUpdatingExpense,
+		} = useHttpClient({
+			trigger: ExpenseApi.updateExpense,
+			onError: Notify.error,
+		});
+		const {
+			trigger: deleteExpenseClient,
+			data: deletedExpense,
+			loading: isDeletingExpense,
+		} = useHttpClient({
+			trigger: ExpenseApi.deleteExpense,
+			onError: Notify.error,
+		});
 
 		const sync = async () => {
 			try {
 				store.getState().setIsSyncing(true);
 				await getGroupsClient(GroupApi.getAllGroups);
-				store.getState().setGroups(fetchedGroups);
 			} finally {
 				store.getState().setIsSyncing(false);
 			}
 		};
 
 		const createGroup = async (body: ApiRequests.CreateGroup) => {
-			await createGroupClient(GroupApi.createGroup, body);
+			await createGroupClient(body);
 			const groupsToSet = [createdGroup, ...store.getState().getGroups()];
 			store.getState().setGroups(groupsToSet);
 			void sync();
@@ -100,7 +147,7 @@ export const useWalletStore = createBaseStore<State, Actions, Options, Extras>({
 			id: string,
 			body: ApiRequests.UpdateGroup
 		) => {
-			await updateGroupClient(GroupApi.updateGroup, id, body);
+			await updateGroupClient(id, body);
 			const groupsToSet = store
 				.getState()
 				.getGroups()
@@ -111,7 +158,7 @@ export const useWalletStore = createBaseStore<State, Actions, Options, Extras>({
 		};
 
 		const deleteGroup = async (id: string) => {
-			await deleteGroupClient(GroupApi.deleteGroup, id);
+			await deleteGroupClient(id);
 			const groupsToSet = store
 				.getState()
 				.getGroups()
@@ -119,6 +166,57 @@ export const useWalletStore = createBaseStore<State, Actions, Options, Extras>({
 			store.getState().setGroups(groupsToSet);
 			void sync();
 			return deletedGroup;
+		};
+
+		const getGroupExpenses = async (id: string) => {
+			await getGroupExpensesClient(id);
+			// add the expenses which are not in the store yet
+			const expensesToSet = [...store.getState().getExpenses()].concat(
+				groupExpenses.filter(
+					(exp) =>
+						!store
+							.getState()
+							.getExpenses()
+							.map((e) => e.id)
+							.includes(exp.id)
+				)
+			);
+			store.getState().setExpenses(expensesToSet);
+			void sync();
+			return groupExpenses;
+		};
+
+		const createExpense = async (body: CreateExpenseData) => {
+			await createExpenseClient(body);
+			const expensesToSet = [
+				createdExpense,
+				...store.getState().getExpenses(),
+			];
+			store.getState().setExpenses(expensesToSet);
+			void sync();
+			return createdExpense;
+		};
+
+		const updateExpense = async (id: string, body: UpdateExpenseData) => {
+			await updateExpenseClient({ expenseId: id, data: body });
+			const expensesToSet = store
+				.getState()
+				.getExpenses()
+				.map((e) => (e.id === id ? updatedExpense : e));
+			store.getState().setExpenses(expensesToSet);
+			void sync();
+			return updatedExpense;
+		};
+
+		const deleteExpense = async (id: string) => {
+			await deleteExpenseClient(id);
+			const expensesToSet = store
+				.getState()
+				.getExpenses()
+				.filter((e) => e.id === id);
+			store.getState().setExpenses(expensesToSet);
+			void sync();
+			return deletedExpense;
 		};
 
 		useEffect(() => {
@@ -131,10 +229,18 @@ export const useWalletStore = createBaseStore<State, Actions, Options, Extras>({
 			isAddingGroup,
 			isUpdatingGroup,
 			isDeletingGroup,
+			isGettingGroupExpenses,
+			isCreatingExpense,
+			isUpdatingExpense,
+			isDeletingExpense,
 			sync,
 			createGroup,
 			updateGroup,
 			deleteGroup,
+			getGroupExpenses,
+			createExpense,
+			updateExpense,
+			deleteExpense,
 		};
 	},
 });

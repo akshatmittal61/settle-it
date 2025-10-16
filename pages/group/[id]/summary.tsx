@@ -1,43 +1,39 @@
-import { authenticatedPage } from "@/client";
+import { GroupApi } from "@/api";
+import { withGroupPage } from "@/client";
 import {
 	Contributions,
 	GroupMetaData,
 	GroupPlaceholder,
 	GroupSummary,
-	Loader,
 	OwedRecords,
 } from "@/components";
-import { GroupApi } from "@/connections";
 import { AppSeo, routes } from "@/constants";
-import { useHttpClient, useStore } from "@/hooks";
+import { useHttpClient } from "@/hooks";
 import { Seo } from "@/layouts";
-import { Typography } from "@/library";
+import { Loader, Typography } from "@/library";
 import PageNotFound from "@/pages/404";
+import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Group.module.scss";
-import {
-	IBalancesSummary,
-	IGroup,
-	IShare,
-	IUser,
-	ServerSideResult,
-} from "@/types";
-import { getNonEmptyString, Notify, stylesConfig } from "@/utils";
+import { IBalancesSummary, IGroup, IShare, IUser } from "@/types";
+import { Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
 const classes = stylesConfig(styles, "group");
 
-type GroupPageProps = {
+type GroupSummaryPageProps = {
 	user: IUser;
 	group: IGroup;
 };
 
 type GroupSummaryWindow = "owed" | "summary" | "contributions";
 
-const GroupPage: React.FC<GroupPageProps> = (props) => {
-	const { groups } = useStore();
+const GroupSummaryPage: React.FC<GroupSummaryPageProps> = (props) => {
+	const { getGroups } = useWalletStore();
 	const router = useRouter();
-	const client = useHttpClient();
+	const { trigger: getBalancesSummary, loading } = useHttpClient({
+		trigger: GroupApi.getBalancesSummary,
+	});
 	const [groupDetails, setGroupDetails] = useState<IGroup>(props.group);
 	const [expenditure, setExpenditure] = useState(0);
 	const [balances, setBalances] = useState<IBalancesSummary>({
@@ -51,11 +47,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 
 	const getGroupSummaryHelper = async () => {
 		try {
-			client.updateId("get-summary");
-			const fetchedSummary = await client.call(
-				GroupApi.getBalancesSummary,
-				props.group.id
-			);
+			const fetchedSummary = await getBalancesSummary(props.group.id);
 			setBalances(fetchedSummary.balances);
 			setExpenditure(fetchedSummary.expenditure);
 			setShares(fetchedSummary.shares);
@@ -70,23 +62,25 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 	};
 
 	useEffect(() => {
-		getGroupSummaryHelper();
+		void getGroupSummaryHelper();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
-		const group = groups.find((group) => group.id === props.group.id);
+		const group = getGroups().find((group) => group.id === props.group.id);
 		if (group) setGroupDetails(group);
-	}, [groups, props.group?.id]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.group?.id]);
 
-	if (!props.group)
+	if (!props.group) {
 		return <PageNotFound description={(props as any).error} />;
+	}
 
 	return (
 		<main className={classes("")}>
 			<Seo title={`${groupDetails?.name} - Summary | ${AppSeo.title}`} />
 			<GroupMetaData group={groupDetails} />
-			{client.loading ? (
+			{loading ? (
 				<section className={classes("-body", "-body--center")}>
 					<Loader.Spinner />
 				</section>
@@ -148,49 +142,10 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 	);
 };
 
-export default GroupPage;
+export default GroupSummaryPage;
 
-export const getServerSideProps = (
-	context: any
-): Promise<ServerSideResult<GroupPageProps>> => {
-	return authenticatedPage(context, {
-		async onLoggedInAndOnboarded(user, headers) {
-			try {
-				const id = getNonEmptyString(context.query.id);
-				const { data } = await GroupApi.getGroupDetails(id, headers);
-				return {
-					props: {
-						user,
-						group: data,
-					},
-				};
-			} catch (error: any) {
-				return {
-					props: {
-						error: error.message,
-					},
-				};
-			}
-		},
-		onLoggedInAndNotOnboarded() {
-			return {
-				redirect: {
-					destination:
-						routes.ONBOARDING +
-						`?redirect=/group/${context.query.id}/summary`,
-					permanent: false,
-				},
-			};
-		},
-		onLoggedOut() {
-			return {
-				redirect: {
-					destination:
-						routes.LOGIN +
-						`?redirect=/group/${context.query.id}/summary`,
-					permanent: false,
-				},
-			};
-		},
-	});
-};
+export const getServerSideProps = withGroupPage<GroupSummaryPageProps>(
+	(user, group) => ({
+		props: { user, group },
+	})
+);

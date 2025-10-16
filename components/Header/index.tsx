@@ -1,5 +1,5 @@
 import { useUiStore } from "@/store";
-import { CollectionUtils, SafetyUtils, stylesConfig } from "@/utils";
+import { CollectionUtils, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React from "react";
 import { FiSidebar } from "react-icons/fi";
@@ -27,7 +27,7 @@ export const Header: React.FC<IHeaderProps> = () => {
 						<button
 							key={`header-navigation-${item.route}`}
 							onClick={() => {
-								router.push(item.route);
+								void router.push(item.route);
 							}}
 							className={classes("-button")}
 						>

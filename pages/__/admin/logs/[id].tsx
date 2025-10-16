@@ -1,13 +1,13 @@
-import { adminPage } from "@/client";
 import { AdminApi } from "@/api";
-import { routes } from "@/constants";
+import { adminPage } from "@/client";
+import { redirectToLogin, routes } from "@/constants";
+import { useHttpClient } from "@/hooks";
 import { Button, Loader, Typography } from "@/library";
 import styles from "@/styles/pages/Admin.module.scss";
 import { IUser, ServerSideResult } from "@/types";
 import { saveFile, StringUtils, stylesConfig } from "@/utils";
 import React, { useEffect } from "react";
 import { FiDownload } from "react-icons/fi";
-import { useHttpClient } from "@/hooks";
 
 type AdminPanelLogPageProps = {
 	user: IUser;
@@ -22,7 +22,8 @@ const AdminPanelLogPage: React.FC<AdminPanelLogPageProps> = (props) => {
 	});
 	useEffect(() => {
 		void trigger(props.file);
-	}, []);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.file]);
 	return loading ? (
 		<Loader.Spinner />
 	) : data ? (
@@ -51,23 +52,22 @@ export const getServerSideProps = (
 	context: any
 ): Promise<ServerSideResult<AdminPanelLogPageProps>> => {
 	return adminPage(context, {
-		async onAdmin(user, headers) {
+		async onAdmin(user) {
 			try {
 				const fileName = StringUtils.getNonEmptyString(
 					context.query.id
 				);
-				const res = await AdminApi.getLogFileByName(fileName, headers);
 				return {
 					props: {
 						user,
 						file: fileName,
-						content: res.data,
 					},
 				};
 			} catch (error: any) {
 				return {
-					props: {
-						error: error.message,
+					redirect: {
+						destination: routes.LOGS,
+						permanent: false,
 					},
 				};
 			}
@@ -83,7 +83,7 @@ export const getServerSideProps = (
 		onLoggedOut() {
 			return {
 				redirect: {
-					destination: routes.LOGIN + `?redirect=${routes.LOGS}`,
+					destination: redirectToLogin(routes.LOGS),
 					permanent: false,
 				},
 			};

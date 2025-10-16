@@ -1,14 +1,10 @@
-import { useStore } from "@/hooks";
+import { EXPENSE_METHOD, EXPENSE_TYPE } from "@/constants";
 import { Responsive } from "@/layouts";
 import { Button, Input, Pane } from "@/library";
+import { useAuthStore, useWalletStore } from "@/store";
 import { CreateExpenseData } from "@/types";
-import { getUserDetails, stylesConfig } from "@/utils";
+import { getUserDetails, stylesConfig, UserUtils } from "@/utils";
 import React, { useState } from "react";
-import {
-	distributionMethods,
-	DistributionsBase,
-	ExpenseUser,
-} from "./distribution";
 import styles from "./styles.module.scss";
 
 interface ICreateExpenseProps {
@@ -26,25 +22,28 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 	onSave,
 	loading,
 }) => {
-	const { user: loggedInuser, groups } = useStore();
-	const group = groups.find((group) => group.id === groupId)!;
+	const { getGroups } = useWalletStore();
+	const { getUser } = useAuthStore();
+	const loggedInUser = getUser()!;
+	const group = getGroups().find((group) => group.id === groupId)!;
 	const [fields, setFields] = useState<CreateExpenseData>({
 		title: "",
 		amount: 0,
 		description: "",
-		paidOn: new Date().toISOString(),
-		groupId,
-		paidBy: loggedInuser.id,
-		members: [],
+		timestamp: new Date().toISOString(),
+		group: groupId,
+		sender: loggedInUser.id,
+		type: EXPENSE_TYPE.PAID,
+		method: EXPENSE_METHOD.UPI,
 	});
-	const [members, setMembers] = useState<Array<ExpenseUser>>(
+	/* const [members, setMembers] = useState<Array<ExpenseUser>>(
 		group.members.map((member) => ({
 			...member,
 			amount: 0,
 			value: 0,
 			selected: true,
 		}))
-	);
+	); */
 	const handleChange = (e: any) => {
 		const { name, value } = e.target;
 		if (name === "amount") {
@@ -62,12 +61,12 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 		e.preventDefault();
 		onSave({
 			...fields,
-			members: members
-				.filter((user) => user.selected)
-				.map((user) => ({
-					userId: user.id,
-					amount: user.amount,
-				})),
+			// members: members
+			// 	.filter((user) => user.selected)
+			// 	.map((user) => ({
+			// 		userId: user.id,
+			// 		amount: user.amount,
+			// 	})),
 		});
 	};
 
@@ -104,30 +103,28 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 						<Input
 							label="Paid By"
 							name="paidBy"
-							placeholder={loggedInuser.name}
+							placeholder={loggedInUser.name}
 							size="small"
 							required
 							value={(() => {
-								const foundMember = group.members.find(
-									(user) => user.id === fields.paidBy
-								);
+								const foundMember = group.members
+									.map((m) => m.user)
+									.find((user) => user.id === fields.sender);
 								if (foundMember) {
-									if (foundMember.name) {
-										return foundMember.name;
-									}
-									return foundMember.email;
+									return UserUtils.getNameOfUser(foundMember);
 								}
-								return loggedInuser.name;
+								return loggedInUser.name;
 							})()}
 							dropdown={{
 								enabled: true,
-								options: group.members.map((user) => ({
-									id: user.id,
-									label: getUserDetails(user).name || "",
-									value: user.id,
+								options: group.members.map((member) => ({
+									id: member.user.id,
+									label:
+										getUserDetails(member.user).name || "",
+									value: member.user.id,
 								})),
 								onSelect(user) {
-									setFields({ ...fields, paidBy: user.id });
+									setFields({ ...fields, sender: user.id });
 								},
 							}}
 						/>
@@ -138,7 +135,7 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 							name="paidOn"
 							type="datetime-local"
 							size="small"
-							value={fields.paidOn}
+							value={fields.timestamp.slice(0, 16)}
 							onChange={handleChange}
 							style={{
 								width: "100%",
@@ -161,7 +158,7 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 							onChange={handleChange}
 						/>
 					</Responsive.Col>
-					{fields.amount > 0 ? (
+					{/* fields.amount > 0 ? (
 						<Responsive.Col
 							xlg={100}
 							lg={100}
@@ -178,7 +175,7 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 								}}
 							/>
 						</Responsive.Col>
-					) : null}
+					) : null */}
 				</Responsive.Row>
 				<Button
 					className={classes("-submit")}
@@ -187,7 +184,7 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 					title={(() => {
 						if (loading) return "Creating...";
 						if (fields.amount <= 0) return "Enter Amount";
-						if (
+						/* if (
 							members
 								.filter((user) => user.selected)
 								.some((member) => member.amount === 0)
@@ -199,19 +196,18 @@ const CreateExpense: React.FC<ICreateExpenseProps> = ({
 								.map((user) => user.amount)
 								.reduce((a, b) => a + b, 0) !== fields.amount
 						)
-							return "Enter Amount for all members";
+							return "Enter Amount for all members"; */
 						return "Create";
 					})()}
 					disabled={
-						loading ||
-						fields.amount <= 0 ||
+						loading || fields.amount <= 0 /* ||
 						members
 							.filter((user) => user.selected)
 							.some((member) => member.amount === 0) ||
 						members
 							.filter((user) => user.selected)
 							.map((user) => user.amount)
-							.reduce((a, b) => a + b, 0) !== fields.amount
+							.reduce((a, b) => a + b, 0) !== fields.amount */
 					}
 				>
 					Create

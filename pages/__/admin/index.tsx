@@ -1,13 +1,13 @@
+import { AdminApi } from "@/api";
 import { adminPage } from "@/client";
-import { Loader } from "@/components";
-import { AdminApi } from "@/connections";
 import { fallbackAssets, routes } from "@/constants";
 import { useHttpClient } from "@/hooks";
 import { Responsive, Seo } from "@/layouts";
-import { Avatar, Avatars, Button, Typography } from "@/library";
+import { Avatar, Button, Loader, Typography } from "@/library";
 import styles from "@/styles/pages/Admin.module.scss";
-import { IGroup, IUser, ServerSideResult } from "@/types";
-import { stylesConfig } from "@/utils";
+import { IUser, ServerSideResult } from "@/types";
+import { StringUtils, stylesConfig, UserUtils } from "@/utils";
+import dayjs from "dayjs";
 import Link from "next/link";
 import React, { useEffect } from "react";
 import { FiCpu, FiFileText, FiMail, FiPhone } from "react-icons/fi";
@@ -21,20 +21,21 @@ const classes = stylesConfig(styles, "admin");
 const AdminPanel: React.FC<AdminPanelProps> = () => {
 	const {
 		data: users,
-		call: callUsersApi,
+		trigger: callUsersApi,
 		loading: gettingUsers,
-	} = useHttpClient<Array<IUser>>([]);
+	} = useHttpClient({
+		trigger: AdminApi.getAllUsers,
+	});
 	const {
 		data: groups,
-		call: callGroupsApi,
+		trigger: callGroupsApi,
 		loading: gettingGroups,
-	} = useHttpClient<Array<IGroup>>([]);
+	} = useHttpClient({
+		trigger: AdminApi.getAllGroups,
+	});
 
 	useEffect(() => {
-		Promise.all([
-			callUsersApi(AdminApi.getAllUsers),
-			callGroupsApi(AdminApi.getAllGroups),
-		]);
+		void Promise.all([callUsersApi(), callGroupsApi()]);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -165,7 +166,10 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
 											size="sm"
 											className={classes("-user-status")}
 										>
-											{group.type}
+											Created at:{" "}
+											{dayjs(group.createdAt).format(
+												"DD-MM-YYYY HH:mm"
+											)}
 										</Typography>
 										<div
 											className={classes("-user-created")}
@@ -173,12 +177,15 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
 											Created By:{" "}
 											<Avatar
 												src={
-													group.createdBy?.avatar ||
-													fallbackAssets.avatar
+													UserUtils.getUserDetails(
+														group.author
+													).avatar ||
+													StringUtils.EMPTY
 												}
 												alt={
-													group.createdBy?.name ||
-													group.createdBy?.email
+													UserUtils.getUserDetails(
+														group.author
+													).name || StringUtils.EMPTY
 												}
 												size={24}
 											/>
@@ -186,7 +193,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
 										<div
 											className={classes("-user-socials")}
 										>
-											<Avatars size={24}>
+											{/* <Avatars size={24}>
 												{group.members.map(
 													(member) => ({
 														src:
@@ -197,7 +204,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
 															member.email,
 													})
 												)}
-											</Avatars>
+											</Avatars> */}
 										</div>
 									</div>
 								</div>

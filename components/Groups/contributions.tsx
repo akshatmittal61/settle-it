@@ -1,6 +1,6 @@
-import { useStore } from "@/hooks";
 import { Responsive } from "@/layouts";
 import { Avatar, Typography } from "@/library";
+import { useUiStore } from "@/store";
 import { IShare } from "@/types";
 import { getUserDetails, stylesConfig } from "@/utils";
 import React from "react";
@@ -13,7 +13,7 @@ interface IGroupContributionsProps {
 const classes = stylesConfig(styles, "group-contributions");
 
 const GroupContributions: React.FC<IGroupContributionsProps> = ({ shares }) => {
-	const { accentColor, theme } = useStore();
+	const { getAccentColor, getTheme } = useUiStore();
 	return (
 		<div className={classes("")}>
 			<div className={classes("-bar")}>
@@ -23,7 +23,7 @@ const GroupContributions: React.FC<IGroupContributionsProps> = ({ shares }) => {
 						key={`group-contributions-bar-${share.user.id}`}
 						style={{
 							width: `${share.percentage}%`,
-							backgroundColor: `rgba(${accentColor}, ${share.opacity})`,
+							backgroundColor: `rgba(${getAccentColor()}, ${share.opacity})`,
 						}}
 					>
 						<div className={classes("-bar__item--user")}>
@@ -57,14 +57,15 @@ const GroupContributions: React.FC<IGroupContributionsProps> = ({ shares }) => {
 						<div
 							className={classes("-person", "-person--block")}
 							style={{
-								backgroundColor: `rgba(${accentColor}, ${record.opacity})`,
+								backgroundColor: `rgba(${getAccentColor()}, ${record.opacity})`,
 							}}
 						>
 							<div
 								className={classes("-person-details")}
 								style={{
 									color:
-										record.opacity > 0.5 || theme === "dark"
+										record.opacity > 0.5 ||
+										getTheme() === "dark"
 											? "var(--theme-white)"
 											: "var(--theme-black)",
 								}}

@@ -1,13 +1,12 @@
-import { ExpenseApi, MemberApi } from "@/connections";
-import { useStore } from "@/hooks";
-import { Responsive } from "@/layouts";
-import { Avatar, Button, Pane, Typography } from "@/library";
+import { ExpenseApi } from "@/api";
+import { useHttpClient } from "@/hooks";
+import { Avatar, Pane, Typography } from "@/library";
+import { useAuthStore, useWalletStore } from "@/store";
 import { IExpense, IMember } from "@/types";
-import { getUserDetails, Notify, roundOff, stylesConfig } from "@/utils";
-import React, { useEffect, useState } from "react";
-import { IoCheckmarkOutline } from "react-icons/io5";
-import styles from "./styles.module.scss";
+import { getUserDetails, stylesConfig, UserUtils } from "@/utils";
 import dayjs from "dayjs";
+import React, { useEffect, useState } from "react";
+import styles from "./styles.module.scss";
 
 interface IViewExpenseProps {
 	id: string;
@@ -23,21 +22,15 @@ interface ExpenseMemberProps extends IMember {
 
 const classes = stylesConfig(styles, "view-expense");
 
-const ExpenseMember: React.FC<ExpenseMemberProps> = ({
-	id,
-	expense,
-	user,
-	owed,
-	paid,
-	onUpdateMembers,
-}) => {
-	const { user: loggedInUser } = useStore();
-	const [settling, setSettling] = useState(false);
-	const settleMember = async () => {
+export const ExpenseMember: React.FC<ExpenseMemberProps> = ({ user }) => {
+	// const { getUser } = useAuthStore();
+	// const loggedInUser = getUser()!;
+	const [settling] = useState(false);
+	/* const settleMember = async () => {
 		try {
 			setSettling(true);
 			const updatedMembersRes = await MemberApi.settleMemberInExpense({
-				groupId: expense.group.id,
+				// groupId: expense.group.id,
 				expenseId: expense.id,
 				memberId: id,
 			});
@@ -47,13 +40,13 @@ const ExpenseMember: React.FC<ExpenseMemberProps> = ({
 		} finally {
 			setSettling(false);
 		}
-	};
+	}; */
 	return (
 		<div
 			className={classes("-member", {
-				"-member--owed": owed > 0,
+				// "-member--owed": owed > 0,
 				"-member--settling": settling,
-				"-member--settled": owed === 0 || expense.paidBy.id === user.id,
+				// "-member--settled": owed === 0 || expense.paidBy.id === user.id,
 			})}
 		>
 			<Avatar
@@ -61,11 +54,11 @@ const ExpenseMember: React.FC<ExpenseMemberProps> = ({
 				alt={getUserDetails(user).name || ""}
 				size={36}
 			/>
-			{(() => {
-				if (expense.paidBy.id === user.id) {
+			{/* (() => {
+				if (expense.sender.id === user.id) {
 					return (
 						<Typography size="sm">
-							{`${getUserDetails(expense.paidBy).name} paid ${roundOff(paid, 2)} for this expense`}
+							{`${getUserDetails(expense.sender).name} paid ${roundOff(paid, 2)} for this expense`}
 						</Typography>
 					);
 				} else {
@@ -83,8 +76,8 @@ const ExpenseMember: React.FC<ExpenseMemberProps> = ({
 						);
 					}
 				}
-			})()}
-			{expense.paidBy.id === loggedInUser.id ? (
+			})() */}
+			{/* expense.paidBy.id === loggedInUser.id ? (
 				<button
 					disabled={owed === 0 || settling}
 					className={classes("-btn", {
@@ -110,7 +103,7 @@ const ExpenseMember: React.FC<ExpenseMemberProps> = ({
 				>
 					Settled
 				</Typography>
-			) : null}
+			) : null */}
 		</div>
 	);
 };
@@ -121,19 +114,27 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 	onSwitchToEdit,
 	onDelete,
 }) => {
-	const { expenses, user: loggedInUser } = useStore();
-	const [settlingExpense, setSettlingExpense] = useState(false);
-	const [members, setMembers] = useState<Array<IMember>>([]);
-	const [gettingMembers, setGettingMembers] = useState(false);
-	const expense = expenses.find((exp) => exp.id === id);
+	const { getUser } = useAuthStore();
+	const { getExpenses } = useWalletStore();
+	const loggedInUser = getUser()!;
+	const {
+		// loading: gettingMembers,
+		trigger: getMembersForExpense,
+		// data: members,
+	} = useHttpClient({ trigger: ExpenseApi.getMembersOfExpense });
+	/* const { loading: settlingExpense, trigger: settleExpense } = useHttpClient({
+		trigger: ExpenseApi.settleExpense,
+		onSuccess: () => {
+			void getMembersForExpense(id);
+		},
+		onError: Notify.error,
+	}); */
+	const expense = getExpenses().find((exp) => exp.id === id);
 
-	const settleExpense = async () => {
+	/* const settleExpense = async () => {
 		try {
 			setSettlingExpense(true);
-			const updatedMembersRes = await ExpenseApi.settleExpense({
-				groupId: expense!.group.id,
-				expenseId: id,
-			});
+			const updatedMembersRes = await ExpenseApi.settleExpense(id);
 			setMembers(updatedMembersRes.data);
 			Notify.success("This expense has been settled");
 		} catch (error) {
@@ -141,26 +142,13 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 		} finally {
 			setSettlingExpense(false);
 		}
-	};
+	}; */
 
 	useEffect(() => {
-		const getMembersForExpense = async () => {
-			setGettingMembers(true);
-			try {
-				const res = await ExpenseApi.getMembersOfExpense({
-					groupId: expense!.group.id,
-					expenseId: id,
-				});
-				setMembers(res.data);
-			} catch (error) {
-				Notify.error(error);
-			} finally {
-				setGettingMembers(false);
-			}
-		};
 		if (expense) {
-			getMembersForExpense();
+			void getMembersForExpense(id);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [expense, id]);
 
 	if (!expense) return null;
@@ -169,14 +157,14 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 		<Pane
 			onClose={onClose}
 			onEdit={
-				expense.createdBy.id === loggedInUser.id ||
-				expense.paidBy.id === loggedInUser.id
+				expense.author.id === loggedInUser.id ||
+				expense.sender.id === loggedInUser.id
 					? onSwitchToEdit
 					: undefined
 			}
 			onDelete={
-				expense.createdBy.id === loggedInUser.id ||
-				expense.paidBy.id === loggedInUser.id
+				expense.author.id === loggedInUser.id ||
+				expense.sender.id === loggedInUser.id
 					? onDelete
 					: undefined
 			}
@@ -190,14 +178,13 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 							{expense.title}
 						</Typography>
 						<Typography size="sm">
-							{dayjs(expense.paidOn ?? expense.createdAt).format(
-								"MMM DD, YYYY"
-							)}
+							{dayjs(
+								expense.timestamp ?? expense.createdAt
+							).format("MMM DD, YYYY")}
 						</Typography>
 					</div>
 					<div className={classes("-card-paid")}>
-						{expense.paidBy.name ||
-							expense.paidBy.email.slice(0, 7) + "..."}
+						{UserUtils.getNameOfUser(expense.sender)}
 						<Typography size="sm">paid {expense.amount}</Typography>
 					</div>
 				</div>
@@ -211,7 +198,7 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 					</Typography>
 				) : null}
 				<div className={classes("-members")}>
-					{gettingMembers ? (
+					{/* gettingMembers ? (
 						<Responsive.Row>
 							{Array(6)
 								.fill(0)
@@ -241,9 +228,9 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 								}}
 							/>
 						))
-					)}
+					) */}
 				</div>
-				{gettingMembers ? null : (
+				{/* gettingMembers ? null : (
 					<div className={classes("-status")}>
 						{members
 							.map((mem) => mem.owed)
@@ -252,16 +239,16 @@ const ViewExpense: React.FC<IViewExpenseProps> = ({
 								<IoCheckmarkOutline />
 								Settled
 							</Typography>
-						) : expense.paidBy.id === loggedInUser.id ? (
+						) : expense.sender.id === loggedInUser.id ? (
 							<Button
-								onClick={settleExpense}
+								onClick={() => settleExpense(id)}
 								loading={settlingExpense}
 							>
 								Settle
 							</Button>
 						) : null}
 					</div>
-				)}
+				) */}
 			</div>
 		</Pane>
 	);

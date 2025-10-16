@@ -22,12 +22,12 @@ export class ExpenseApi {
 	}
 
 	public static async getMembersOfExpense(
-		{ groupId, expenseId }: { groupId: string; expenseId: string },
+		expenseId: string,
 		headers?: any
 	): Promise<ApiRes<ApiResponses.GetMembersForExpense>> {
 		const response = await http.get<
 			ApiRes<ApiResponses.GetMembersForExpense>
-		>(`/group/expense/members?groupId=${groupId}&expenseId=${expenseId}`, {
+		>(`/group/expense/members?expenseId=${expenseId}`, {
 			headers,
 		});
 		return response.data;
@@ -46,11 +46,9 @@ export class ExpenseApi {
 
 	public static async updateExpense(
 		{
-			groupId,
 			expenseId,
 			data,
 		}: {
-			groupId: string;
 			expenseId: string;
 			data: ApiRequests.UpdateExpense;
 		},
@@ -59,33 +57,23 @@ export class ExpenseApi {
 		const response = await http.patch<
 			ApiRes<ApiResponses.UpdateExpense>,
 			ApiRequests.UpdateExpense
-		>(`/group/expense?groupId=${groupId}&expenseId=${expenseId}`, data, {
+		>(`/group/expense?expenseId=${expenseId}`, data, {
 			headers,
 		});
 		return response.data;
 	}
 
-	public static async settleExpense(
-		{ groupId, expenseId }: { groupId: string; expenseId: string },
-		headers?: any
-	) {
+	public static async settleExpense(expenseId: string, headers?: any) {
 		const response = await http.patch<
 			ApiRes<ApiResponses.SettleExpense>,
 			ApiRequests.SettleExpense
-		>(
-			`/group/expense/settle?groupId=${groupId}&expenseId=${expenseId}`,
-			null,
-			{ headers }
-		);
+		>(`/group/expense/settle?expenseId=${expenseId}`, null, { headers });
 		return response.data;
 	}
 
-	public static async deleteExpense(
-		{ groupId, expenseId }: { groupId: string; expenseId: string },
-		headers?: any
-	) {
+	public static async deleteExpense(expenseId: string, headers?: any) {
 		const response = await http.delete<ApiRes<ApiResponses.RemoveExpense>>(
-			`/group/expense?groupId=${groupId}&expenseId=${expenseId}`,
+			`/group/expense?expenseId=${expenseId}`,
 			{ headers }
 		);
 		return response.data;

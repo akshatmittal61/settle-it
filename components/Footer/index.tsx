@@ -18,7 +18,7 @@ export const Footer: React.FC = () => {
 						src="/logo-full.png"
 						alt={AppSeo.title || ""}
 						onClick={() => {
-							router.push("/");
+							void router.push("/");
 						}}
 						width={1920}
 						height={1080}

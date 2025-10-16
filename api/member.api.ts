@@ -4,11 +4,11 @@ import { ApiRequests, ApiRes, ApiResponses } from "@/types";
 export class MemberApi {
 	public static async settleMemberInExpense(
 		{
-			groupId,
+			// groupId,
 			expenseId,
 			memberId,
 		}: {
-			groupId: string;
+			// groupId: string;
 			expenseId: string;
 			memberId: string;
 		},
@@ -18,7 +18,7 @@ export class MemberApi {
 			ApiRes<ApiResponses.SettleMemberInExpense>,
 			ApiRequests.SettleMemberInExpense
 		>(
-			`/group/expense/members/settle?groupId=${groupId}&expenseId=${expenseId}&memberId=${memberId}`,
+			`/group/expense/members/settle?expenseId=${expenseId}&memberId=${memberId}`,
 			null,
 			{ headers }
 		);

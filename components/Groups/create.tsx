@@ -1,6 +1,6 @@
-import { useStore } from "@/hooks";
 import { Responsive } from "@/layouts";
 import { Button, Input, Pane } from "@/library";
+import { useAuthStore } from "@/store";
 import { CreateGroupData, IUser } from "@/types";
 import { Notify, stylesConfig } from "@/utils";
 import React, { useState } from "react";
@@ -9,7 +9,7 @@ import styles from "./styles.module.scss";
 
 interface ICreateGroupProps {
 	onClose: () => void;
-	onSave: (_: CreateGroupData) => void;
+	onSave: (_: CreateGroupData & { members: Array<string> }) => void;
 	loading: boolean;
 }
 
@@ -20,16 +20,18 @@ const CreateGroup: React.FC<ICreateGroupProps> = ({
 	loading,
 	onSave,
 }) => {
-	const { user: loggedInuser } = useStore();
+	const { getUser } = useAuthStore();
+	const loggedInUser = getUser()!;
+	const [members, setMembers] = useState([loggedInUser.id]);
 	const [fields, setFields] = useState<CreateGroupData>({
 		name: "",
 		icon: "",
 		banner: "",
-		type: "",
-		members: [],
+		// type: "",
+		tags: [],
 	});
 	const [selectedMembers, setSelectedMembers] = useState<Array<IUser>>([
-		loggedInuser,
+		loggedInUser,
 	]);
 	const handleChange = (e: any) => {
 		setFields({ ...fields, [e.target.name]: e.target.value });
@@ -40,16 +42,16 @@ const CreateGroup: React.FC<ICreateGroupProps> = ({
 		if (
 			selectedMembers.length === 0 ||
 			(selectedMembers.length === 1 &&
-				selectedMembers[0].id === loggedInuser.id)
+				selectedMembers[0].id === loggedInUser.id)
 		) {
 			return Notify.error("Please select at least 1 member");
 		}
-		if (selectedMembers.map((user) => user.id).includes(loggedInuser.id)) {
-			onSave(fields);
+		if (selectedMembers.map((user) => user.id).includes(loggedInUser.id)) {
+			onSave({ ...fields, members });
 		} else {
 			onSave({
 				...fields,
-				members: [...fields.members, loggedInuser.id],
+				members: [...members, loggedInUser.id],
 			});
 		}
 	};
@@ -90,7 +92,7 @@ const CreateGroup: React.FC<ICreateGroupProps> = ({
 							onChange={handleChange}
 						/>
 					</Responsive.Col>
-					<Responsive.Col xlg={50} lg={50} md={50} sm={100} xsm={100}>
+					{/* <Responsive.Col xlg={50} lg={50} md={50} sm={100} xsm={100}>
 						<Input
 							label="Type"
 							name="type"
@@ -124,7 +126,7 @@ const CreateGroup: React.FC<ICreateGroupProps> = ({
 								},
 							}}
 						/>
-					</Responsive.Col>
+					</Responsive.Col> */}
 					<Responsive.Col
 						xlg={100}
 						lg={100}
@@ -137,10 +139,7 @@ const CreateGroup: React.FC<ICreateGroupProps> = ({
 							selectedMembers={selectedMembers}
 							setSelectedMembers={(users) => {
 								setSelectedMembers(users);
-								setFields({
-									...fields,
-									members: users.map((user) => user.id),
-								});
+								setMembers(users.map((user) => user.id));
 							}}
 						/>
 					</Responsive.Col>

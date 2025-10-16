@@ -1,7 +1,7 @@
 import { fallbackAssets, routes } from "@/constants";
 import { useOnClickOutside } from "@/hooks";
 import { Avatar, MaterialIcon, Typography } from "@/library";
-import { IGroup } from "@/types";
+import { GroupSpread } from "@/types";
 import { stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useRef, useState } from "react";
@@ -9,7 +9,7 @@ import GroupInfo from "./info";
 import styles from "./styles.module.scss";
 
 interface IGroupPageMetaProps {
-	group: IGroup;
+	group: GroupSpread;
 	onAddExpense?: () => void;
 	onUpdate?: () => void;
 }

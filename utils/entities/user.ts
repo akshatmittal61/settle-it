@@ -21,6 +21,14 @@ export class UserUtils {
 		};
 	}
 
+	public static getUserAvatar(user: IUser): string {
+		return user.avatar || fallbackAssets.avatar;
+	}
+
+	public static getNameOfUser(user: IUser): string {
+		return user.name || user.email.split("@")[0];
+	}
+
 	public static isAdmin(user: IUser | null) {
 		if (SafetyUtils.isNonNull(user)) {
 			return StringUtils.equals(user.role, USER_ROLE.ADMIN);

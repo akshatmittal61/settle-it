@@ -1,11 +1,12 @@
 import { UpdateExpense, ViewExpense } from "@/components";
-import { useConfirmationModal, useHttpClient, useStore } from "@/hooks";
+import { useConfirmationModal } from "@/hooks";
 import { Typography } from "@/library";
+import { useWalletStore } from "@/store";
 import { IExpense, UpdateExpenseData } from "@/types";
-import { getUserDetails, Notify, stylesConfig } from "@/utils";
+import { Notify, stylesConfig, UserUtils } from "@/utils";
+import dayjs from "dayjs";
 import React, { useState } from "react";
 import styles from "./styles.module.scss";
-import dayjs from "dayjs";
 
 interface IExpenseProps extends IExpense {}
 
@@ -14,51 +15,41 @@ const classes = stylesConfig(styles, "expense");
 const Expense: React.FC<IExpenseProps> = ({
 	id,
 	title,
-	paidOn,
+	timestamp,
 	createdAt,
-	paidBy,
+	sender,
 	amount,
-	group,
 }) => {
-	const { updateExpense, removeExpense, syncEverything } = useStore();
-	const client = useHttpClient();
+	// const { updateExpense, removeExpense, syncEverything } = useStore();
+	const {
+		updateExpense,
+		deleteExpense,
+		sync: syncWallet,
+		isUpdatingExpense,
+		isDeletingExpense,
+	} = useWalletStore();
 	const [openViewExpensePopup, setOpenViewExpensePopup] = useState(false);
 	const [openEditExpensePopup, setOpenEditExpensePopup] = useState(false);
-	const [updating, setUpdating] = useState(false);
-	const [deleting, setDeleting] = useState(false);
 
 	const updateExpenseHelper = async (data: UpdateExpenseData) => {
-		setUpdating(true);
 		try {
-			await client.dispatch(updateExpense, {
-				groupId: group.id,
-				expenseId: id,
-				data,
-			});
-			await syncEverything();
+			await updateExpense(id, data);
+			await syncWallet();
 			setOpenEditExpensePopup(false);
 			setOpenViewExpensePopup(true);
 		} catch (error) {
 			Notify.error(error);
-		} finally {
-			setUpdating(false);
 		}
 	};
 
 	const deleteExpenseHelper = async () => {
-		setDeleting(true);
 		try {
-			await client.dispatch(removeExpense, {
-				groupId: group.id,
-				expenseId: id,
-			});
-			await syncEverything();
+			await deleteExpense(id);
+			await syncWallet();
 			setOpenEditExpensePopup(false);
 			setOpenViewExpensePopup(false);
 		} catch (error) {
 			Notify.error(error);
-		} finally {
-			setDeleting(false);
 		}
 	};
 
@@ -76,7 +67,7 @@ const Expense: React.FC<IExpenseProps> = ({
 			setOpenEditExpensePopup(false);
 			setOpenViewExpensePopup(false);
 		},
-		deleting
+		isDeletingExpense
 	);
 
 	return (
@@ -86,11 +77,11 @@ const Expense: React.FC<IExpenseProps> = ({
 				onClick={() => setOpenViewExpensePopup(true)}
 			>
 				<Typography className={classes("-date")}>
-					{dayjs(paidOn ?? createdAt).format("MMM DD, YYYY")}
+					{dayjs(timestamp ?? createdAt).format("MMM DD, YYYY")}
 				</Typography>
 				<Typography className={classes("-title")}>{title}</Typography>
 				<Typography className={classes("-amount")}>
-					{getUserDetails(paidBy).name}
+					{UserUtils.getNameOfUser(sender)}
 					{" paid "}
 					{amount}
 				</Typography>
@@ -112,8 +103,8 @@ const Expense: React.FC<IExpenseProps> = ({
 			{openEditExpensePopup ? (
 				<UpdateExpense
 					id={id}
-					loading={updating}
-					groupId={group.id}
+					loading={isUpdatingExpense}
+					// groupId={group.id}
 					onClose={() => setOpenEditExpensePopup(false)}
 					onSave={updateExpenseHelper}
 				/>

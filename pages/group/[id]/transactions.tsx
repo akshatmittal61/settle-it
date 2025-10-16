@@ -1,54 +1,48 @@
-import { authenticatedPage } from "@/client";
-import { GroupMetaData, GroupPlaceholder, Loader } from "@/components";
-import { GroupApi } from "@/connections";
+import { GroupApi } from "@/api";
+import { withGroupPage } from "@/client";
+import { GroupMetaData, GroupPlaceholder } from "@/components";
 import { AppSeo, routes } from "@/constants";
-import { useHttpClient, useStore } from "@/hooks";
+import { useHttpClient } from "@/hooks";
 import { Seo } from "@/layouts";
+import { Loader } from "@/library";
 import PageNotFound from "@/pages/404";
+import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Group.module.scss";
-import { IGroup, ITransaction, IUser, ServerSideResult } from "@/types";
-import { getNonEmptyString, Notify, stylesConfig } from "@/utils";
+import { IGroup, IUser } from "@/types";
+import { Notify, stylesConfig } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
 const classes = stylesConfig(styles, "group");
 
-type GroupPageProps = {
+type GroupTransactionsPageProps = {
 	user: IUser;
 	group: IGroup;
 };
 
-const GroupPage: React.FC<GroupPageProps> = (props) => {
-	const { groups } = useStore();
+const GroupTransactionsPage: React.FC<GroupTransactionsPageProps> = (props) => {
+	const { getGroups } = useWalletStore();
 	const router = useRouter();
-	const client = useHttpClient();
+	const {
+		trigger: getGroupTransactions,
+		loading,
+		data: { transactions },
+	} = useHttpClient({
+		trigger: GroupApi.getTransactions,
+		onError: Notify.error,
+	});
 	const [groupDetails, setGroupDetails] = useState<IGroup>(props.group);
-	const [transactions, setTransactions] = useState<Array<ITransaction>>([]);
-
-	const getGroupTransactionsHelper = async () => {
-		try {
-			const fetchedTransactions = await client.call(
-				GroupApi.getTransactions,
-				props.group.id
-			);
-			setTransactions(fetchedTransactions.transactions);
-		} catch (error) {
-			Notify.error(error);
-		}
-	};
 
 	useEffect(() => {
-		getGroupTransactionsHelper();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	useEffect(() => {
-		const group = groups.find((group) => group.id === props.group.id);
+		void getGroupTransactions(props.group.id);
+		const group = getGroups().find((group) => group.id === props.group.id);
 		if (group) setGroupDetails(group);
-	}, [groups, props.group?.id]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.group?.id]);
 
-	if (!props.group)
+	if (!props.group) {
 		return <PageNotFound description={(props as any).error} />;
+	}
 
 	return (
 		<main className={classes("")}>
@@ -56,7 +50,7 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 				title={`${groupDetails?.name} - Transactions | ${AppSeo.title}`}
 			/>
 			<GroupMetaData group={groupDetails} />
-			{client.loading ? (
+			{loading ? (
 				<section className={classes("-body", "-body--center")}>
 					<Loader.Spinner />
 				</section>
@@ -110,49 +104,10 @@ const GroupPage: React.FC<GroupPageProps> = (props) => {
 	);
 };
 
-export default GroupPage;
+export default GroupTransactionsPage;
 
-export const getServerSideProps = (
-	context: any
-): Promise<ServerSideResult<GroupPageProps>> => {
-	return authenticatedPage(context, {
-		async onLoggedInAndOnboarded(user, headers) {
-			try {
-				const id = getNonEmptyString(context.query.id);
-				const { data } = await GroupApi.getGroupDetails(id, headers);
-				return {
-					props: {
-						user,
-						group: data,
-					},
-				};
-			} catch (error: any) {
-				return {
-					props: {
-						error: error.message,
-					},
-				};
-			}
-		},
-		onLoggedInAndNotOnboarded() {
-			return {
-				redirect: {
-					destination:
-						routes.ONBOARDING +
-						`?redirect=/group/${context.query.id}/transactions`,
-					permanent: false,
-				},
-			};
-		},
-		onLoggedOut() {
-			return {
-				redirect: {
-					destination:
-						routes.LOGIN +
-						`?redirect=/group/${context.query.id}/transactions`,
-					permanent: false,
-				},
-			};
-		},
-	});
-};
+export const getServerSideProps = withGroupPage<GroupTransactionsPageProps>(
+	(user, group) => ({
+		props: { user, group },
+	})
+);

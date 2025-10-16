@@ -1,7 +1,6 @@
-import { fallbackAssets } from "@/constants";
-import { useStore } from "@/hooks";
 import { Avatar, Typography } from "@/library";
-import { stylesConfig } from "@/utils";
+import { useAuthStore } from "@/store";
+import { stylesConfig, UserUtils } from "@/utils";
 import { useRouter } from "next/router";
 import React from "react";
 import styles from "./styles.module.scss";
@@ -11,9 +10,10 @@ interface IHeaderProps {}
 const classes = stylesConfig(styles, "header");
 
 const Header: React.FC<IHeaderProps> = () => {
-	const { user } = useStore();
+	const { getUser, getIsLoggedIn } = useAuthStore();
+	const user = getUser();
 	const router = useRouter();
-	if (!user.id) return null;
+	if (!getIsLoggedIn() || !user) return null;
 	return (
 		<header className={classes("")}>
 			<Typography size="head-4" as="h1" weight="medium">
@@ -25,12 +25,12 @@ const Header: React.FC<IHeaderProps> = () => {
 						: new Date().getHours() < 24
 							? "Evening"
 							: "Night"}{" "}
-				{user.name?.split(" ")[0]}
+				{UserUtils.getNameOfUser(user)}
 			</Typography>
 			<button>
 				<Avatar
-					src={user.avatar || fallbackAssets.avatar}
-					alt={user.name || "User"}
+					src={UserUtils.getUserAvatar(user)}
+					alt={UserUtils.getNameOfUser(user)}
 					size={48}
 					onClick={() => router.push("/me")}
 				/>

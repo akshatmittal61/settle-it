@@ -1,5 +1,5 @@
+import { AdminApi } from "@/api";
 import { adminPage } from "@/client";
-import { AdminApi } from "@/connections";
 import { routes } from "@/constants";
 import { useHttpClient } from "@/hooks";
 import { Seo } from "@/layouts";
@@ -16,23 +16,20 @@ type AdminPanelCacheProps = {
 const classes = stylesConfig(styles, "admin");
 
 const AdminPanelCache: React.FC<AdminPanelCacheProps> = () => {
-	const { data: cacheData, call: getData } = useHttpClient();
-	const { loading: clearing, call: removeData } = useHttpClient();
-
-	const clearCache = async () => {
-		try {
-			await Promise.all([
-				removeData(AdminApi.clearCacheData),
-				getData(AdminApi.getAllCacheData),
-			]);
+	const { data: cacheData, trigger: getData } = useHttpClient({
+		trigger: AdminApi.getAllCacheData,
+	});
+	const { loading: clearing, trigger: clearCache } = useHttpClient({
+		trigger: AdminApi.clearCacheData,
+		onSuccess: async () => {
 			Notify.success("Cache cleared successfully.");
-		} catch (error) {
-			Notify.error(error);
-		}
-	};
+			await getData();
+		},
+		onError: Notify.error,
+	});
 
 	useEffect(() => {
-		getData(AdminApi.getAllCacheData);
+		void getData();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	return cacheData ? (

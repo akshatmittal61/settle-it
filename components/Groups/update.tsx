@@ -1,9 +1,9 @@
 import { fallbackAssets } from "@/constants";
-import { useStore } from "@/hooks";
 import { Responsive } from "@/layouts";
 import { Avatar, Button, Input, Pane } from "@/library";
+import { useAuthStore, useWalletStore } from "@/store";
 import { IUser, UpdateGroupData } from "@/types";
-import { stylesConfig } from "@/utils";
+import { CollectionUtils, stylesConfig } from "@/utils";
 import React, { useState } from "react";
 import { FiSave, FiTrash2 } from "react-icons/fi";
 import Members from "./members";
@@ -12,9 +12,10 @@ import styles from "./styles.module.scss";
 interface IUpdateGroupProps {
 	id: string;
 	onClose: () => void;
-	onSave: (_: UpdateGroupData) => void;
+	onSave: (_: UpdateGroupData & { members: Array<string> }) => void;
 	onDelete: () => void;
-	loading: boolean;
+	isUpdatingGroup: boolean;
+	isDeletingGroup: boolean;
 }
 
 const classes = stylesConfig(styles, "create-group");
@@ -22,22 +23,25 @@ const classes = stylesConfig(styles, "create-group");
 const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 	id,
 	onClose,
-	loading,
+	isUpdatingGroup,
+	isDeletingGroup,
 	onSave,
 	onDelete,
 }) => {
-	const { user: loggedInuser, groups } = useStore();
+	const { getGroups } = useWalletStore();
+	const { getUser } = useAuthStore();
+	const loggedInUser = getUser()!;
 	const isLoggedInUserAuthorOfGroup =
-		groups.find((group) => group.id === id)?.createdBy.id ===
-		loggedInuser.id;
+		getGroups().find((group) => group.id === id)?.author.id ===
+		loggedInUser.id;
 	const [fields, setFields] = useState<UpdateGroupData>(() => {
-		const group = groups.find((group) => group.id === id);
+		const group = getGroups().find((group) => group.id === id);
 		if (group) {
 			return {
 				name: group.name,
 				icon: group.icon,
 				banner: group.banner,
-				type: group.type,
+				tags: group.tags,
 				members: group.members.map((member) => member.id),
 			};
 		}
@@ -50,11 +54,12 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 		};
 	});
 	const [selectedMembers, setSelectedMembers] = useState<Array<IUser>>(() => {
-		const group = groups.find((group) => group.id === id);
-		if (group) {
-			return group.members;
+		const group = getGroups().find((group) => group.id === id);
+		if (CollectionUtils.isNotEmpty(group?.members)) {
+			return group.members.map((m) => m.user);
+		} else {
+			return CollectionUtils.EMPTY;
 		}
-		return [];
 	});
 	const handleChange = (e: any) => {
 		setFields({ ...fields, [e.target.name]: e.target.value });
@@ -62,12 +67,15 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 
 	const handleSubmit = (e: any) => {
 		e.preventDefault();
-		if (selectedMembers.map((user) => user.id).includes(loggedInuser.id)) {
-			onSave(fields);
+		if (selectedMembers.map((user) => user.id).includes(loggedInUser.id)) {
+			onSave({
+				...fields,
+				members: selectedMembers.map((u) => u.id),
+			});
 		} else {
 			onSave({
 				...fields,
-				members: [...fields.members, loggedInuser.id],
+				members: [...selectedMembers.map((u) => u.id), loggedInUser.id],
 			});
 		}
 	};
@@ -85,7 +93,7 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 						>
 							<Avatar
 								src={fields.icon || fallbackAssets.groupIcon}
-								alt={fields.name}
+								alt={fields.name || "Group Icon"}
 								className={classes("-banner__icon")}
 								fallback={fallbackAssets.groupIcon}
 								shape="square"
@@ -128,7 +136,7 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 							onChange={handleChange}
 						/>
 					</Responsive.Col>
-					<Responsive.Col xlg={50} lg={50} md={50} sm={100} xsm={100}>
+					{/* <Responsive.Col xlg={50} lg={50} md={50} sm={100} xsm={100}>
 						<Input
 							label="Type"
 							name="type"
@@ -162,7 +170,7 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 								},
 							}}
 						/>
-					</Responsive.Col>
+					</Responsive.Col> */}
 					<Responsive.Col
 						xlg={100}
 						lg={100}
@@ -175,10 +183,6 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 							selectedMembers={selectedMembers}
 							setSelectedMembers={(users) => {
 								setSelectedMembers(users);
-								setFields({
-									...fields,
-									members: users.map((user) => user.id),
-								});
 							}}
 						/>
 					</Responsive.Col>
@@ -195,7 +199,7 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 								type="button"
 								theme="error"
 								variant="outlined"
-								loading={loading}
+								loading={isDeletingGroup}
 								icon={<FiTrash2 />}
 								onClick={onDelete}
 							>
@@ -211,7 +215,7 @@ const UpdateGroup: React.FC<IUpdateGroupProps> = ({
 						<Button
 							className={classes("-form-submit")}
 							type="submit"
-							loading={loading}
+							loading={isUpdatingGroup}
 							icon={<FiSave />}
 						>
 							Update

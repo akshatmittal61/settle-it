@@ -1,11 +1,11 @@
-import { authenticatedPage } from "@/client";
-import { AppSeo, fallbackAssets, routes } from "@/constants";
-import { useStore } from "@/hooks";
+import { withAuthPage } from "@/client";
+import { AppSeo, routes } from "@/constants";
 import { Responsive, Seo } from "@/layouts";
 import { Avatar, Button, Input, Typography } from "@/library";
+import { useAuthStore } from "@/store";
 import styles from "@/styles/pages/Profile.module.scss";
-import { IUser, ServerSideResult } from "@/types";
-import { Notify, stylesConfig } from "@/utils";
+import { IUser } from "@/types";
+import { Notify, stylesConfig, UserUtils } from "@/utils";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { FiArrowLeft, FiLogOut } from "react-icons/fi";
@@ -18,12 +18,12 @@ interface IProfilePageProps {
 
 const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 	const router = useRouter();
-	const { dispatch, user, updateUser, logoutUser } = useStore();
-	const [updating, setUpdating] = useState(false);
+	const { getUser, updateProfile, isUpdatingProfile, logout } =
+		useAuthStore();
 	const [fields, setFields] = useState({
-		name: user.name || props.user.name || "",
-		phone: user.phone || props.user.phone || "",
-		avatar: user.avatar || props.user.avatar || "",
+		name: getUser()?.name || props.user.name || "",
+		phone: getUser()?.phone || props.user.phone || "",
+		avatar: getUser()?.avatar || props.user.avatar || "",
 	});
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,25 +35,18 @@ const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setUpdating(true);
-		try {
-			await dispatch(updateUser(fields)).unwrap();
-			Notify.success("Updated successfully");
-		} catch (error) {
-			Notify.error(error);
-		} finally {
-			setUpdating(false);
-		}
+		await updateProfile(fields);
+		Notify.success("Updated successfully");
 	};
 
-	const logout = async () => {
-		await dispatch(logoutUser()).unwrap();
-		router.push(routes.LOGIN);
+	const logoutUser = async () => {
+		await logout();
+		void router.push(routes.LOGIN);
 	};
 
 	return (
 		<>
-			<Seo title={`${user.name} - Profile | ${AppSeo.title}`} />
+			<Seo title={`${getUser()!.name} - Profile | ${AppSeo.title}`} />
 			<main className={classes("")}>
 				<div className={classes("-banner")}>
 					<button
@@ -63,7 +56,7 @@ const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 						<FiArrowLeft />
 					</button>
 					<button
-						onClick={logout}
+						onClick={logoutUser}
 						className={classes("-banner-btn", "-banner-btn--flat")}
 					>
 						<FiLogOut />
@@ -72,17 +65,8 @@ const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 				</div>
 				<div className={classes("-meta")}>
 					<Avatar
-						src={
-							user.avatar ||
-							props.user.avatar ||
-							fallbackAssets.avatar
-						}
-						alt={
-							user.name ||
-							props.user.name ||
-							user.email ||
-							props.user.email
-						}
+						src={UserUtils.getUserDetails(getUser()!).avatar!}
+						alt={UserUtils.getUserDetails(getUser()!).name!}
 						size={160}
 					/>
 				</div>
@@ -152,7 +136,7 @@ const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 						>
 							<Button
 								type="submit"
-								loading={updating}
+								loading={isUpdatingProfile}
 								className={classes("-form-btn")}
 								size="large"
 							>
@@ -168,32 +152,6 @@ const ProfilePage: React.FC<IProfilePageProps> = (props) => {
 
 export default ProfilePage;
 
-export const getServerSideProps = (
-	context: any
-): Promise<ServerSideResult<IProfilePageProps>> => {
-	return authenticatedPage(context, {
-		async onLoggedInAndOnboarded(user) {
-			return {
-				props: {
-					user,
-				},
-			};
-		},
-		onLoggedInAndNotOnboarded() {
-			return {
-				redirect: {
-					destination: routes.ONBOARDING + "?redirect=/me",
-					permanent: false,
-				},
-			};
-		},
-		onLoggedOut() {
-			return {
-				redirect: {
-					destination: routes.LOGIN + "?redirect=/me",
-					permanent: false,
-				},
-			};
-		},
-	});
-};
+export const getServerSideProps = withAuthPage((user) => ({
+	props: { user },
+}));

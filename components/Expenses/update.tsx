@@ -1,20 +1,12 @@
-import { ExpenseApi } from "@/connections";
-import { useStore } from "@/hooks";
-import { Responsive } from "@/layouts";
-import { Button, Input, Pane } from "@/library";
+import { Pane } from "@/library";
+import { useWalletStore } from "@/store";
 import { UpdateExpenseData } from "@/types";
-import { getNonNullValue, getUserDetails, Notify, stylesConfig } from "@/utils";
-import React, { useEffect, useState } from "react";
-import {
-	distributionMethods,
-	DistributionsBase,
-	ExpenseUser,
-} from "./distribution";
+import { SafetyUtils, stylesConfig } from "@/utils";
+import React from "react";
 import styles from "./styles.module.scss";
 
 interface IUpdateExpenseProps {
 	id: string;
-	groupId: string;
 	onClose: () => void;
 	onSave: (_: UpdateExpenseData) => void;
 	loading: boolean;
@@ -22,27 +14,19 @@ interface IUpdateExpenseProps {
 
 const classes = stylesConfig(styles, "update-expense");
 
-const UpdateExpense: React.FC<IUpdateExpenseProps> = ({
-	id,
-	groupId,
-	onClose,
-	onSave,
-	loading,
-}) => {
-	const { user: loggedInuser, groups, expenses } = useStore();
-	const originalExpense = getNonNullValue(
-		expenses.find((expense) => expense.id === id)
+const UpdateExpense: React.FC<IUpdateExpenseProps> = ({ id, onClose }) => {
+	const { getExpenses } = useWalletStore();
+	const originalExpense = SafetyUtils.getNonNullValue(
+		getExpenses().find((expense) => expense.id === id)
 	);
-	const group = groups.find((group) => group.id === groupId)!;
+	/* const group = getGroups().find((group) => StringUtils.equals(group.id, groupId))!;
 	const [gettingMembers, setGettingMembers] = useState(false);
 	const [fields, setFields] = useState<UpdateExpenseData>({
 		title: originalExpense.title,
 		amount: originalExpense.amount,
-		groupId,
-		paidBy: originalExpense.paidBy.id,
-		paidOn: originalExpense.paidOn,
+		sender: originalExpense.sender.id,
+		timestamp: originalExpense.timestamp,
 		description: originalExpense.description,
-		members: [],
 	});
 	const [members, setMembers] = useState<Array<ExpenseUser>>(
 		group.members.map((member) => ({
@@ -52,6 +36,7 @@ const UpdateExpense: React.FC<IUpdateExpenseProps> = ({
 			selected: true,
 		}))
 	);
+
 	const handleChange = (e: any) => {
 		const { name, value } = e.target;
 		if (name === "amount") {
@@ -107,9 +92,9 @@ const UpdateExpense: React.FC<IUpdateExpenseProps> = ({
 		};
 		getMembersForExpense();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [id]);
+	}, [id]); */
 
-	if (!group) return null;
+	// if (!group) return null;
 
 	return (
 		<Pane
@@ -117,7 +102,8 @@ const UpdateExpense: React.FC<IUpdateExpenseProps> = ({
 			title={`Update Expense - ${originalExpense.title}`}
 			className={classes("")}
 		>
-			{gettingMembers ? (
+			Will change all of this
+			{/* gettingMembers ? (
 				<Responsive.Row>
 					{Array(6)
 						.fill(0)
@@ -306,7 +292,7 @@ const UpdateExpense: React.FC<IUpdateExpenseProps> = ({
 						Save
 					</Button>
 				</form>
-			)}
+			) */}
 		</Pane>
 	);
 };

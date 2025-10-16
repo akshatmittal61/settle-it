@@ -1,15 +1,23 @@
-import { authenticatedPage } from "@/client";
-import { CreateGroup, Loader } from "@/components";
+import { withAuthPage } from "@/client";
+import { CreateGroup } from "@/components";
 import { AppSeo, fallbackAssets, routes } from "@/constants";
-import { useHttpClient, useStore } from "@/hooks";
+import { useHttpClient } from "@/hooks";
 import { Responsive, Seo } from "@/layouts";
-import { Avatar, Avatars, Button, MaterialIcon, Typography } from "@/library";
+import {
+	Avatar,
+	Avatars,
+	Button,
+	Loader,
+	MaterialIcon,
+	Typography,
+} from "@/library";
+import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Home.module.scss";
-import { CreateGroupData, IUser, ServerSideResult } from "@/types";
-import { Notify, stylesConfig } from "@/utils";
+import { CreateGroupData, IUser } from "@/types";
+import { CollectionUtils, stylesConfig, UserUtils } from "@/utils";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FiPlus } from "react-icons/fi";
 
 const classes = stylesConfig(styles, "home-page");
@@ -20,44 +28,25 @@ type HomePageProps = {
 
 const HomePage: React.FC<HomePageProps> = (props) => {
 	const client = useHttpClient();
-	const { getAllGroups, createGroup, groups } = useStore();
+	const { createGroup, getGroups, isAddingGroup } = useWalletStore({
+		syncOnMount: true,
+	});
 	const [openCreateGroupPopup, setOpenCreateGroupPopup] = useState(false);
-	const [creatingGroup, setCreatingGroup] = useState(false);
 
-	const getGroups = async () => {
-		try {
-			await client.dispatch(getAllGroups, undefined);
-		} catch (error) {
-			Notify.error(error);
-		}
-	};
-
-	useEffect(() => {
-		getGroups();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	const createGroupHelper = async (newGroupData: CreateGroupData) => {
-		try {
-			setCreatingGroup(true);
-			const res = await client.dispatch(createGroup, newGroupData);
-			if (res) {
-				setOpenCreateGroupPopup(false);
-			}
-		} catch (error) {
-			Notify.error(error);
-		} finally {
-			setCreatingGroup(false);
-		}
+	const createGroupHelper = async (
+		newGroupData: CreateGroupData & { members: Array<string> }
+	) => {
+		await createGroup(newGroupData);
+		setOpenCreateGroupPopup(false);
 	};
 
 	return (
 		<>
 			<Seo title={`${props.user.name} - Home | ${AppSeo.title}`} />
 			<main className={classes("")}>
-				{client.loading && groups.length === 0 ? (
+				{client.loading && CollectionUtils.isEmpty(getGroups()) ? (
 					<Loader.Spinner />
-				) : groups.length > 0 ? (
+				) : CollectionUtils.isNotEmpty(getGroups()) ? (
 					<Responsive.Row>
 						<Responsive.Col
 							key="add-group-tile"
@@ -79,7 +68,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 								<MaterialIcon icon="add" />
 							</div>
 						</Responsive.Col>
-						{groups.map((group) => (
+						{getGroups().map((group) => (
 							<Responsive.Col
 								key={group.id}
 								xlg={33}
@@ -117,14 +106,13 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 											{group.name}
 										</Typography>
 										<Avatars size={36}>
-											{group.members.map((member) => ({
-												src:
-													member.avatar ||
-													fallbackAssets.avatar,
-												alt:
-													member.name ||
-													member.email.slice(0, 7) +
-														"...",
+											{group.members.map(({ user }) => ({
+												src: UserUtils.getUserAvatar(
+													user
+												),
+												alt: UserUtils.getNameOfUser(
+													user
+												),
 											}))}
 										</Avatars>
 									</div>
@@ -153,7 +141,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 						</Button>
 					</div>
 				)}
-				{groups.length > 0 ? (
+				{CollectionUtils.isNotEmpty(getGroups()) ? (
 					<Button
 						onClick={() => setOpenCreateGroupPopup(true)}
 						className={classes("-add-fab")}
@@ -165,7 +153,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 			</main>
 			{openCreateGroupPopup ? (
 				<CreateGroup
-					loading={creatingGroup}
+					loading={isAddingGroup}
 					onClose={() => setOpenCreateGroupPopup(false)}
 					onSave={createGroupHelper}
 				/>
@@ -176,28 +164,6 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 
 export default HomePage;
 
-export const getServerSideProps = (
-	context: any
-): Promise<ServerSideResult<HomePageProps>> => {
-	return authenticatedPage(context, {
-		onLoggedInAndOnboarded(user) {
-			return { props: { user } };
-		},
-		onLoggedInAndNotOnboarded() {
-			return {
-				redirect: {
-					destination: routes.ONBOARDING + "?redirect=/home",
-					permanent: false,
-				},
-			};
-		},
-		onLoggedOut() {
-			return {
-				redirect: {
-					destination: routes.LOGIN + "?redirect=/home",
-					permanent: false,
-				},
-			};
-		},
-	});
-};
+export const getServerSideProps = withAuthPage((user) => ({
+	props: { user },
+}));
