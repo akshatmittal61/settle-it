@@ -142,7 +142,7 @@
 	left: 0;
 	z-index: 10;
 
-	@include theme(dark) {
+	@include _theme(dark) {
 		background-color: #646e8a;
 	}
 
@@ -223,7 +223,7 @@
 		&:hover {
 			background-color: rgba(0, 0, 0, 0.1);
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background-color: rgba(255, 255, 255, 0.1);
 			}
 		}
@@ -445,7 +445,7 @@
 		&--gives {
 			background-color: var(--red-100);
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background-color: var(--red-900);
 			}
 		}
@@ -453,7 +453,7 @@
 		&--gets {
 			background-color: var(--green-100);
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background-color: var(--green-900);
 			}
 		}

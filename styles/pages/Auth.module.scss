@@ -59,11 +59,11 @@
 			height: 1px;
 			background: var(--theme-black);
 
-			@include theme(light) {
+			@include _theme(light) {
 				background: var(--theme-black);
 			}
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background: var(--theme-white);
 			}
 		}

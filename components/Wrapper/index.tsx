@@ -25,7 +25,7 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 	const router = useRouter();
 	const [showLoader, setShowLoader] = useState(false);
 	const { sync: syncAuth, setUser, getIsLoggedIn } = useAuthStore();
-	const { openSidebar, syncNetworkStatus } = useUiStore({
+	const { closeSidebar, openSidebar, syncNetworkStatus } = useUiStore({
 		syncOnMount: true,
 	});
 	const { device } = useDevice();
@@ -59,6 +59,8 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 
 	useEffect(() => {
 		if (device === "mobile") {
+			closeSidebar();
+		} else {
 			openSidebar();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps

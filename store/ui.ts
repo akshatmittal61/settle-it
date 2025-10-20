@@ -63,6 +63,8 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 		accentColor: "0, 0, 0",
 		networkStatus: appNetworkStatus.online,
 		sidebar: {
+			// since we are working with mobile-first UI
+			// we have to consider initially sidebar is closed
 			expanded: BooleanUtils.False.value,
 			navigation: CollectionUtils.EMPTY,
 			options: CollectionUtils.EMPTY,
@@ -146,17 +148,37 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			}
 		};
 
+		const toggleSidebar = () => {
+			const stateToSet = BooleanUtils.invert(
+				store.getState().getSidebarExpanded()
+			);
+			console.log("I will mark side bar as ", stateToSet);
+			if (BooleanUtils.True.equals(stateToSet)) {
+				document.body.style.setProperty(
+					"--side-width",
+					"var(--side-width-expanded)"
+				);
+			} else {
+				document.body.style.setProperty(
+					"--side-width",
+					"var(--side-width-collapsed)"
+				);
+			}
+			store.getState().setSidebarExpanded(stateToSet);
+		};
+
 		const openSidebar = () => {
-			store.getState().setSidebarExpanded(true);
+			const currentState = store.getState().getSidebarExpanded();
+			if (BooleanUtils.False.equals(currentState)) {
+				toggleSidebar();
+			}
 		};
 
 		const closeSidebar = () => {
-			store.getState().setSidebarExpanded(false);
-		};
-
-		const toggleSidebar = () => {
 			const currentState = store.getState().getSidebarExpanded();
-			store.getState().setSidebarExpanded(!currentState);
+			if (BooleanUtils.True.equals(currentState)) {
+				toggleSidebar();
+			}
 		};
 
 		useEffect(() => {

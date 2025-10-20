@@ -127,11 +127,11 @@ export class UserService {
 				}
 			}
 		});
-		if (updatedBody.phone) {
-			const phoneExists = await userRepo.findOne({
+		if (StringUtils.isNotEmpty(updatedBody.phone)) {
+			const userWithPhoneNo = await userRepo.findOne({
 				phone: updatedBody.phone,
 			});
-			if (!SafetyUtils.isNonNull(phoneExists)) {
+			if (SafetyUtils.isNonNull(userWithPhoneNo)) {
 				throw new ApiError(
 					HTTP.status.CONFLICT,
 					"Phone number already in use"

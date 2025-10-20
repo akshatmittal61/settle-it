@@ -34,6 +34,7 @@ export const protectedRoutes: Array<String | Function> = [
 ];
 
 export const routesSupportingContainer: Array<string | Function> = [
+	routes.HOME,
 	routes.GROUP,
 	routes.GROUP_SUMMARY,
 	routes.GROUP_TRANSACTIONS,

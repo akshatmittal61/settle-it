@@ -50,7 +50,7 @@
 			background-color: var(--accent-color-500);
 		}
 
-		@include theme(dark) {
+		@include _theme(dark) {
 			background-color: var(--accent-color-heavy);
 
 			&:hover {
@@ -120,7 +120,7 @@
 			background-color: var(--accent-color-500);
 		}
 
-		@include theme(dark) {
+		@include _theme(dark) {
 			background-color: var(--transparent);
 			border-color: var(--accent-color-400);
 

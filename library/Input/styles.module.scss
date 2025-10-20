@@ -38,7 +38,7 @@
 		border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 		transition: all var(--transition-time) ease-in-out;
 
-		@include theme(dark) {
+		@include _theme(dark) {
 			border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 		}
 
@@ -50,7 +50,7 @@
 		&:focus {
 			border-color: var(--accent-color);
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				border-color: var(--accent-color);
 			}
 

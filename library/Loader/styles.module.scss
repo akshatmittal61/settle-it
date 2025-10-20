@@ -24,7 +24,7 @@
 		background-color: var(--accent-color);
 		animation: move 1s linear infinite;
 
-		@include theme(dark) {
+		@include _theme(dark) {
 			background-color: var(--accent-color);
 		}
 	}

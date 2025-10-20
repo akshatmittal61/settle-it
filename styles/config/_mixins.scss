@@ -48,7 +48,7 @@
 	}
 }
 
-@mixin theme($theme) {
+@mixin _theme($theme) {
 	// if body has no data-theme attribute, then apply the styles
 
 	@if $theme ==light {
@@ -149,7 +149,7 @@
 		display: flex;
 	}
 
-	@include theme(dark) {
+	@include _theme(dark) {
 		box-shadow: var(--shadow-elevation-4dp-dark);
 	}
 }

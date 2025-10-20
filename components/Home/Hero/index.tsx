@@ -26,9 +26,6 @@ const HomeHero: React.FC<IHomeHeroProps> = () => {
 					/>
 				</div>
 				<div className={classes("-content")}>
-					<span className="bg-red-500 text-white p-4 rounded-2xl">
-						Checking tw setup
-					</span>
 					<Typography
 						className={classes("-container__heading")}
 						size="head-1"

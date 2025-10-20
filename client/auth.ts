@@ -34,15 +34,14 @@ export const authRouterInterceptor: ServerSideAuthInterceptor = async (
 			(res) => res.data
 		);
 		if ("onLoggedIn" in actions) {
-			actions.onLoggedIn(user, headers);
+			return actions.onLoggedIn(user, headers);
 		} else {
 			if (UserUtils.isUserOnboarded(user)) {
-				return actions.onLoggedInAndNotOnboarded(user, headers);
-			} else {
 				return actions.onLoggedInAndOnboarded(user, headers);
+			} else {
+				return actions.onLoggedInAndNotOnboarded(user, headers);
 			}
 		}
-		return actions.onLoggedOut();
 	} catch (error: any) {
 		return actions.onLoggedOut();
 	}

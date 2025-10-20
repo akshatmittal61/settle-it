@@ -214,7 +214,7 @@
 		&--owed {
 			background-color: var(--red-100);
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background-color: var(--red-900);
 			}
 		}
@@ -222,7 +222,7 @@
 		&--settled {
 			background-color: var(--green-100);
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background-color: var(--green-900);
 			}
 		}

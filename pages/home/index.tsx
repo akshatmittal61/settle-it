@@ -164,6 +164,6 @@ const HomePage: React.FC<HomePageProps> = (props) => {
 
 export default HomePage;
 
-export const getServerSideProps = withAuthPage((user) => ({
+export const getServerSideProps = withAuthPage<HomePageProps>((user) => ({
 	props: { user },
 }));

@@ -48,6 +48,7 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 	const [expandOptionsMenu, setExpandOptionsMenu] = useState(false);
 	const [isSyncing, setIsSyncing] = useState(false);
 	useOnClickOutside(bottomContainerRef, () => setExpandOptionsMenu(false));
+
 	const sync = async () => {
 		setIsSyncing(true);
 		await Promise.all([syncAuthState(), syncWalletState(), syncUiState()]);

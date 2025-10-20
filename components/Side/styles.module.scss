@@ -23,7 +23,7 @@
 		z-index: 70;
 	}
 
-	@include theme(dark) {
+	@include _theme(dark) {
 		background: var(--accent-color);
 	}
 
@@ -137,7 +137,7 @@
 				background-color: var(--back-shadow-light);
 			}
 
-			@include theme(dark) {
+			@include _theme(dark) {
 				background-color: var(--back-shadow-light);
 			}
 		}
@@ -242,6 +242,10 @@
 	}
 
 	&-user {
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+
 		&-action {
 			margin-left: auto;
 

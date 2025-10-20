@@ -18,7 +18,7 @@
 	box-shadow: var(--shadow-elevation-4dp);
 	@include hide-scrollbar();
 
-	@include theme(dark) {
+	@include _theme(dark) {
 		box-shadow: var(--shadow-elevation-4dp-dark);
 	}
 
