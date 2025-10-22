@@ -97,7 +97,7 @@ export const stylesConfig =
 	(
 		styles: Styles,
 		prefix: string = ""
-	): ((..._: (string | { [key: string]: boolean })[]) => string) =>
+	): ((..._classNames: (string | { [key: string]: boolean })[]) => string) =>
 	(...args: (string | { [key: string]: boolean })[]) => {
 		const classes: string[] = [];
 		args.forEach((arg) => {
@@ -109,7 +109,7 @@ export const stylesConfig =
 				});
 			}
 		});
-		return classes.join(" ");
+		return classes.join(" ").trim();
 	};
 
 /**

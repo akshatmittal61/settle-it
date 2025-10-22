@@ -1,4 +1,3 @@
-import Header from "./Header";
-import Hero from "./Hero";
-
-export { Header, Hero };
+export { HomeHeader as Header } from "./Header";
+export { HomeHero as Hero } from "./Hero";
+export { HomeProfile as Profile } from "./Profile";

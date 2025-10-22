@@ -9,7 +9,7 @@ interface IHeaderProps {}
 
 const classes = stylesConfig(styles, "header");
 
-const Header: React.FC<IHeaderProps> = () => {
+export const HomeHeader: React.FC<IHeaderProps> = () => {
 	const { getUser, getIsLoggedIn } = useAuthStore();
 	const user = getUser();
 	const router = useRouter();
@@ -38,5 +38,3 @@ const Header: React.FC<IHeaderProps> = () => {
 		</header>
 	);
 };
-
-export default Header;

@@ -233,7 +233,7 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 								}
 							/>
 							<Typography
-								size="sm"
+								size="s"
 								className={classes(
 									"-option-title",
 									"-user-name"

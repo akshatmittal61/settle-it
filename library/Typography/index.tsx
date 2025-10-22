@@ -18,9 +18,10 @@ export const Typography: React.FC<TypographyProps> = ({
 
 	return (
 		<Component
-			className={
-				classes("", `--${family}-${size}-${weight}`) + ` ${className}`
-			}
+			className={[
+				classes("", `--${family}-${size}-${weight}`),
+				className,
+			].join(" ")}
 			{...rest}
 		>
 			{children}

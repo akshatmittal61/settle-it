@@ -152,7 +152,6 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			const stateToSet = BooleanUtils.invert(
 				store.getState().getSidebarExpanded()
 			);
-			console.log("I will mark side bar as ", stateToSet);
 			if (BooleanUtils.True.equals(stateToSet)) {
 				document.body.style.setProperty(
 					"--side-width",

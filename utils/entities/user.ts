@@ -29,6 +29,11 @@ export class UserUtils {
 		return user.name || user.email.split("@")[0];
 	}
 
+	public static getFirstNameOfUser(user: IUser): string {
+		const fullName = UserUtils.getNameOfUser(user);
+		return fullName.split(" ")[0];
+	}
+
 	public static isAdmin(user: IUser | null) {
 		if (SafetyUtils.isNonNull(user)) {
 			return StringUtils.equals(user.role, USER_ROLE.ADMIN);

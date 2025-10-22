@@ -2,7 +2,7 @@ import React from "react";
 
 // All the font definitions can be found in @/styles/config/_typography.scss
 
-export type FontFamily = "poppins" | "montserrat";
+export type FontFamily = "poppins" | "montserrat" | "alice";
 
 export type FontSize =
 	| "xxs"

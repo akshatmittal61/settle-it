@@ -1,8 +1,8 @@
 import { AuthApi, UserApi } from "@/api";
-import { redirectToLogin, USER_STATUS } from "@/constants";
+import { redirectToLogin } from "@/constants";
 import { useHttpClient } from "@/hooks";
 import { IUser, UpdateUser } from "@/types";
-import { BooleanUtils, Notify, SafetyUtils, StringUtils } from "@/utils";
+import { BooleanUtils, Notify, SafetyUtils, UserUtils } from "@/utils";
 import { useEffect } from "react";
 import { createBaseStore, Getter, Setter } from "./base";
 import { useRouter } from "next/router";
@@ -29,10 +29,13 @@ type Options = {
 };
 
 type Extras = {
+	// store sync util
 	sync: () => Promise<IUser>;
+	// loading states
 	isUpdatingProfile: boolean;
 	isRequestingOtp: boolean;
 	isVerifyingOtp: boolean;
+	// handlers
 	updateProfile: (_body: UpdateUser) => Promise<IUser>;
 	requestOtpWithEmail: (_email: string) => Promise<null>;
 	verifyOtpWithEmail: (_email: string, _otp: string) => Promise<IUser>;
@@ -52,10 +55,7 @@ export const useAuthStore = createBaseStore<State, Action, Options, Extras>({
 		getIsLoggedIn: () => get().isLoggedIn,
 		setUser: (user) => {
 			const isLoggedIn = SafetyUtils.isNonNull(user);
-			const isOnboarded =
-				isLoggedIn &&
-				StringUtils.equals(user.status, USER_STATUS.JOINED) &&
-				StringUtils.isNotEmpty(user.name);
+			const isOnboarded = UserUtils.isUserOnboarded(user);
 			set({ user, isLoggedIn, isOnboarded });
 		},
 		setIsSyncing: (isSyncing) => set({ isSyncing }),

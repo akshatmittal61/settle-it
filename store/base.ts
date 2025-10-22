@@ -6,7 +6,7 @@ type WithSelectors<S> = S extends { getState: () => infer T }
 	: never;
 
 export type Getter<State, T extends keyof State> = () => State[T];
-export type Setter<State, T extends keyof State> = (_: State[T]) => void;
+export type Setter<State, T extends keyof State> = (_val: State[T]) => void;
 
 const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
 	_store: S
@@ -58,7 +58,7 @@ export function createBaseStore<
 	const store = create<State & Actions>(builder.createState);
 	const useStore = createSelectors(store) as WithSelectors<typeof store>;
 
-	const useHook = (options?: Partial<Options>): Actions & Extras => {
+	return (options?: Partial<Options>): State & Actions & Extras => {
 		const s = useStore;
 		const state = s() as Actions;
 		const mergedOptions = {
@@ -75,6 +75,4 @@ export function createBaseStore<
 
 		return { ...state, ...extras };
 	};
-
-	return useHook;
 }

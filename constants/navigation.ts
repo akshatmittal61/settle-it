@@ -9,6 +9,12 @@ const loggedOutSideBarLinks: Array<Navigation> = [
 		route: routes.ROOT,
 	},
 	{
+		id: "groups",
+		title: "My Groups",
+		icon: "users",
+		route: routes.GROUPS,
+	},
+	{
 		id: "about",
 		title: "About",
 		icon: "info",

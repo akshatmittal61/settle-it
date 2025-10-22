@@ -11,7 +11,7 @@ interface IHomeHeroProps {}
 
 const classes = stylesConfig(styles, "home-hero");
 
-const HomeHero: React.FC<IHomeHeroProps> = () => {
+export const HomeHero: React.FC<IHomeHeroProps> = () => {
 	const router = useRouter();
 	return (
 		<section className={classes("")}>
@@ -63,5 +63,3 @@ const HomeHero: React.FC<IHomeHeroProps> = () => {
 		</section>
 	);
 };
-
-export default HomeHero;

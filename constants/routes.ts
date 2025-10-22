@@ -12,6 +12,7 @@ export const routes = Object.freeze({
 	ONBOARDING: "/login",
 	PROFILE: "/me",
 	ERROR: "/500",
+	GROUPS: "/groups",
 	GROUP: (id: string) => `/group/${id}`,
 	GROUP_SUMMARY: (id: string) => `/group/${id}/summary`,
 	GROUP_TRANSACTIONS: (id: string) => `/group/${id}/transactions`,

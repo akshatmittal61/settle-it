@@ -6,7 +6,7 @@ import { stylesConfig } from "@/utils";
 import { GetServerSidePropsContext } from "next";
 import React from "react";
 
-const classes = stylesConfig(styles, "home");
+const classes = stylesConfig(styles, "groups");
 
 const HomePage: React.FC = () => {
 	return (
