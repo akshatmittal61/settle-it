@@ -24,7 +24,7 @@
 	}
 
 	@include _theme(dark) {
-		background: var(--accent-color);
+		background: var(--grey-700);
 	}
 
 	&--expanded {

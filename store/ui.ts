@@ -74,7 +74,11 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			navigation: CollectionUtils.EMPTY,
 		},
 		getTheme: () => get().theme,
-		setTheme: (theme) => set({ theme }),
+		setTheme: (theme) => {
+			set({ theme });
+			localStorage.setItem("theme", theme);
+			document.body.dataset.theme = theme;
+		},
 		getAccentColor: () => get().accentColor,
 		setAccentColor: (accentColor) => set({ accentColor }),
 		getNetworkStatus: () => get().networkStatus,
@@ -139,11 +143,11 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 		};
 
 		const toggleTheme = () => {
-			if (store.getState().theme === appTheme.light) {
-				localStorage.setItem("theme", appTheme.dark);
+			if (
+				StringUtils.equals(store.getState().getTheme(), appTheme.light)
+			) {
 				store.getState().setTheme(appTheme.dark);
 			} else {
-				localStorage.setItem("theme", appTheme.light);
 				store.getState().setTheme(appTheme.light);
 			}
 		};
@@ -181,9 +185,9 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 		};
 
 		useEffect(() => {
-			if (!options.syncOnMount) return;
-			if (typeof window === "undefined") return;
-			sync();
+			if (BooleanUtils.True.equals(options.syncOnMount)) {
+				sync();
+			}
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		}, [options.syncOnMount]);
 

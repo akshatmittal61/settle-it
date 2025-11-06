@@ -30,7 +30,7 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 	});
 	const { device } = useDevice();
 
-	// only show router when route is changing
+	// only show top bar loader when route is changing
 	useEffect(() => {
 		router.events.on("routeChangeStart", () => {
 			setShowLoader(true);
@@ -44,6 +44,10 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 	}, [router.events]);
 
 	useEffect(() => {
+		// if server side props have sent user -> update auth store
+		// else if user visits a protected route, but store is in logged out state
+		// try to sync, if it fails, user will be redirected to LOGIN page
+		// for handling of redirecting to LOGIN page, ref: client/http.ts
 		if (user) {
 			setUser(user);
 		} else {
@@ -58,18 +62,29 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 	}, [user, router.pathname]);
 
 	useEffect(() => {
+		// when a dev intentionally switches to mobile device, close sidebar
 		if (device === "mobile") {
 			closeSidebar();
 		} else {
 			openSidebar();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [device, router.pathname]);
+	}, [device]);
 
 	useEffect(() => {
-		setInterval(() => {
+		// in mobiles, whenever user switches to different page, close sidebar
+		if (device === "mobile") {
+			closeSidebar();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [router.pathname, device]);
+
+	useEffect(() => {
+		// check for network state every 10 seconds
+		const interval = setInterval(() => {
 			syncNetworkStatus();
-		}, 5000);
+		}, 10 * 1000);
+		return () => clearInterval(interval);
 	}, [syncNetworkStatus]);
 
 	return (

@@ -24,4 +24,9 @@
 .home-page {
 	width: 100%;
 	padding: 0 0.5rem;
+
+	&-col {
+		gap: 24px;
+		flex-direction: column;
+	}
 }

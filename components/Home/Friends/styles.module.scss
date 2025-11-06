@@ -1,6 +1,6 @@
 @import "@/styles/config/mixins";
 
-.home-profile {
+.home-friends {
 	width: 100%;
 	border-radius: var(--border-radius);
 	background-color: var(--accent-color-100);
@@ -20,14 +20,6 @@
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
-		gap: 16px;
-
-		&__name {
-			width: 100%;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-			overflow: hidden;
-		}
 	}
 
 	&-btn {

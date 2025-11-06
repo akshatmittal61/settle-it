@@ -1,3 +1,4 @@
+export * from "./assets";
 export * from "./auth";
 export * from "./cache";
 export * from "./enum";

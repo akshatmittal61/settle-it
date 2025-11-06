@@ -60,6 +60,9 @@ export type IShare = {
 };
 
 // Extra Aggregated Collections
+export type Friend = IUser & {
+	strings: number;
+};
 export type Transaction = {
 	from: string;
 	to: string;

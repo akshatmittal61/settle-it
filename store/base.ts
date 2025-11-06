@@ -60,7 +60,7 @@ export function createBaseStore<
 
 	return (options?: Partial<Options>): State & Actions & Extras => {
 		const s = useStore;
-		const state = s() as Actions;
+		const state = s() as State & Actions;
 		const mergedOptions = {
 			...(builder.defaults ?? {}),
 			...options,
