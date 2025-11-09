@@ -1,6 +1,6 @@
 import { AppSeo, routes, socials } from "@/constants";
+import { Multimedia } from "@/library";
 import { stylesConfig } from "@/utils";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
 		<footer className={classes("")}>
 			<div className={classes("-top")}>
 				<div className={classes("-logo")}>
-					<Image
+					<Multimedia.Image
 						src="/logo-full.png"
 						alt={AppSeo.title || ""}
 						onClick={() => {

@@ -1,5 +1,5 @@
 import { fallbackAssets } from "@/constants";
-import { getImageUrlFromDriveLink, StringUtils } from "@/utils";
+import { StringUtils } from "@/utils";
 
 export class AvatarUtils {
 	public static getAvatarSize(size: string | number): number {
@@ -22,12 +22,6 @@ export class AvatarUtils {
 		return src.startsWith("https://") || src.startsWith("/");
 	}
 
-	public static getImageUrl(src: string): string {
-		if (this.isValidImageUrl(src)) {
-			return getImageUrlFromDriveLink(src);
-		}
-		return src;
-	}
 	public static getFallbackAvatarUrl(
 		alt: string | undefined,
 		fallback?: string

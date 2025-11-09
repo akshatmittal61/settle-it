@@ -2,14 +2,13 @@ import { authRouterInterceptor } from "@/client";
 import { Auth, Auth as Components } from "@/components";
 import { AppSeo, routes } from "@/constants";
 import { Seo } from "@/layouts";
-import { Typography } from "@/library";
+import { Multimedia, Typography } from "@/library";
 import { Logger } from "@/log";
 import { useAuthStore } from "@/store";
 import styles from "@/styles/pages/Auth.module.scss";
 import { IUser, ServerSideResult } from "@/types";
 import { Notify, StringUtils, stylesConfig } from "@/utils";
 import { GetServerSidePropsContext } from "next";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 
@@ -87,7 +86,7 @@ const LoginPage: React.FC<LoginPageProps> = (props) => {
 			<main className={classes("")}>
 				<span />
 				<section>
-					<Image
+					<Multimedia.Image
 						src="/logo-full.png"
 						alt={`${AppSeo.title} logo`}
 						height={1920}

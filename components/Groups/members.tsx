@@ -1,5 +1,5 @@
 import { UserApi } from "@/api";
-import { fallbackAssets, regex } from "@/constants";
+import { fallbackAssets, regex, vectors } from "@/constants";
 import { useDebounce, useHttpClient } from "@/hooks";
 import {
 	Avatar,
@@ -9,13 +9,13 @@ import {
 	Input,
 	Loader,
 	MaterialIcon,
+	Multimedia,
 	Textarea,
 	Typography,
 } from "@/library";
 import { useAuthStore } from "@/store";
 import { IUser } from "@/types";
 import { Notify, StringUtils, stylesConfig } from "@/utils";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.scss";
 
@@ -67,8 +67,8 @@ const MembersPlaceholder: React.FC<MembersPlaceholderProps> = ({
 	if (searchStr.length < 3) {
 		return (
 			<div className={classes("-placeholder")}>
-				<Image
-					src="/vectors/empty-records.svg"
+				<Multimedia.Image
+					src={vectors.emptyRecords}
 					alt="empty-records"
 					width={1920}
 					height={1080}
@@ -83,8 +83,8 @@ const MembersPlaceholder: React.FC<MembersPlaceholderProps> = ({
 		if (!regex.email.test(searchStr)) {
 			return (
 				<div className={classes("-placeholder")}>
-					<Image
-						src="/vectors/empty-records.svg"
+					<Multimedia.Image
+						src={vectors.emptyRecords}
 						alt="empty-records"
 						width={1920}
 						height={1080}

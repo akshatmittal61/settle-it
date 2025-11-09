@@ -1,19 +1,25 @@
 import React from "react";
 
-export interface IAvatarProps extends React.HTMLAttributes<HTMLDivElement> {
+type AssetProps = {
 	src: string;
 	alt?: string;
+};
+
+type AvatarComponentProps = {
 	fallback?: string;
 	shape?: "circle" | "square";
 	className?: string;
 	onClick?: () => void;
 	isClickable?: boolean;
 	size?: "small" | "medium" | "large" | number;
-}
+};
 
-export interface IAvatarsProps
-	extends Omit<IAvatarProps, "src" | "alt" | "children"> {
-	children: Array<{ src: string; alt: string }>;
+export type IAvatarProps = React.HTMLAttributes<HTMLDivElement> &
+	AvatarComponentProps &
+	AssetProps;
+
+export type IAvatarsProps = Omit<IAvatarProps, "src" | "alt" | "children"> & {
+	children: Array<AssetProps>;
 	stack?: boolean;
 	limit?: number;
-}
+};

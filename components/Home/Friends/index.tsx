@@ -2,8 +2,7 @@ import React from "react";
 import styles from "./styles.module.scss";
 import { CollectionUtils, stylesConfig } from "@/utils";
 import { useGodownStore } from "@/store";
-import { Button, Typography } from "@/library";
-import Image from "next/image";
+import { Button, Multimedia, Typography } from "@/library";
 import { animations } from "@/constants";
 
 const classes = stylesConfig(styles, "home-friends");
@@ -24,7 +23,7 @@ export const HomeFriends: React.FC = () => {
 				</>
 			) : (
 				<>
-					<Image
+					<Multimedia.Image
 						src={animations.alone}
 						alt="Alone"
 						width={512}

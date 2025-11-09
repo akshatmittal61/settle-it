@@ -1,7 +1,6 @@
 import { AppSeo, routes } from "@/constants";
-import { Button, Typography } from "@/library";
+import { Button, Multimedia, Typography } from "@/library";
 import { stylesConfig } from "@/utils";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import React from "react";
 import { AiOutlineArrowRight } from "react-icons/ai";
@@ -17,7 +16,7 @@ export const HomeHero: React.FC<IHomeHeroProps> = () => {
 		<section className={classes("")}>
 			<div className={classes("-container")}>
 				<div className={classes("-logo")}>
-					<Image
+					<Multimedia.Image
 						className={classes("-container__logo")}
 						src="/favicon-transparent.svg"
 						alt="logo"
@@ -53,7 +52,7 @@ export const HomeHero: React.FC<IHomeHeroProps> = () => {
 					</Button>
 				</div>
 			</div>
-			<Image
+			<Multimedia.Image
 				src="/images/chaotic-parade.png"
 				alt="chaotic-parade"
 				width={1920}

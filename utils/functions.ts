@@ -238,24 +238,6 @@ export const getEnumeration = <T extends string>(
 	}, {} as any);
 };
 
-/**
- * Takes a Google Drive link and returns a URL that can be used as an image
- * src. If the link is not a valid Google Drive link, the original link is
- * returned.
- * @param {string} link The Google Drive link to convert.
- * @returns {string} A URL that can be used as an image src.
- */
-export const getImageUrlFromDriveLink = (link: string): string => {
-	// eslint-disable-next-line no-useless-escape
-	const regex = /^https:\/\/drive\.google\.com\/file\/d\/([^\/]+)(\/|$)/;
-	const match = link.match(regex);
-	if (match && match[1]) {
-		return `https://lh3.googleusercontent.com/d/${match[1]}=w1000`;
-	} else {
-		return link;
-	}
-};
-
 export const runningCase = (text: string): string => {
 	return text
 		.split("_")

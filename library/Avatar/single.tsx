@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import styles from "./styles.module.scss";
 import { IAvatarProps } from "./types";
 import { AvatarUtils } from "./utils";
-import Image from "next/image";
+import { Multimedia } from "@/library";
 
 const classes = stylesConfig(styles);
 
@@ -22,7 +22,6 @@ export const Avatar: React.FC<IAvatarProps> = ({
 	const [isImageValid, setIsImageValid] = useState(
 		AvatarUtils.isValidImageUrl(src)
 	);
-	const imageUrl = AvatarUtils.getImageUrl(src);
 
 	return (
 		<div
@@ -46,8 +45,8 @@ export const Avatar: React.FC<IAvatarProps> = ({
 			}}
 		>
 			{isImageValid ? (
-				<Image
-					src={imageUrl}
+				<Multimedia.Image
+					src={src}
 					alt={StringUtils.getNonEmptyStringOrElse(
 						alt,
 						`avatar-${src}`
@@ -55,12 +54,13 @@ export const Avatar: React.FC<IAvatarProps> = ({
 					width={AvatarUtils.getAvatarSize(size) * 2}
 					height={AvatarUtils.getAvatarSize(size) * 2}
 					className={classes("avatar-image")}
+					fallback={fallbackAssets.avatar}
 					onError={() => {
 						setIsImageValid(false);
 					}}
 				/>
 			) : (
-				<Image
+				<Multimedia.Image
 					src={AvatarUtils.getFallbackAvatarUrl(alt, fallback)}
 					alt={StringUtils.getNonEmptyStringOrElse(
 						alt,

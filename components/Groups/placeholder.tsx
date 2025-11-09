@@ -1,6 +1,5 @@
-import { Button, Typography } from "@/library";
+import { Button, Multimedia, Typography } from "@/library";
 import { stylesConfig } from "@/utils";
-import Image from "next/image";
 import React from "react";
 import styles from "./styles.module.scss";
 
@@ -13,7 +12,7 @@ const classes = stylesConfig(styles, "group-placeholder");
 const GroupPlaceholder: React.FC<IGroupPlaceholderProps> = ({ action }) => {
 	return (
 		<div className={classes("")}>
-			<Image
+			<Multimedia.Image
 				src="/vectors/empty-records.svg"
 				alt="empty-records"
 				width={1920}

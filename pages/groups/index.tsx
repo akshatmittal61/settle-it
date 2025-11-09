@@ -1,6 +1,6 @@
 import { withAuthPage } from "@/client";
 import { CreateGroup } from "@/components";
-import { AppSeo, fallbackAssets, routes } from "@/constants";
+import { AppSeo, fallbackAssets, routes, vectors } from "@/constants";
 import { useHttpClient } from "@/hooks";
 import { Responsive, Seo } from "@/layouts";
 import {
@@ -9,13 +9,13 @@ import {
 	Button,
 	Loader,
 	MaterialIcon,
+	Multimedia,
 	Typography,
 } from "@/library";
 import { useWalletStore } from "@/store";
 import styles from "@/styles/pages/Group.module.scss";
 import { CreateGroupData, IUser } from "@/types";
 import { CollectionUtils, stylesConfig, UserUtils } from "@/utils";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { FiPlus } from "react-icons/fi";
@@ -122,8 +122,8 @@ const GroupsPage: React.FC<GroupsPageProps> = (props) => {
 					</Responsive.Row>
 				) : (
 					<div className={classes("-placeholder")}>
-						<Image
-							src="/vectors/empty-records.svg"
+						<Multimedia.Image
+							src={vectors.emptyRecords}
 							alt="empty-records"
 							width={1920}
 							height={1080}

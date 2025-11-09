@@ -1,16 +1,16 @@
-import { Header, Seo, SideBar } from "@/components";
+import { Footer, Header, Seo, SideBar } from "@/components";
 import {
 	AppSeo,
 	protectedRoutes,
 	routesSupportingContainer,
+	routesSupportingFooter,
 } from "@/constants";
-import { useDevice } from "@/hooks";
+import { useDevice, useEffect, useRouter, useState } from "@/hooks";
 import { Loader } from "@/library";
 import { useAuthStore, useUiStore } from "@/store";
 import { IUser } from "@/types";
 import { BooleanUtils, stylesConfig } from "@/utils";
-import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Toaster } from "react-hot-toast";
 import styles from "./styles.module.scss";
 
@@ -115,6 +115,9 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 			>
 				{children}
 			</main>
+			{routesSupportingFooter.includes(router.pathname) ? (
+				<Footer />
+			) : null}
 			{/*<ActionBar />*/}
 			<Toaster position="top-center" />
 		</>

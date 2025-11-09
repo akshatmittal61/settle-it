@@ -45,6 +45,14 @@ export const routesSupportingContainer: Array<string | Function> = [
 	routes.PROFILE,
 ];
 
+export const routesSupportingFooter: Array<string> = [
+	routes.ROOT,
+	routes.PRIVACY_POLICY,
+	routes.ABOUT,
+	routes.REPORT,
+	routes.CONTACT,
+];
+
 export const redirectToLogin = (currentPath: string = StringUtils.EMPTY) => {
 	return routes.LOGIN + `?redirect=${currentPath}`;
 };

@@ -1,10 +1,10 @@
 import { AuthApi } from "@/api";
 import { routes } from "@/constants";
+import { Multimedia } from "@/library";
 import { Logger } from "@/log";
 import { useAuthStore } from "@/store";
 import styles from "@/styles/pages/Auth.module.scss";
 import { Notify, StringUtils, stylesConfig } from "@/utils";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 
@@ -35,7 +35,7 @@ const GoogleOAuthRedirectedPage: GoogleOAuthRedirectedPageProps = (props) => {
 
 	return (
 		<main className={classes("")}>
-			<Image
+			<Multimedia.Image
 				src="/favicon.svg"
 				alt="logo"
 				width={400}

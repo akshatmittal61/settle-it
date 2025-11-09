@@ -3,8 +3,7 @@ import styles from "./styles.module.scss";
 import { SafetyUtils, StringUtils, stylesConfig } from "@/utils";
 import { vectors } from "@/constants";
 import { useRouter } from "next/router";
-import { Button, Typography } from "@/library";
-import Image from "next/image";
+import { Button, Multimedia, Typography } from "@/library";
 
 const classes = stylesConfig(styles, "placeholder");
 
@@ -46,7 +45,7 @@ export const Placeholder: React.FC<PlaceholderProps> = (props) => {
 	return (
 		<div className={classes("")}>
 			{StringUtils.isNotEmpty(props.image) ? (
-				<Image
+				<Multimedia.Image
 					src={props.image}
 					alt={`placholder-${props.id}`}
 					width={1920}

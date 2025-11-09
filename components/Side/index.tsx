@@ -6,7 +6,7 @@ import {
 	vectors,
 } from "@/constants";
 import { useOnClickOutside } from "@/hooks";
-import { Avatar, Typography } from "@/library";
+import { Avatar, Multimedia, Typography } from "@/library";
 import { useAuthStore, useUiStore, useWalletStore } from "@/store";
 import {
 	BooleanUtils,
@@ -15,7 +15,6 @@ import {
 	stylesConfig,
 	UserUtils,
 } from "@/utils";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
@@ -89,7 +88,7 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 								: routes.ROOT
 						}
 					>
-						<Image
+						<Multimedia.Image
 							className={classes("-logo__image")}
 							src={
 								BooleanUtils.True.equals(getSidebarExpanded())
