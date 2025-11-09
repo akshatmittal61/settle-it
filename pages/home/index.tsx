@@ -15,9 +15,7 @@ type HomePageProps = {
 };
 
 const HomePage: React.FC<HomePageProps> = () => {
-	const [openGroupModal, setOpenGroupModal] = useState(
-		BooleanUtils.False.value
-	);
+	const [, setOpenGroupModal] = useState(BooleanUtils.False.value);
 	const { device } = useDevice();
 	useWalletStore({ syncOnMount: true });
 	useGodownStore({ syncOnMount: StringUtils.notEquals(device, "mobile") });

@@ -34,7 +34,7 @@ export const Group: React.FC<GroupProps> = ({ group }) => {
 				>
 					{group.name}
 				</Typography>
-				<Avatars size={36} className={classes("-members")}>
+				<Avatars size={36} limit={4} className={classes("-members")}>
 					{group.members.map((member) => ({
 						src: UserUtils.getUserAvatar(member.user),
 						alt: UserUtils.getNameOfUser(member.user),

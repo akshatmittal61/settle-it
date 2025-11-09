@@ -1,9 +1,10 @@
 import { fallbackAssets } from "@/constants";
-import { getImageUrlFromDriveLink, stylesConfig } from "@/utils";
-import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import { StringUtils, stylesConfig } from "@/utils";
+import React, { useState } from "react";
 import styles from "./styles.module.scss";
 import { IAvatarProps } from "./types";
+import { AvatarUtils } from "./utils";
+import Image from "next/image";
 
 const classes = stylesConfig(styles);
 
@@ -19,37 +20,9 @@ export const Avatar: React.FC<IAvatarProps> = ({
 	...props
 }) => {
 	const [isImageValid, setIsImageValid] = useState(
-		src && (src.startsWith("https://") || src.startsWith("/"))
-			? true
-			: false
+		AvatarUtils.isValidImageUrl(src)
 	);
-	const imageUrl = (() => {
-		if (src && (src.startsWith("https://") || src.startsWith("/"))) {
-			return getImageUrlFromDriveLink(src);
-		}
-		return "";
-	})();
-
-	const getAvatarSize = () => {
-		switch (size) {
-			case "small":
-				return 100;
-			case "medium":
-				return 150;
-			case "large":
-				return 200;
-			default:
-				return typeof size === "number" ? size : 50;
-		}
-	};
-
-	useEffect(() => {
-		setIsImageValid(
-			src && (src.startsWith("https://") || src.startsWith("/"))
-				? true
-				: false
-		);
-	}, [src, fallback]);
+	const imageUrl = AvatarUtils.getImageUrl(src);
 
 	return (
 		<div
@@ -63,8 +36,8 @@ export const Avatar: React.FC<IAvatarProps> = ({
 			title={alt}
 			{...props}
 			style={{
-				width: getAvatarSize(),
-				height: getAvatarSize(),
+				width: AvatarUtils.getAvatarSize(size),
+				height: AvatarUtils.getAvatarSize(size),
 				cursor:
 					onClick && typeof onClick === "function"
 						? "pointer"
@@ -75,9 +48,12 @@ export const Avatar: React.FC<IAvatarProps> = ({
 			{isImageValid ? (
 				<Image
 					src={imageUrl}
-					alt={alt + ""}
-					width={getAvatarSize() * 2}
-					height={getAvatarSize() * 2}
+					alt={StringUtils.getNonEmptyStringOrElse(
+						alt,
+						`avatar-${src}`
+					)}
+					width={AvatarUtils.getAvatarSize(size) * 2}
+					height={AvatarUtils.getAvatarSize(size) * 2}
 					className={classes("avatar-image")}
 					onError={() => {
 						setIsImageValid(false);
@@ -85,10 +61,13 @@ export const Avatar: React.FC<IAvatarProps> = ({
 				/>
 			) : (
 				<Image
-					src={fallback}
-					alt={alt + ""}
-					width={getAvatarSize() * 2}
-					height={getAvatarSize() * 2}
+					src={AvatarUtils.getFallbackAvatarUrl(alt, fallback)}
+					alt={StringUtils.getNonEmptyStringOrElse(
+						alt,
+						`avatar-${src}`
+					)}
+					width={AvatarUtils.getAvatarSize(size) * 2}
+					height={AvatarUtils.getAvatarSize(size) * 2}
 					className={classes("avatar-image")}
 				/>
 			)}
