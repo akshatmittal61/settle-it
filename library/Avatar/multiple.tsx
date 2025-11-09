@@ -14,11 +14,12 @@ interface IAvatarsProps extends Omit<IAvatarProps, "src" | "alt" | "children"> {
 export const Avatars: React.FC<IAvatarsProps> = ({
 	children,
 	stack = true,
+	className,
 	...props
 }) => {
 	return (
 		<div
-			className={classes("")}
+			className={classes("") + ` ${className ?? ""}`}
 			title={children.map((c) => c.alt).join(", ")}
 		>
 			{/* if there are more than 4, show only the first 4 and one more cell showing the count */}

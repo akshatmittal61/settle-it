@@ -9,7 +9,7 @@
 	justify-content: center;
 	align-items: center;
 	gap: 6px;
-	border-radius: 500px;
+	border-radius: var(--border-radius);
 	border: 1px solid transparent;
 	white-space: nowrap;
 	flex: 0 0 auto;
@@ -17,7 +17,6 @@
 	user-select: none;
 	transition: all 0.2s ease-in-out;
 	color: var(--theme-white);
-	border: 1px solid transparent;
 
 	&--theme {
 		&--default {

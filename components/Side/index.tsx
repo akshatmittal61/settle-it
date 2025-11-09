@@ -1,4 +1,10 @@
-import { appTheme, redirectToLogin, routes } from "@/constants";
+import {
+	appTheme,
+	images,
+	redirectToLogin,
+	routes,
+	vectors,
+} from "@/constants";
 import { useOnClickOutside } from "@/hooks";
 import { Avatar, Typography } from "@/library";
 import { useAuthStore, useUiStore, useWalletStore } from "@/store";
@@ -38,7 +44,7 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 	const { sync: syncWalletState } = useWalletStore();
 	const {
 		getTheme,
-		openSidebar,
+		closeSidebar,
 		getSidebarNavigation,
 		getSidebarExpanded,
 		toggleTheme,
@@ -87,8 +93,13 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 							className={classes("-logo__image")}
 							src={
 								BooleanUtils.True.equals(getSidebarExpanded())
-									? "/logo-full.png"
-									: "/favicon.svg"
+									? StringUtils.equals(
+											getTheme(),
+											appTheme.light
+										)
+										? images.logoFullDark
+										: images.logoFullLight
+									: vectors.favicon
 							}
 							alt="logo"
 							width={512}
@@ -257,10 +268,7 @@ export const SideBar: React.FC<ISideBarProps> = () => {
 					) : null}
 				</div>
 			</aside>
-			<div
-				className={classes("-overlay")}
-				onClick={() => openSidebar()}
-			/>
+			<div className={classes("-overlay")} onClick={closeSidebar} />
 		</>
 	);
 };

@@ -1,0 +1,144 @@
+@import "@/styles/config/mixins";
+@import "../mixins";
+
+.home-groups {
+	@include home-tile;
+	padding: 0;
+
+	@include responsive(phone) {
+		border: none;
+		background-color: transparent;
+		padding: 0;
+
+		@include _theme(dark) {
+			background-color: transparent;
+		}
+	}
+
+	&-header {
+		width: 100%;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 16px;
+
+		@include responsive(phone) {
+			display: none;
+		}
+	}
+
+	&-groups {
+		width: 100%;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		flex-direction: column;
+		gap: 12px;
+
+		@include responsive(not-phone) {
+			gap: 0;
+		}
+	}
+
+	&-group {
+		width: 100%;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 16px;
+		padding: 12px;
+		flex: 0 1 auto;
+		border-radius: var(--border-radius);
+		cursor: pointer;
+		border: 1px solid var(--accent-color-heavy);
+		user-select: none;
+		color: var(--theme-fg);
+		text-decoration: none;
+		overflow: hidden;
+
+		&:hover {
+			background-color: var(--accent-color-300);
+		}
+
+		@include _theme(dark) {
+			background-color: var(--accent-color-heavy);
+
+			&:hover {
+				opacity: 0.8;
+			}
+		}
+
+		@include responsive(not-phone) {
+			padding: 16px;
+			border: none;
+			border-radius: 0;
+		}
+
+		&:not(:last-child) {
+			@include responsive(not-phone) {
+				border-bottom: 1px solid var(--accent-color-heavy);
+			}
+		}
+
+		&-details {
+			width: 100%;
+			display: flex;
+			justify-content: flex-start;
+			align-items: center;
+
+			@include responsive(phone) {
+				align-items: flex-start;
+				flex-direction: column;
+				gap: 16px;
+			}
+		}
+
+		&-name {
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
+		}
+
+		&-members {
+			@include responsive(not-phone) {
+				margin-left: auto;
+			}
+		}
+	}
+
+	&-tile {
+		width: 100%;
+		height: 58px;
+		background-color: var(--accent-color-100);
+		border: 1.5px dashed var(--accent-color-heavy);
+		display: none;
+		justify-content: center;
+		align-items: center;
+		flex: 0 1 auto;
+		border-radius: 8px;
+		cursor: pointer;
+
+		@include responsive(phone) {
+			height: 124px;
+			aspect-ratio: 2 / 1;
+			display: flex;
+		}
+
+		svg {
+			font-size: 24px;
+		}
+
+		&:hover {
+			background-color: var(--accent-color-500);
+		}
+
+		@include _theme(dark) {
+			background-color: var(--transparent);
+			border-color: var(--accent-color-400);
+
+			&:hover {
+				background-color: var(--accent-color-400);
+			}
+		}
+	}
+}

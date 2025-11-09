@@ -77,7 +77,7 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 			closeSidebar();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [router.pathname, device]);
+	}, [router.pathname]);
 
 	useEffect(() => {
 		// check for network state every 10 seconds

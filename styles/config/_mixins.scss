@@ -5,6 +5,12 @@
 		}
 	}
 
+	@if $breakpoint ==not-phone {
+		@media (min-width: 672px) {
+			@content;
+		}
+	}
+
 	@if $breakpoint ==tablet {
 		@media (min-width: 672px) and (max-width: 1055.5px) {
 			@content;

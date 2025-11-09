@@ -69,6 +69,7 @@ export type Otp = Model<{
  */
 export type Group = Model<{
 	name: string;
+	description?: string;
 	icon?: string;
 	banner?: string;
 	tags?: Array<string>;

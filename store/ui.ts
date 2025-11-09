@@ -1,4 +1,8 @@
-import { appNetworkStatus, appTheme } from "@/constants";
+import {
+	appNetworkStatus,
+	appTheme,
+	sideBarNavigationLinks,
+} from "@/constants";
 import { AppNetworkStatus, AppTheme, DashboardHeader, Sidebar } from "@/types";
 import {
 	BooleanUtils,
@@ -66,7 +70,7 @@ export const useUiStore = createBaseStore<State, Actions, Options, Extras>({
 			// since we are working with mobile-first UI
 			// we have to consider initially sidebar is closed
 			expanded: BooleanUtils.False.value,
-			navigation: CollectionUtils.EMPTY,
+			navigation: sideBarNavigationLinks,
 			options: CollectionUtils.EMPTY,
 		},
 		header: {

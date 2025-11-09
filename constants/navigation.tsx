@@ -1,5 +1,6 @@
 import { IGroup, Navigation } from "@/types";
 import { routes } from "./routes";
+import { FiActivity, FiFlag, FiHome, FiPhone, FiUsers } from "react-icons/fi";
 
 const loggedOutSideBarLinks: Array<Navigation> = [
 	{
@@ -98,3 +99,36 @@ export const getSideBarLinks = ({
 	groups?: Array<IGroup>;
 }) =>
 	loggedIn && groups ? loggedInSideBarLinks(groups) : loggedOutSideBarLinks;
+
+export const sideBarNavigationLinks: Array<Navigation> = [
+	{
+		id: "home",
+		title: "Home",
+		icon: <FiHome />,
+		route: routes.HOME,
+	},
+	{
+		id: "groups",
+		title: "My Groups",
+		icon: <FiUsers />,
+		route: routes.GROUPS,
+	},
+	{
+		id: "activities",
+		title: "Recent Activity",
+		icon: <FiActivity />,
+		route: routes.GROUPS,
+	},
+	{
+		id: "report-bug",
+		title: "Report A Bug",
+		icon: <FiFlag />,
+		route: routes.REPORT,
+	},
+	{
+		id: "contact-us",
+		title: "Contact Us",
+		icon: <FiPhone />,
+		route: routes.CONTACT,
+	},
+];

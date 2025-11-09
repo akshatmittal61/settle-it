@@ -34,6 +34,10 @@ export class GroupController {
 			StringUtils.getNonEmptyString,
 			req.body.name
 		);
+		const description = SafetyUtils.safeParse(
+			StringUtils.getNonEmptyString,
+			req.body.description
+		);
 		const icon = SafetyUtils.safeParse(
 			StringUtils.getNonEmptyString,
 			req.body.icon
@@ -51,6 +55,9 @@ export class GroupController {
 			req.body.members
 		) || [loggedInUserId];
 		const body: CreateGroupData = { name };
+		if (StringUtils.isNotEmpty(description)) {
+			body.description = description;
+		}
 		if (StringUtils.isNotEmpty(icon)) {
 			body.icon = icon;
 		}

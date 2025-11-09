@@ -6,6 +6,7 @@ export * from "./icons";
 export * from "./Input";
 export * as Loader from "./Loader";
 export * from "./Pane";
+export * from "./Placeholder";
 export * from "./Popup";
 export * from "./Table";
 export * from "./Typography";

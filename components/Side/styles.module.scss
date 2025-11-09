@@ -13,7 +13,7 @@
 	justify-content: flex-start;
 	align-items: center;
 	flex-direction: column;
-	background: var(--grey-100);
+	background-color: var(--accent-color-100);
 	color: var(--theme-fg);
 	padding: 0.5rem;
 
@@ -51,6 +51,7 @@
 		cursor: pointer;
 		user-select: none;
 		margin-right: auto;
+		padding: 0 0.4rem;
 
 		img {
 			height: 100%;
@@ -60,8 +61,10 @@
 	}
 
 	&--collapsed &-logo {
-		justify-content: center;
-		margin-right: unset;
+		@include responsive(not-phone) {
+			justify-content: center;
+			margin-right: unset;
+		}
 	}
 
 	&-nav {
@@ -160,19 +163,19 @@
 		}
 	}
 
-	&--collapsed &-list__item {
-		justify-content: center;
-	}
-
 	&--collapsed &-link {
-		width: 2.25rem;
-		height: 2.25rem;
-		justify-content: center;
-		padding: 0.4rem;
+		@include responsive(not-phone) {
+			width: 2.25rem;
+			height: 2.25rem;
+			justify-content: center;
+			padding: 0.4rem;
+		}
 	}
 
 	&--collapsed &-link__title {
-		display: none;
+		@include responsive(not-phone) {
+			display: none;
+		}
 	}
 
 	&-overlay {
@@ -231,14 +234,18 @@
 
 	&--collapsed &-option-action,
 	&--collapsed &-option-title {
-		display: none;
+		@include responsive(not-phone) {
+			display: none;
+		}
 	}
 
 	&--collapsed &-user {
-		width: 3rem;
-		height: 3rem;
-		justify-content: center;
-		margin: 0 auto;
+		@include responsive(not-phone) {
+			width: 3rem;
+			height: 3rem;
+			justify-content: center;
+			margin: 0 auto;
+		}
 	}
 
 	&-user {

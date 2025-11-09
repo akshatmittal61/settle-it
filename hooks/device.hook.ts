@@ -5,7 +5,7 @@ type ScreenOrientationType = "portrait" | "landscape";
 type PlatformType = "client" | "server";
 
 export const useDevice = () => {
-	const [device, setDevice] = useState<DeviceType>("desktop");
+	const [device, setDevice] = useState<DeviceType>("mobile");
 	const [orientation, setOrientation] =
 		useState<ScreenOrientationType>("landscape");
 	const [platform, setPlatform] = useState<PlatformType>("server");

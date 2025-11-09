@@ -27,6 +27,14 @@
 
 	&-col {
 		gap: 24px;
+		justify-content: flex-start;
 		flex-direction: column;
+		padding: 0 0.5rem;
+
+		&__right {
+			@include responsive(phone) {
+				display: none;
+			}
+		}
 	}
 }

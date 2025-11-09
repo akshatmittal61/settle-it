@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "@/styles/pages/Home.module.scss";
-import { stylesConfig } from "@/utils";
+import { BooleanUtils, StringUtils, stylesConfig } from "@/utils";
 import { IUser } from "@/types";
 import { withAuthPage } from "@/client";
 import { Home } from "@/components";
 import { Responsive } from "@/layouts";
+import { useGodownStore, useWalletStore } from "@/store";
+import { useDevice } from "@/hooks";
 
 const classes = stylesConfig(styles, "home-page");
 
@@ -13,6 +15,12 @@ type HomePageProps = {
 };
 
 const HomePage: React.FC<HomePageProps> = () => {
+	const [openGroupModal, setOpenGroupModal] = useState(
+		BooleanUtils.False.value
+	);
+	const { device } = useDevice();
+	useWalletStore({ syncOnMount: true });
+	useGodownStore({ syncOnMount: StringUtils.notEquals(device, "mobile") });
 	return (
 		<>
 			<main className={classes("")}>
@@ -25,7 +33,11 @@ const HomePage: React.FC<HomePageProps> = () => {
 						xsm={100}
 						className={classes("-col")}
 					>
-						Groups and Activity Placeholder
+						<Home.Groups
+							onOpenCreateGroupModal={() => {
+								setOpenGroupModal(BooleanUtils.True.value);
+							}}
+						/>
 					</Responsive.Col>
 					<Responsive.Col
 						xlg={25}
@@ -33,7 +45,7 @@ const HomePage: React.FC<HomePageProps> = () => {
 						md={25}
 						sm={100}
 						xsm={100}
-						className={classes("-col")}
+						className={classes("-col", "-col__right")}
 					>
 						<Home.Profile />
 						<Home.Friends />
