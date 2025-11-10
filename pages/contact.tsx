@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Notify, stylesConfig } from "@/utils";
+import { Notify, StringUtils, stylesConfig } from "@/utils";
 import { useAuthStore } from "@/store";
 import { Button, Input, Textarea, Typography } from "@/library";
 import { ContactMessage } from "@/types";
@@ -26,6 +26,12 @@ const ContactUsPage: React.FC<ContactUsPageProps> = () => {
 	});
 
 	const handleChange = (e: any) => {
+		if (
+			StringUtils.equals(e.target.name, "message") &&
+			e.target.value.length > 1000
+		) {
+			return;
+		}
 		setFields({ ...fields, [e.target.name]: e.target.value });
 	};
 
@@ -72,9 +78,20 @@ const ContactUsPage: React.FC<ContactUsPageProps> = () => {
 					variant="box"
 					required={true}
 					rows={5}
+					error={fields.message.length > 1000}
+					errorMessage="Message too long!"
 					onChange={handleChange}
 					className={classes("-input")}
 				/>
+				<Typography
+					size="sm"
+					className={classes("-input__message", {
+						"-input__message--invalid":
+							fields.message.length >= 1000,
+					})}
+				>
+					{fields.message.length}/1000
+				</Typography>
 				<Button type="submit" loading={sendingMessage}>
 					Send Message
 				</Button>

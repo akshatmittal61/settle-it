@@ -1,4 +1,5 @@
 import { CacheParameter, T_EMAIL_TEMPLATE } from "./enum";
+import { ContactMessage } from "@/types/client";
 
 type CachePayloadMap = {
 	USER: { id: string } | { email: string };
@@ -21,6 +22,8 @@ type EmailTemplateDataMap = {
 		group: { id: string; name: string };
 	};
 	NEW_USER_ONBOARDED: never;
+	CONTACT_MESSAGE: ContactMessage;
 };
+
 export type EmailTemplateGenerator<T extends T_EMAIL_TEMPLATE> =
 	EmailTemplateDataMap[T];

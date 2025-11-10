@@ -101,6 +101,14 @@ export class EmailService {
 				"View Group",
 				`${frontendBaseUrl}/group/${payload.group.id}`
 			);
+		} else if (template === emailTemplates.CONTACT_MESSAGE) {
+			const payload = data as EmailTemplateGenerator<"CONTACT_MESSAGE">;
+			return emailTemplate(
+				`You have unread message from ${payload.name}`,
+				`${payload.message}`,
+				`Click to reply to ${payload.name}`,
+				`mailto:${payload.email}`
+			);
 		} else {
 			return "";
 		}

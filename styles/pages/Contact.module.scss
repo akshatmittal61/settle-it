@@ -71,6 +71,18 @@
 		}
 	}
 
+	&-input {
+		&__message {
+			width: 100%;
+			text-align: right;
+			font-style: italic;
+
+			&--invalid {
+				color: var(--red-400);
+			}
+		}
+	}
+
 	&-info {
 		--contact-panel-color: var(--accent-color);
 		align-items: flex-end;

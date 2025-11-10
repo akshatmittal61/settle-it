@@ -73,7 +73,7 @@ export class StringUtils {
 		const output = StringUtils.valueOf<T>(input);
 		if (StringUtils.isEmpty(output)) {
 			throw new ParserSafetyError(
-				`${input} is an empty string!`,
+				`'${output}' is an empty string!`,
 				"StringUtils.getNonEmptyString",
 				input
 			);

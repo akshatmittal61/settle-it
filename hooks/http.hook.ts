@@ -63,8 +63,10 @@ export const useHttpClient = <
 				setError(err);
 				if (options.onError) {
 					await options.onError(err);
+					return err as T;
+				} else {
+					throw err;
 				}
-				throw err;
 			} finally {
 				setLoading(false);
 			}
