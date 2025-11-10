@@ -2,6 +2,7 @@ import { Footer, Header, Seo, SideBar } from "@/components";
 import {
 	AppSeo,
 	protectedRoutes,
+	routes,
 	routesSupportingContainer,
 	routesSupportingFooter,
 } from "@/constants";
@@ -9,7 +10,12 @@ import { useDevice, useEffect, useRouter, useState } from "@/hooks";
 import { Loader } from "@/library";
 import { useAuthStore, useUiStore } from "@/store";
 import { IUser } from "@/types";
-import { BooleanUtils, stylesConfig } from "@/utils";
+import {
+	BooleanUtils,
+	CollectionUtils,
+	StringUtils,
+	stylesConfig,
+} from "@/utils";
 import React from "react";
 import { Toaster } from "react-hot-toast";
 import styles from "./styles.module.scss";
@@ -29,6 +35,34 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 		syncOnMount: true,
 	});
 	const { device } = useDevice();
+
+	const isContainerSupported = () => {
+		if (
+			CollectionUtils.includes(routesSupportingContainer, router.pathname)
+		) {
+			return BooleanUtils.True.value;
+		}
+		if (
+			StringUtils.equals(router.pathname, routes.CONTACT) &&
+			getIsLoggedIn()
+		) {
+			return BooleanUtils.True.value;
+		}
+		return BooleanUtils.False.value;
+	};
+
+	const isFooterSupported = () => {
+		if (CollectionUtils.includes(routesSupportingFooter, router.pathname)) {
+			if (
+				StringUtils.equals(router.pathname, routes.CONTACT) &&
+				getIsLoggedIn()
+			) {
+				return BooleanUtils.False.value;
+			}
+			return BooleanUtils.True.value;
+		}
+		return BooleanUtils.False.value;
+	};
 
 	// only show top bar loader when route is changing
 	useEffect(() => {
@@ -99,25 +133,17 @@ export const Wrapper: React.FC<WrapperProps> = ({ children, user }) => {
 				twitter={AppSeo.twitter}
 				og={AppSeo.og}
 			/>
-			{routesSupportingContainer.includes(router.pathname) ? (
+			{isContainerSupported() ? (
 				<>
 					<Header />
 					<SideBar />
 				</>
 			) : null}
 			{showLoader ? <Loader.Bar /> : null}
-			<main
-				className={
-					routesSupportingContainer.includes(router.pathname)
-						? classes("")
-						: ""
-				}
-			>
+			<main className={isContainerSupported() ? classes("") : ""}>
 				{children}
 			</main>
-			{routesSupportingFooter.includes(router.pathname) ? (
-				<Footer />
-			) : null}
+			{isFooterSupported() ? <Footer /> : null}
 			{/*<ActionBar />*/}
 			<Toaster position="top-center" />
 		</>

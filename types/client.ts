@@ -91,3 +91,10 @@ export type IBalancesSummary = {
 	owes: Array<IOwedRecord>;
 	balances: Array<IBalance>;
 };
+
+// Others
+export type ContactMessage = {
+	name: string;
+	email: string;
+	message: string;
+};

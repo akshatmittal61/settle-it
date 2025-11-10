@@ -27,6 +27,7 @@ export interface InputProps
 	errorMessage?: string;
 	leftIcon?: React.ReactNode;
 	rightIcon?: React.ReactNode;
+	variant?: "line" | "box";
 }
 
 export interface TextareaProps
@@ -39,4 +40,5 @@ export interface TextareaProps
 	label?: string | any;
 	error?: boolean;
 	errorMessage?: string;
+	variant?: "line" | "box";
 }

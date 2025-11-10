@@ -20,11 +20,11 @@ html {
 	font-size: 16px;
 
 	@include responsive(phone) {
-		font-size: 12px;
+		font-size: 14px;
 	}
 
 	@include responsive(tablet) {
-		font-size: 14px;
+		font-size: 15px;
 	}
 
 	/* @include responsive(desktop) {

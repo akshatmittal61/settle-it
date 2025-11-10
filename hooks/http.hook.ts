@@ -11,7 +11,7 @@ type Options<T, F extends (..._args: any[]) => Promise<ApiRes<T>>> = {
 	trigger?: F; // F is the type of the trigger function
 	data?: DataOfApiCall<T, F>;
 	id?: string;
-	onSuccess?: (_data: T) => void | Promise<void>;
+	onSuccess?: (_data: DataOfApiCall<T, F>) => void | Promise<void>;
 	onError?: (_error: unknown) => void | Promise<void>;
 };
 

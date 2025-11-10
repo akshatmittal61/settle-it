@@ -1,0 +1,188 @@
+@import "@/styles/config/mixins";
+@import "@/styles/config/shadows";
+
+.contact {
+	width: 100%;
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	flex-direction: column;
+	padding: 24px;
+	gap: 0;
+
+	@include responsive(not-phone) {
+		flex-direction: row-reverse;
+		justify-content: center;
+		align-items: stretch;
+	}
+
+	& > * {
+		width: 100%;
+		display: flex;
+		justify-content: flex-start;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1.25rem;
+		background-color: var(--contact-panel-color);
+		border: 1px solid var(--back-shadow-light);
+		position: relative;
+
+		&::after {
+			// triangles peeking to the other panel
+			content: "";
+			width: 2.12rem;
+			height: 1.5rem;
+			position: absolute;
+			z-index: 2;
+			transform: rotate(180deg);
+			background-color: var(--contact-panel-color);
+		}
+	}
+
+	&-form {
+		--contact-panel-color: var(--accent-color-100);
+		align-items: flex-start;
+		border-radius: var(--border-radius) var(--border-radius) 0 0;
+		border-bottom: none;
+		padding-bottom: 2.75rem;
+
+		@include _theme(dark) {
+			--contact-panel-color: var(--accent-color-600);
+			color: var(--black);
+		}
+
+		@include responsive(not-phone) {
+			width: 60%;
+			border-radius: 0 var(--border-radius) var(--border-radius) 0;
+			border-bottom: 1px solid var(--back-shadow-light);
+			border-left: none;
+			padding-bottom: 4rem;
+		}
+
+		&::after {
+			bottom: 0;
+			left: 15%;
+			clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+			transform-origin: bottom;
+
+			@include responsive(not-phone) {
+				display: none;
+			}
+		}
+	}
+
+	&-info {
+		--contact-panel-color: var(--accent-color);
+		align-items: flex-end;
+		color: var(--white);
+		border-radius: 0 0 var(--border-radius) var(--border-radius);
+		text-align: right;
+		border-top: none;
+		padding-top: 2.75rem;
+		gap: 1.5rem;
+
+		@include responsive(not-phone) {
+			width: 40%;
+			border-radius: var(--border-radius) 0 0 var(--border-radius);
+			border-top: 1px solid var(--back-shadow-light);
+			border-right: none;
+			align-items: flex-start;
+			padding-top: 1.25rem;
+		}
+
+		&::after {
+			top: 0;
+			right: 15%;
+			clip-path: polygon(50% 100%, 0 0, 100% 0);
+			transform-origin: top;
+
+			@include responsive(not-phone) {
+				width: 1.5rem;
+				height: 2.12rem;
+				top: unset;
+				bottom: 1rem;
+				right: 0;
+				clip-path: polygon(0 50%, 100% 0, 100% 100%);
+				transform-origin: right;
+			}
+		}
+	}
+
+	&-socials,
+	&-methods {
+		width: 100%;
+		display: flex;
+		list-style: none;
+		gap: 20px;
+
+		li {
+			height: 30px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+
+			@include responsive(phone) {
+				height: 24px;
+			}
+		}
+
+		a {
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			border-radius: 50%;
+			font-size: 1rem;
+			color: inherit;
+
+			img,
+			svg {
+				width: 20px;
+				height: 20px;
+			}
+		}
+	}
+
+	&-methods {
+		display: flex;
+		justify-content: center;
+		align-items: flex-end;
+		flex-direction: column;
+		gap: 12px;
+
+		@include responsive(not-phone) {
+			align-items: flex-start;
+		}
+
+		a {
+			flex-direction: row-reverse;
+			gap: 8px;
+
+			@include responsive(not-phone) {
+				flex-direction: row;
+			}
+		}
+	}
+
+	&-socials {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+
+		@include responsive(not-phone) {
+			justify-content: flex-start;
+		}
+
+		li {
+			width: 30px;
+
+			@include responsive(phone) {
+				width: 24px;
+			}
+
+			a {
+				width: 100%;
+			}
+		}
+	}
+}

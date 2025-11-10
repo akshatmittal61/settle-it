@@ -1,8 +1,8 @@
 import {
+	ContactMessage,
 	CreateExpenseData,
 	CreateGroupData,
 	IUser,
-	T_EXPENSE_STATUS,
 	UpdateExpenseData,
 	UpdateGroupData,
 } from "@/types";
@@ -47,3 +47,6 @@ export type SettleOwedMembersInGroup = {
 // Wallet
 export type SettleMemberInGroup = { sender: string; receiver: string };
 export type SettleSplitInExpense = { expenseId: string; splitId: string };
+
+// Godown
+export type SendMessage = ContactMessage;

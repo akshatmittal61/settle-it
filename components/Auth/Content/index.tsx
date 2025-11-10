@@ -38,6 +38,7 @@ const AuthContent: React.FC<IAuthContentProps> = ({
 				type="email"
 				required
 				autoFocus
+				variant="line"
 			/>
 			<Button
 				icon={<IoMailOutline />}

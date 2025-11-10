@@ -17,6 +17,7 @@ export const Input: React.FC<InputProps> = ({
 	error,
 	errorMessage,
 	size,
+	variant = "line",
 	...props
 }) => {
 	const inputRef = useRef<any>(null);
@@ -78,7 +79,10 @@ export const Input: React.FC<InputProps> = ({
 	}, [dropdown, optionsToRender]);
 
 	return (
-		<div className={classes("") + ` ${className}`} style={styles?.box}>
+		<div
+			className={classes("", `--${variant}`) + ` ${className}`}
+			style={styles?.box}
+		>
 			{label ? (
 				<label className={classes("__label")} style={styles?.label}>
 					{label}
@@ -175,10 +179,14 @@ export const Textarea: React.FC<TextareaProps> = ({
 	className,
 	style,
 	errorMessage,
+	variant = "line",
 	...rest
 }) => {
 	return (
-		<div className={classes("") + ` ${className}`} style={styles?.box}>
+		<div
+			className={classes("", `--${variant}`) + ` ${className}`}
+			style={styles?.box}
+		>
 			{label ? (
 				<label className={classes("__label")} style={styles?.label}>
 					{label}

@@ -71,3 +71,6 @@ export type GetTransactions = {
 	transactions: Array<ITransaction>;
 };
 export type SettleMemberInGroup = null;
+
+// Godown
+export type SendMessage = string;
