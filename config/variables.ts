@@ -10,9 +10,6 @@ export const url: Record<T_URL, string> = {
 	db: process.env.DB_URI || "mongodb://localhost:27017",
 };
 
-export const enableDebugging: boolean =
-	process.env.NEXT_PUBLIC_ENABLE_DEBUGGING === "true" || false;
-
 export const service = process.env.NEXT_PUBLIC_SERVICE || "balance-it";
 
 export const nodeEnv: T_NODE_ENV =

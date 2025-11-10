@@ -1,4 +1,4 @@
-import { apiMethods, dbUri, HTTP } from "@/constants";
+import { apiMethods, backendBaseUrl, dbUri, HTTP } from "@/constants";
 import { DatabaseManager, DbContainer } from "@/db";
 import { ApiError, DbConnectionError, ParserSafetyError } from "@/errors";
 import { Logger } from "@/log";
@@ -13,6 +13,7 @@ import {
 } from "@/types";
 import { MongooseError } from "mongoose";
 import { NextApiHandler } from "next";
+import { StringUtils } from "@/utils";
 
 export class ApiRoute {
 	// Options for API Wrapper
@@ -131,6 +132,18 @@ export class ApiRoute {
 			body: req.body,
 			headers: req.headers,
 		};
+		let requestCurl = "\ncurl";
+		requestCurl += ` -X ${request.method}`;
+		requestCurl += ` --location '${backendBaseUrl}${request.uri}' \\`;
+		if (request.headers) {
+			for (const [key, value] of Object.entries(request.headers)) {
+				requestCurl += `\n--header '${key}: ${value}' \\`;
+			}
+		}
+		if (request.body) {
+			requestCurl += `\n--data '${JSON.stringify(request.body)}'`;
+		}
+		requestCurl += "\n";
 		const response = {
 			status: res.statusCode,
 			headers: res.getHeaders ? res.getHeaders() : {}, // Assuming `getHeaders` exists
@@ -140,6 +153,7 @@ export class ApiRoute {
 			`${request.method} ${response.status} ${request.uri} - ${response.time}ms`
 		);
 		Logger.debug("Request", request);
+		Logger.debug("Request Curl", requestCurl);
 		Logger.debug("Response", response);
 	}
 
@@ -157,18 +171,16 @@ export class ApiRoute {
 					await this.dbContainer.db.connect();
 				}
 
-				const { method } = req;
+				const method = StringUtils.valueOf<T_API_METHODS>(
+					req.method || "GET"
+				);
 				// We need the handler to run by async/await to catch errors
 				let result: void;
 
 				Logger.debug(
 					"method and handler",
 					method,
-					typeof this.GET,
-					typeof this.POST,
-					typeof this.PUT,
-					typeof this.PATCH,
-					typeof this.DELETE
+					`${method} = ${method ? this[method]?.name : "undefined"}`
 				);
 				if (method === apiMethods.GET && this.GET !== undefined) {
 					result = await this.wrapper(this.GET)(req, res);

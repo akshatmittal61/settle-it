@@ -1,8 +1,10 @@
-import { googleEmailConfig } from "@/config";
+import { enableEmailSender, googleEmailConfig } from "@/config";
 import { AppSeo, emailTemplates, frontendBaseUrl } from "@/constants";
 import { EmailTemplateGenerator, T_EMAIL_TEMPLATE } from "@/types";
 import { createTransport } from "nodemailer";
 import { emailTemplate } from "./template";
+import { BooleanUtils } from "@/utils";
+import { Logger } from "@/log";
 
 export class EmailService {
 	private static getSMTPTransport() {
@@ -23,6 +25,10 @@ export class EmailService {
 	}
 
 	private static async send(to: string, subject: string, html: string) {
+		if (BooleanUtils.False.equals(enableEmailSender)) {
+			Logger.warn(`Email to ${to} blocked by flag: ${subject}`);
+			return;
+		}
 		return EmailService.getSMTPTransport().sendMail({
 			from: {
 				name: AppSeo.title || "",
@@ -39,6 +45,12 @@ export class EmailService {
 		subject: string,
 		html: string
 	) {
+		if (BooleanUtils.False.equals(enableEmailSender)) {
+			Logger.warn(
+				`Email to ${to.join(", ")} blocked by flag: ${subject}`
+			);
+			return;
+		}
 		return EmailService.getSMTPTransport().sendMail({
 			from: googleEmailConfig.email,
 			bcc: to,
