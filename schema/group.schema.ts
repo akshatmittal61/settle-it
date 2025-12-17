@@ -7,6 +7,10 @@ export const GroupSchema: Schema<Group> = {
 		type: String,
 		required: true,
 	},
+	description: {
+		type: String,
+		required: false,
+	},
 	icon: {
 		type: String,
 		default: fallbackAssets.groupIcon,
